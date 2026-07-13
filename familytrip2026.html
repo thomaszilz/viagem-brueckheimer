@@ -682,20 +682,6 @@
 <body>
 
 
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-texto">
-      <span class="hero-dream">✈ Família Brueckheimer · um sonho antigo, finalmente saindo do papel</span>
-      <span class="eyebrow">Planejamento da viagem em família</span>
-      <h1>Argentina <em>&amp;</em> Chile</h1>
-      <div class="sub">Buenos Aires · Santiago · Viña del Mar</div>
-      <div class="note">Primeiro a família sugere e vota os lugares de cada cidade. Depois montamos o roteiro juntos, com o que todo mundo escolheu. As datas e noites de cada cidade ficam na aba <strong>Viagem</strong>.</div>
-      <div class="hero-stats" id="hero-stats"></div>
-    </div>
-    <div class="hero-foto-wrap" id="hero-foto-wrap"></div>
-  </div>
-</div>
-
 <div class="navbar">
   <div class="navbar-row">
     <button class="hamburger-btn" id="hamburger-btn" type="button" aria-label="Abrir menu">☰</button>
@@ -711,6 +697,20 @@
       <button type="button" data-theme-btn="light" title="Modo claro">☀</button>
       <button type="button" data-theme-btn="dark" title="Modo escuro">☾</button>
     </div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-texto">
+      <span class="hero-dream">✈ Família Brueckheimer · um sonho antigo, finalmente saindo do papel</span>
+      <span class="eyebrow">Planejamento da viagem em família</span>
+      <h1>Argentina <em>&amp;</em> Chile</h1>
+      <div class="sub">Buenos Aires · Santiago · Viña del Mar</div>
+      <div class="note">Primeiro a família sugere e vota os lugares de cada cidade. Depois montamos o roteiro juntos, com o que todo mundo escolheu. As datas e noites de cada cidade ficam na aba <strong>Viagem</strong>.</div>
+      <div class="hero-stats" id="hero-stats"></div>
+    </div>
+    <div class="hero-foto-wrap" id="hero-foto-wrap"></div>
   </div>
 </div>
 
@@ -2466,7 +2466,7 @@ function mostrarInfoLocalMapaEscroll(local){ mostrarInfoLocalMapa(local); escrol
 /* ================= FOTO DA FAMÍLIA (hero) ================= */
 const STORE_HERO_FOTO = "family_trip_hero_foto";
 // Foto padrão da família inteira — aparece pra todo mundo até alguém trocar por outra (✎)
-const HERO_FOTO_PADRAO = "https://i.postimg.cc/3W47FdjX/avatar-familia.png";
+const HERO_FOTO_PADRAO = "https://i.postimg.cc/DF3brdFn/avatar-familia.png";
 
 function renderHeroFoto(){
   const cont = document.getElementById("hero-foto-wrap");
