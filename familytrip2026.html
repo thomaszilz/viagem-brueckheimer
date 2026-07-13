@@ -99,7 +99,7 @@
     font-weight: 700;
   }
 
-  /* ---------- Hero ---------- */
+  /* ---------- Hero (foto + resumo — só aparece na aba Início) ---------- */
   .hero {
     position: relative;
     padding: 88px 20px 60px;
@@ -109,6 +109,7 @@
       radial-gradient(ellipse 620px 420px at 96% -14%, rgba(226,100,59,.22), transparent 62%),
       radial-gradient(ellipse 520px 380px at -6% 100%, rgba(78,110,142,.22), transparent 60%);
   }
+  body:not([data-painel="inicio"]) .hero { display: none; }
   .hero-inner {
     max-width: 1180px; margin: 0 auto; position: relative;
     display: flex; align-items: center; gap: 44px; flex-wrap: wrap; justify-content: space-between;
@@ -274,6 +275,8 @@
 
   section.panel { display: none; padding-top: 44px; }
   section.panel.active { display: block; animation: fadeIn .3s ease; }
+  /* Sem o hero acima, dá um respiro extra pro conteúdo não ficar colado no menu */
+  body:not([data-painel="inicio"]) .wrap { padding-top: 28px; }
   @media (prefers-reduced-motion: reduce) { section.panel.active { animation: none; } }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
@@ -710,7 +713,7 @@
   }
 </style>
 </head>
-<body>
+<body data-painel="inicio">
 
 
 <div class="navbar">
@@ -879,6 +882,7 @@ document.getElementById("view-toggle").addEventListener("click", e => {
 
 /* ================= NAV & FILTER WIRING ================= */
 function irParaPainel(nomePainel){
+  document.body.setAttribute("data-painel", nomePainel);
   document.querySelectorAll(".navbtn").forEach(b => b.classList.toggle("active", b.dataset.panel === nomePainel));
   document.querySelectorAll(".drawer-navbtn").forEach(b => b.classList.toggle("active", b.dataset.panel === nomePainel));
   document.querySelectorAll("section.panel").forEach(p => p.classList.remove("active"));
