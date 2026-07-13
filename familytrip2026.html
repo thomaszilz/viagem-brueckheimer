@@ -704,6 +704,10 @@
   .post-it-responsavel:hover { background: rgba(43,36,28,.16); }
   .post-it-resp-img { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
   .post-it-resp-emoji { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:rgba(255,255,255,.5); font-size:.6rem; flex-shrink:0; }
+  .post-it-autor {
+    display: block; margin-top: 8px; font-family: 'Work Sans', sans-serif;
+    font-size: .62rem; font-style: normal; color: rgba(43,36,28,.5);
+  }
 
   @media (max-width: 620px) {
     .mural-quadro { gap:14px; padding:20px 14px 26px; justify-content:center; }
@@ -1428,6 +1432,7 @@ function renderVotacao(){
         <div class="place-info">
           <span><strong>${local.bairro === BAIRRO_A_CONFIRMAR ? "🤷 A confirmar" : esc(local.bairro)}</strong></span>
           <span>${esc(local.categoria)}</span>
+          ${local.sugeridoPor ? `<span>sugerido por ${esc(local.sugeridoPor)}</span>` : ""}
         </div>
         ${local.notas ? `<div class="place-notes">${esc(local.notas)}</div>` : ""}
         ${mediaHtml(local)}
@@ -2652,6 +2657,7 @@ function renderInicio(){
             <button type="button" class="post-it-responsavel" data-pendencia-responsavel="${i}" title="${p.responsavel ? "Responsável: " + esc(p.responsavel) : "Atribuir responsável"}">
               ${p.responsavel ? avatarHtmlDe(p.responsavel, "post-it-resp") + " " + esc(p.responsavel) : "+ responsável"}
             </button>
+            ${p.autor ? `<span class="post-it-autor">adicionado por ${esc(p.autor)}</span>` : ""}
           </div>
         `).join("")}
         ${pendencias.map((p,i) => `
@@ -2687,11 +2693,11 @@ function renderInicio(){
   if(!cont._delegado){
     cont._delegado = true;
     cont.addEventListener("click", ev => {
-      if(ev.target.closest("[data-mural-add]")){ adicionarPendenciaManual(); return; }
+      if(ev.target.closest("[data-mural-add]")){ abrirPendenciaModal(null); return; }
       const del = ev.target.closest("[data-pendencia-remover]");
       if(del){ removerPendenciaManual(+del.getAttribute("data-pendencia-remover")); return; }
       const resp = ev.target.closest("[data-pendencia-responsavel]");
-      if(resp){ atribuirResponsavelPendencia(+resp.getAttribute("data-pendencia-responsavel")); return; }
+      if(resp){ abrirPendenciaModal(+resp.getAttribute("data-pendencia-responsavel")); return; }
       const auto = ev.target.closest("[data-pendencia-acao-painel]");
       if(auto){
         const painel = auto.getAttribute("data-pendencia-acao-painel");
@@ -3105,30 +3111,89 @@ function alternarPendenciaManual(idx){
   if(lista[idx]){ lista[idx].feito = !lista[idx].feito; salvarPendenciasManuais(lista); }
   renderInicio();
 }
-function adicionarPendenciaManual(){
-  const texto = prompt("O que você quer lembrar a família? (ex: Levar protetor solar)");
-  const limpo = (texto || "").trim();
-  if(!limpo) return;
-  const respInput = prompt(`Quem fica responsável por isso? (opcional)\nNomes: ${VIAJANTES.join(", ")}\nDeixe em branco pra ser de todo mundo.`, "");
-  const responsavel = VIAJANTES.find(v => v.toLowerCase() === (respInput||"").trim().toLowerCase()) || "";
-  const lista = carregarPendenciasManuais();
-  lista.push({ texto: limpo, urgencia: "media", feito: false, responsavel });
-  salvarPendenciasManuais(lista);
-  renderInicio();
-}
 function removerPendenciaManual(idx){
   const lista = carregarPendenciasManuais();
   lista.splice(idx, 1);
   salvarPendenciasManuais(lista);
   renderInicio();
 }
-function atribuirResponsavelPendencia(idx){
-  const lista = carregarPendenciasManuais();
-  const atual = lista[idx]?.responsavel || "";
-  const nome = prompt(`Quem fica responsável por isso?\nNomes: ${VIAJANTES.join(", ")}\nDeixe em branco pra tirar a atribuição.`, atual);
-  if(nome === null) return;
-  const responsavel = VIAJANTES.find(v => v.toLowerCase() === nome.trim().toLowerCase()) || "";
-  if(lista[idx]){ lista[idx].responsavel = responsavel; salvarPendenciasManuais(lista); }
+
+/* ---- Modal de aviso: texto + menu suspenso de responsável (em vez de prompt de texto) ---- */
+let pendenciaModalIdx = null; // null = criando um aviso novo; número = só editando o responsável de um existente
+
+function setupPendenciaModal(){
+  if(document.getElementById("pendencia-modal")) return;
+  const modal = document.createElement("div");
+  modal.id = "pendencia-modal";
+  modal.style.cssText = "display:none;position:fixed;inset:0;background:rgba(10,7,4,.55);z-index:250;align-items:center;justify-content:center;padding:20px";
+  modal.innerHTML = `
+    <div style="background:var(--paper);color:var(--ink);border-radius:12px;padding:26px;max-width:380px;width:100%;box-shadow:0 30px 60px rgba(0,0,0,.5)">
+      <h3 id="pendencia-modal-titulo" style="font-family:'Fraunces',Georgia,serif;color:var(--terracotta-deep);margin:0 0 16px;font-size:1.2rem"></h3>
+      <div id="pendencia-modal-texto-wrap" style="margin-bottom:14px">
+        <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">O que lembrar?</label>
+        <input id="pendencia-modal-texto" type="text" placeholder="ex: Levar protetor solar" style="width:100%;padding:10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.9rem;background:var(--paper-2);color:var(--ink);font-family:inherit">
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Responsável</label>
+        <select id="pendencia-modal-responsavel" style="width:100%;padding:10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.9rem;background:var(--paper-2);color:var(--ink);font-family:inherit">
+          <option value="">Todo mundo / ninguém em especial</option>
+          ${VIAJANTES.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("")}
+        </select>
+      </div>
+      <p id="pendencia-modal-erro" style="color:#b33a3a;font-size:.82rem;margin:0 0 12px;min-height:1em"></p>
+      <div style="display:flex;gap:10px">
+        <button type="button" id="pendencia-modal-salvar" style="flex:1;padding:10px;background:var(--gold);color:#2b241c;border:none;border-radius:6px;font-weight:700;cursor:pointer">Salvar</button>
+        <button type="button" id="pendencia-modal-cancelar" style="flex:1;padding:10px;background:rgba(var(--hairline),.15);color:var(--cream-text);border:none;border-radius:6px;font-weight:700;cursor:pointer">Cancelar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById("pendencia-modal-cancelar").addEventListener("click", fecharPendenciaModal);
+  modal.addEventListener("click", ev => { if(ev.target === modal) fecharPendenciaModal(); });
+  document.getElementById("pendencia-modal-salvar").addEventListener("click", salvarPendenciaModal);
+  document.getElementById("pendencia-modal-texto").addEventListener("keyup", ev => { if(ev.key === "Enter") salvarPendenciaModal(); });
+}
+function fecharPendenciaModal(){
+  const modal = document.getElementById("pendencia-modal");
+  if(modal) modal.style.display = "none";
+  pendenciaModalIdx = null;
+}
+function abrirPendenciaModal(idx){
+  setupPendenciaModal();
+  pendenciaModalIdx = idx;
+  const textoWrap = document.getElementById("pendencia-modal-texto-wrap");
+  const titulo = document.getElementById("pendencia-modal-titulo");
+  const textoInput = document.getElementById("pendencia-modal-texto");
+  const respSelect = document.getElementById("pendencia-modal-responsavel");
+  document.getElementById("pendencia-modal-erro").textContent = "";
+  if(idx === null){
+    titulo.textContent = "Novo aviso no mural";
+    textoWrap.style.display = "";
+    textoInput.value = "";
+    respSelect.value = "";
+  } else {
+    const item = carregarPendenciasManuais()[idx];
+    titulo.textContent = "Quem fica responsável?";
+    textoWrap.style.display = "none";
+    respSelect.value = item?.responsavel || "";
+  }
+  document.getElementById("pendencia-modal").style.display = "flex";
+  if(idx === null) setTimeout(() => textoInput.focus(), 50);
+}
+function salvarPendenciaModal(){
+  const responsavel = document.getElementById("pendencia-modal-responsavel").value;
+  if(pendenciaModalIdx === null){
+    const texto = document.getElementById("pendencia-modal-texto").value.trim();
+    if(!texto){ document.getElementById("pendencia-modal-erro").textContent = "Escreva o que você quer lembrar a família."; return; }
+    const lista = carregarPendenciasManuais();
+    lista.push({ texto, urgencia: "media", feito: false, responsavel, autor: USUARIO || "" });
+    salvarPendenciasManuais(lista);
+  } else {
+    const lista = carregarPendenciasManuais();
+    if(lista[pendenciaModalIdx]) lista[pendenciaModalIdx].responsavel = responsavel;
+    salvarPendenciasManuais(lista);
+  }
+  fecharPendenciaModal();
   renderInicio();
 }
 // Total de pendências em aberto (manuais não concluídas + automáticas ativas) — usado nos indicadores/badge
