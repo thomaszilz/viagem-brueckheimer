@@ -505,6 +505,9 @@
   .home-cidade-nome { font-family:'Fraunces',Georgia,serif; color:var(--gold); font-weight:700; font-size:1.05rem; }
   .home-cidade-info { font-size:.8rem; color:var(--cream-text); opacity:.75; margin-top:3px; }
   .home-cidade-votos { font-size:.8rem; color:var(--cream-text); margin-top:8px; }
+  .home-cidade-status { font-size:.74rem; font-weight:700; margin-top:10px; padding:4px 10px; border-radius:999px; display:inline-block; background:rgba(var(--hairline),.08); color:var(--cream-text); opacity:.85; }
+  .home-cidade-status.status-aqui { background:rgba(47,107,99,.2); color:var(--teal); opacity:1; }
+  .home-cidade-status.status-feito { background:rgba(217,138,61,.15); color:var(--gold); opacity:1; }
   .home-progresso, .home-recentes { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:16px; padding:20px 22px; box-shadow:0 14px 30px -14px var(--shadow); }
   .home-progresso h3, .home-recentes h3 { font-family:'Fraunces',Georgia,serif; color:var(--cream-text); font-size:1rem; margin:0 0 12px; }
   .prog-row { display:grid; grid-template-columns:96px 1fr auto; align-items:center; gap:10px; margin-bottom:10px; font-size:.82rem; color:var(--cream-text); }
@@ -550,6 +553,36 @@
   .noite-btn:hover { background:var(--gold); color:#2b241c; border-color:var(--gold); }
   .viagem-hint { font-size:.78rem; color:var(--ink-soft); margin:10px 0 0; }
   .viagem-resumo { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:18px; padding-top:16px; border-top:1px solid rgba(var(--hairline),.2); font-size:.88rem; color:var(--cream-text); }
+  /* ===== CÂMBIO RÁPIDO ===== */
+  .cambio-card { background: var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:18px; padding:26px 28px; max-width:640px; box-shadow:0 16px 32px -14px var(--shadow); margin-top:24px; }
+  .cambio-card h3 { font-family:'Fraunces',Georgia,serif; color:var(--cream-text); font-size:1.1rem; margin:0 0 6px; }
+  .cambio-hint { font-size:.82rem; color:var(--ink-soft); margin:0 0 20px; max-width:52ch; }
+  .cambio-linha { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+  .cambio-linha label { flex-shrink:0; width:150px; font-size:.82rem; font-weight:700; color:var(--cream-text); }
+  .cambio-linha input { flex:1; padding:10px 12px; border:1px solid rgba(var(--hairline),.25); background:rgba(var(--hairline),.06); color:var(--cream-text); border-radius:6px; font-family:inherit; font-size:1rem; text-align:right; }
+  .cambio-atualizado { font-size:.75rem; color:var(--ink-soft); margin:14px 0 0; text-align:center; }
+  @media (max-width: 480px) {
+    .cambio-linha { flex-wrap:wrap; }
+    .cambio-linha label { width:100%; }
+    .cambio-linha input { width:100%; }
+  }
+  /* ===== ROTEIRO DIA A DIA ===== */
+  .roteiro-dia { background: var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:16px; padding:20px 22px; margin-bottom:16px; box-shadow:0 12px 26px -16px var(--shadow); }
+  .roteiro-dia-cabecalho { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(var(--hairline),.12); flex-wrap:wrap; }
+  .roteiro-dia-data { font-family:'Fraunces',Georgia,serif; font-weight:700; color:var(--ink); font-size:1.05rem; text-transform:capitalize; }
+  .roteiro-dia-cidade { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--terracotta-deep); background:rgba(226,100,59,.1); padding:4px 10px; border-radius:999px; }
+  .roteiro-itens { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .roteiro-item { display:flex; align-items:center; gap:8px; background:rgba(var(--hairline),.05); border-radius:8px; padding:9px 12px; font-size:.88rem; color:var(--ink); }
+  .roteiro-item span:first-child { flex:1; }
+  .roteiro-item-autor { font-size:.7rem; color:var(--ink-soft); flex-shrink:0; }
+  .roteiro-item-del { background:transparent; border:none; color:var(--ink-soft); opacity:.5; cursor:pointer; font-size:1.1rem; line-height:1; flex-shrink:0; }
+  .roteiro-item-del:hover { opacity:1; color:#b8362a; }
+  .roteiro-vazio { font-size:.85rem; color:var(--ink-soft); font-style:italic; margin:0; }
+  .roteiro-add { display:flex; flex-direction:column; gap:8px; }
+  .roteiro-add select { padding:9px 10px; border:1px solid rgba(var(--hairline),.2); border-radius:6px; background:var(--paper-2); color:var(--ink); font-family:inherit; font-size:.85rem; }
+  .roteiro-add-livre { display:flex; gap:8px; }
+  .roteiro-add-livre input { flex:1; padding:9px 10px; border:1px solid rgba(var(--hairline),.2); border-radius:6px; background:var(--paper-2); color:var(--ink); font-family:inherit; font-size:.85rem; }
+  .roteiro-add-livre button { width:36px; border:none; border-radius:6px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; font-size:1.1rem; }
   /* ===== MAPA (Leaflet real) ===== */
   .mapa-modo-toggle { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
   .mapa-modo-btn {
@@ -741,6 +774,7 @@
       <button class="navbtn active" data-panel="inicio">Início<span class="badge-pendencias"></span></button>
       <button class="navbtn" data-panel="viagem">Viagem</button>
       <button class="navbtn" data-panel="votacao">Votação</button>
+      <button class="navbtn" data-panel="roteiro">Roteiro</button>
       <button class="navbtn" data-panel="resultados">Resultados</button>
       <button class="navbtn" data-panel="mapa">Mapa</button>
       <button class="navbtn" data-panel="bagagem">Bagagem</button>
@@ -775,6 +809,7 @@
   <button type="button" class="drawer-navbtn active" data-panel="inicio">🏠 Início<span class="badge-pendencias"></span></button>
   <button type="button" class="drawer-navbtn" data-panel="viagem">🗓️ Viagem</button>
   <button type="button" class="drawer-navbtn" data-panel="votacao">🗳️ Votação</button>
+  <button type="button" class="drawer-navbtn" data-panel="roteiro">📅 Roteiro</button>
   <button type="button" class="drawer-navbtn" data-panel="resultados">🏆 Resultados</button>
   <button type="button" class="drawer-navbtn" data-panel="mapa">🗺️ Mapa</button>
   <button type="button" class="drawer-navbtn" data-panel="bagagem">🧳 Bagagem</button>
@@ -846,6 +881,16 @@
     </div>
   </section>
 
+  <section class="panel" id="panel-roteiro">
+    <div class="panel-head">
+      <button type="button" class="ajuda-btn" data-ajuda="roteiro" title="Como usar esta aba">?</button>
+      <span class="eyebrow">O plano, dia por dia</span>
+      <h2>Roteiro da viagem</h2>
+      <p>Monte a agenda de cada dia com os lugares votados (ou qualquer atividade extra). Sincroniza com todo mundo, igual o resto do app.</p>
+    </div>
+    <div id="roteiro-conteudo"></div>
+  </section>
+
   <section class="panel" id="panel-resultados">
     <div class="panel-head">
       <button type="button" class="ajuda-btn" data-ajuda="resultados" title="Como usar esta aba">?</button>
@@ -914,6 +959,8 @@ function irParaPainel(nomePainel){
   if(nomePainel === "mapa") renderMapaRota();
   if(nomePainel === "viagem") renderViagem();
   if(nomePainel === "inicio") renderInicio();
+  if(nomePainel === "votacao") renderVotacao();
+  if(nomePainel === "roteiro") renderRoteiro();
   if(nomePainel === "resultados") renderResultados();
   if(nomePainel === "bagagem") renderBagagem();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1702,7 +1749,7 @@ function adicionarLocalSheets(){
 
 /* Auto-sync a cada 5 segundos se conectado ao Sheets */
 setInterval(() => {
-  if(USE_SHEETS){ syncFromSheets(); syncViagem(); syncAvatares(); syncAcessos(); syncBagagemCompartilhada(); syncPendenciasManuais(); }
+  if(USE_SHEETS){ syncFromSheets(); syncViagem(); syncAvatares(); syncAcessos(); syncBagagemCompartilhada(); syncPendenciasManuais(); syncRoteiro(); }
 }, 5000);
 
 /* ================= LOGIN / CADASTRO ================= */
@@ -2187,6 +2234,204 @@ function climaDoPeriodo(cidade, dataInicio, dataFim){
   return { min: Math.round((a.min + b.min) / 2), max: Math.round((a.max + b.max) / 2) };
 }
 
+/* ===== CÂMBIO RÁPIDO (BRL ↔ ARS ↔ CLP) — cotação pública, sem chave de API ===== */
+const STORE_CAMBIO = "family_trip_cambio_cache";
+function carregarCambioCache(){ try { return JSON.parse(localStorage.getItem(STORE_CAMBIO)); } catch(e){ return null; } }
+function salvarCambioCache(c){ localStorage.setItem(STORE_CAMBIO, JSON.stringify(c)); }
+
+async function obterCambio(){
+  const cache = carregarCambioCache();
+  const agora = Date.now();
+  if(cache && (agora - cache.atualizado) < 12 * 3600 * 1000) return cache;
+  try {
+    const resp = await fetch("https://open.er-api.com/v6/latest/BRL");
+    const data = await resp.json();
+    if(data && data.result === "success" && data.rates && data.rates.ARS && data.rates.CLP){
+      const novo = { ARS: data.rates.ARS, CLP: data.rates.CLP, atualizado: agora };
+      salvarCambioCache(novo);
+      return novo;
+    }
+  } catch(e){ console.log("Câmbio error:", e); }
+  return cache; // sem internet ou API fora do ar — usa o último valor salvo, se tiver
+}
+
+function wireCambioInputs(rates){
+  const brlInput = document.getElementById("cambio-brl");
+  const arsInput = document.getElementById("cambio-ars");
+  const clpInput = document.getElementById("cambio-clp");
+  if(!brlInput || !arsInput || !clpInput || !rates) return;
+  let travado = false;
+  function converter(origem){
+    if(travado) return;
+    travado = true;
+    const brl = parseFloat(brlInput.value.replace(",", "."));
+    const ars = parseFloat(arsInput.value.replace(",", "."));
+    const clp = parseFloat(clpInput.value.replace(",", "."));
+    if(origem === "brl" && !isNaN(brl)){
+      arsInput.value = (brl * rates.ARS).toFixed(2);
+      clpInput.value = (brl * rates.CLP).toFixed(0);
+    } else if(origem === "ars" && !isNaN(ars)){
+      brlInput.value = (ars / rates.ARS).toFixed(2);
+      clpInput.value = (ars / rates.ARS * rates.CLP).toFixed(0);
+    } else if(origem === "clp" && !isNaN(clp)){
+      brlInput.value = (clp / rates.CLP).toFixed(2);
+      arsInput.value = (clp / rates.CLP * rates.ARS).toFixed(2);
+    }
+    travado = false;
+  }
+  brlInput.addEventListener("input", () => converter("brl"));
+  arsInput.addEventListener("input", () => converter("ars"));
+  clpInput.addEventListener("input", () => converter("clp"));
+}
+
+async function carregarCambioNaTela(){
+  const rates = await obterCambio();
+  const atualizadoEl = document.getElementById("cambio-atualizado");
+  if(!atualizadoEl) return; // usuário já saiu da aba Viagem antes da resposta chegar
+  if(rates){
+    const dataFmt = new Date(rates.atualizado).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+    atualizadoEl.textContent = `1 R$ ≈ ${rates.ARS.toFixed(2)} pesos arg. · ${rates.CLP.toFixed(1)} pesos chi. — atualizado ${dataFmt}`;
+    wireCambioInputs(rates);
+  } else {
+    atualizadoEl.textContent = "Não foi possível buscar a cotação agora. Verifique a internet e tente de novo.";
+  }
+}
+
+/* ================= ROTEIRO DIA A DIA ================= */
+const STORE_ROTEIRO = "family_trip_roteiro";
+function carregarRoteiro(){ try { return JSON.parse(localStorage.getItem(STORE_ROTEIRO) || "{}"); } catch(e){ return {}; } }
+function salvarRoteiroLocal(r){ localStorage.setItem(STORE_ROTEIRO, JSON.stringify(r)); }
+function salvarRoteiro(r){
+  salvarRoteiroLocal(r);
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=setConfig", {
+      method: "POST", redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ roteiro: r })
+    }).catch(err => console.log("Roteiro sync error:", err));
+  }
+}
+function syncRoteiro(){
+  if(!USE_SHEETS || !SHEETS_API_URL) return;
+  fetch(SHEETS_API_URL + "?action=getConfig")
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.success && data.roteiro){
+        if(JSON.stringify(carregarRoteiro()) !== JSON.stringify(data.roteiro)){
+          salvarRoteiroLocal(data.roteiro);
+          renderRoteiro();
+        }
+      }
+    })
+    .catch(err => console.log("Roteiro sync error:", err));
+}
+// Expande os trechos (cidade + noites) em uma lista de dias individuais, um por data do calendário
+function diasDaViagem(){
+  const trechos = viagemTrechos();
+  const dias = [];
+  trechos.forEach(t => {
+    if(!t.checkin) return;
+    for(let i = 0; i < t.noites; i++){
+      dias.push({ data: addDias(t.checkin, i), cidade: t.nome });
+    }
+  });
+  return dias;
+}
+function isoDeData(date){
+  const y = date.getFullYear(), m = String(date.getMonth()+1).padStart(2,"0"), d = String(date.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+}
+
+function renderRoteiro(){
+  const cont = document.getElementById("roteiro-conteudo");
+  if(!cont) return;
+  const dias = diasDaViagem();
+  const roteiro = carregarRoteiro();
+  const locais = carregarLocais();
+
+  if(!dias.length){
+    cont.innerHTML = `<p class="home-vazio">Defina as datas e noites de cada cidade na aba <strong>Viagem</strong> pra começar a montar o roteiro.</p>`;
+    return;
+  }
+
+  cont.innerHTML = dias.map(d => {
+    const iso = isoDeData(d.data);
+    const itens = roteiro[iso] || [];
+    const locaisCidade = locais.filter(l => l.cidade === d.cidade).slice().sort((a,b) => (b.votos||[]).length - (a.votos||[]).length);
+    return `
+      <div class="roteiro-dia">
+        <div class="roteiro-dia-cabecalho">
+          <div class="roteiro-dia-data">${fmtData(d.data)}</div>
+          <div class="roteiro-dia-cidade">${esc(d.cidade)}</div>
+        </div>
+        <div class="roteiro-itens">
+          ${itens.length ? itens.map((it,i) => `
+            <div class="roteiro-item">
+              <span>${esc(it.texto)}</span>
+              ${it.autor ? `<span class="roteiro-item-autor">${esc(it.autor)}</span>` : ""}
+              <button type="button" class="roteiro-item-del" data-roteiro-del="${iso}|${i}" title="Remover">×</button>
+            </div>
+          `).join("") : `<p class="roteiro-vazio">Nada planejado ainda pra esse dia.</p>`}
+        </div>
+        <div class="roteiro-add">
+          ${locaisCidade.length ? `
+            <select data-roteiro-select="${iso}">
+              <option value="">+ Adicionar lugar votado…</option>
+              ${locaisCidade.map(l => `<option value="${esc(l.nome)}">${esc(l.nome)} (${(l.votos||[]).length} interesse${(l.votos||[]).length===1?"":"s"})</option>`).join("")}
+            </select>
+          ` : ""}
+          <div class="roteiro-add-livre">
+            <input type="text" placeholder="ou escreva uma atividade…" data-roteiro-input="${iso}">
+            <button type="button" data-roteiro-add="${iso}">+</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  if(!cont._delegado){
+    cont._delegado = true;
+    cont.addEventListener("click", ev => {
+      const del = ev.target.closest("[data-roteiro-del]");
+      if(del){
+        const [iso, idx] = del.getAttribute("data-roteiro-del").split("|");
+        const r = carregarRoteiro();
+        if(r[iso]){ r[iso].splice(+idx, 1); if(!r[iso].length) delete r[iso]; salvarRoteiro(r); renderRoteiro(); }
+        return;
+      }
+      const addBtn = ev.target.closest("[data-roteiro-add]");
+      if(addBtn){
+        const iso = addBtn.getAttribute("data-roteiro-add");
+        const input = cont.querySelector(`[data-roteiro-input="${iso}"]`);
+        const texto = (input.value || "").trim();
+        if(!texto) return;
+        const r = carregarRoteiro();
+        if(!r[iso]) r[iso] = [];
+        r[iso].push({ texto, autor: USUARIO || "" });
+        salvarRoteiro(r);
+        renderRoteiro();
+      }
+    });
+    cont.addEventListener("change", ev => {
+      const select = ev.target.closest("[data-roteiro-select]");
+      if(!select || !select.value) return;
+      const iso = select.getAttribute("data-roteiro-select");
+      const texto = select.value;
+      const r = carregarRoteiro();
+      if(!r[iso]) r[iso] = [];
+      r[iso].push({ texto, autor: USUARIO || "" });
+      salvarRoteiro(r);
+      renderRoteiro();
+    });
+    cont.addEventListener("keydown", ev => {
+      if(ev.key === "Enter" && ev.target.matches("[data-roteiro-input]")){
+        const iso = ev.target.getAttribute("data-roteiro-input");
+        cont.querySelector(`[data-roteiro-add="${iso}"]`).click();
+      }
+    });
+  }
+}
+
 function renderViagem(){
   const cont = document.getElementById("viagem-conteudo");
   if(!cont) return;
@@ -2235,7 +2480,26 @@ function renderViagem(){
         <span>Passagens compradas — datas confirmadas</span>
       </label>
     </div>
+
+    <div class="cambio-card">
+      <h3>💱 Câmbio rápido</h3>
+      <p class="cambio-hint">Digite em qualquer campo pra converter na hora. Cotação do dia, só de referência — confira antes de trocar dinheiro de verdade.</p>
+      <div class="cambio-linha">
+        <label for="cambio-brl">Reais (R$)</label>
+        <input type="number" id="cambio-brl" placeholder="0" inputmode="decimal" step="any">
+      </div>
+      <div class="cambio-linha">
+        <label for="cambio-ars">Pesos argentinos</label>
+        <input type="number" id="cambio-ars" placeholder="0" inputmode="decimal" step="any">
+      </div>
+      <div class="cambio-linha">
+        <label for="cambio-clp">Pesos chilenos</label>
+        <input type="number" id="cambio-clp" placeholder="0" inputmode="decimal" step="any">
+      </div>
+      <p class="cambio-atualizado" id="cambio-atualizado">Buscando cotação…</p>
+    </div>
   `;
+  carregarCambioNaTela();
 
   if(!cont._delegado){
     cont._delegado = true;
@@ -2635,10 +2899,23 @@ function renderInicio(){
       <div class="home-cidades">
         ${trechos.map(t=>{
           const c = porCidade.find(x=>x.cidade===t.nome) || {total:0};
+          let statusCidade = "";
+          if(t.checkin && t.checkout){
+            if(hoje < t.checkin){
+              const faltam = Math.round((t.checkin - hoje) / 86400000);
+              statusCidade = `<div class="home-cidade-status">📅 faltam ${faltam} ${faltam===1?"dia":"dias"}</div>`;
+            } else if(hoje >= t.checkin && hoje < t.checkout){
+              const diaAtual = Math.round((hoje - t.checkin) / 86400000) + 1;
+              statusCidade = `<div class="home-cidade-status status-aqui">📍 vocês estão aqui · dia ${diaAtual}/${t.noites}</div>`;
+            } else {
+              statusCidade = `<div class="home-cidade-status status-feito">✓ concluído</div>`;
+            }
+          }
           return `<div class="home-cidade">
             <div class="home-cidade-nome">${esc(t.nome)}</div>
             <div class="home-cidade-info">${t.noites} ${t.noites===1?"noite":"noites"} · ${fmtData(t.checkin)}</div>
             <div class="home-cidade-votos">${c.total} ${c.total===1?"lugar sugerido":"lugares sugeridos"}</div>
+            ${statusCidade}
           </div>`;
         }).join("")}
       </div>
@@ -3345,6 +3622,10 @@ const AJUDA_TEXTOS = {
     titulo: "Como usar a Votação",
     texto: "Escolha uma cidade nas abas do topo, depois sugira um lugar preenchendo nome, bairro e categoria. Todo mundo pode marcar \"Tenho interesse\" ou \"Sem interesse\" em cada lugar sugerido — quando todos da família marcam interesse, o lugar ganha um selo de consenso e vira prioridade no roteiro."
   },
+  roteiro: {
+    titulo: "Como usar o Roteiro",
+    texto: "Um card pra cada dia da viagem, já na cidade certa (calculado a partir das datas da aba Viagem). Em cada dia, escolha no menu um lugar que a família já votou (aparece o número de interessados) ou escreva uma atividade livre — tipo \"almoço em tal restaurante\" — que não estava na votação. Toque no × pra remover um item."
+  },
   resultados: {
     titulo: "Como usar os Resultados",
     texto: "Aqui aparece o placar de votos de cada cidade, com os lugares mais votados no topo. É só pra consulta — pra votar ou sugerir um lugar novo, use a aba Votação."
@@ -3415,11 +3696,13 @@ renderVotacao();
 renderResultados();
 renderMapaRota();
 renderBagagem();
+renderRoteiro();
 syncViagem();
 syncAvatares();
 syncAcessos();
 syncBagagemCompartilhada();
 syncPendenciasManuais();
+syncRoteiro();
 if(!USUARIO) setTimeout(abrirLogin, 300);
 
 /* PWA: só registra quando hospedado (https ou localhost) — não funciona abrindo o arquivo direto do computador */
