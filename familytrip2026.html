@@ -1308,7 +1308,7 @@ function renderVotacao(){
           <div class="vote-meter"><i style="width:${pct}%;background:${corBarra}"></i></div>
           <div class="vote-count">${local.votos.length}/${VIAJANTES.length} com interesse</div>
         </div>
-        ${semInteresse ? `<div class="sem-interesse-line">✗ ${semInteresse} sem interesse: ${local.naoInteresse.map(v => `${emojiDe(v)} ${esc(v)}`).join(", ")}</div>` : ""}
+        ${semInteresse ? `<div class="sem-interesse-line">✗ ${semInteresse} sem interesse: ${local.naoInteresse.map(v => `${esc(v)}`).join(", ")}</div>` : ""}
         ${isConsenso ? '<div class="consenso-banner">✓ Consenso total</div>' : ""}
         ${USUARIO
           ? (() => {
@@ -1597,8 +1597,8 @@ function avatarUrlDe(nome){
 // HTML de avatar: usa a caricatura se existir, senão cai pro emoji
 function avatarHtmlDe(nome, classe){
   const url = avatarUrlDe(nome);
-  if(url) return `<img src="${esc(url)}" alt="${esc(nome)}" class="${classe}-img" data-avatar-fallback-classe="${classe}" data-avatar-fallback-emoji="${emojiDe(nome)}" onerror="avatarImgErro(this)">`;
-  return `<span class="${classe}-emoji">${emojiDe(nome)}</span>`;
+  if(url) return `<img src="${esc(url)}" alt="${esc(nome)}" class="${classe}-img" onerror="this.parentElement.innerHTML=''">`;
+  return "";
 }
 function avatarImgErro(img){
   const span = document.createElement("span");
@@ -2714,7 +2714,7 @@ function renderListaBagagem(tipo, titulo, dica){
                     <input type="checkbox" data-bag-tipo="${tipo}" data-bag-cat="${esc(cat)}" data-bag-idx="${idx}" ${it.feito ? "checked" : ""}>
                     <span>${esc(it.item)}</span>
                   </label>
-                  ${it.marcadoPor ? `<span class="bagagem-marcador" title="Marcado por ${esc(it.marcadoPor)}">${emojiDe(it.marcadoPor)}</span>` : ""}
+                  ${it.marcadoPor ? `<span class="bagagem-marcador" title="Marcado por ${esc(it.marcadoPor)}">${esc(it.marcadoPor)}</span>` : ""}
                   <button type="button" class="bagagem-del" data-bag-tipo="${tipo}" data-bag-del-cat="${esc(cat)}" data-bag-del-idx="${idx}" title="Remover">×</button>
                 </li>
               `).join("")}
@@ -2801,11 +2801,11 @@ function calcularSelos(){
   VIAJANTES.forEach(pessoa => {
     const avaliados = locais.filter(l => (l.votos||[]).includes(pessoa) || (l.naoInteresse||[]).includes(pessoa));
     if(locais.length > 0 && avaliados.length === locais.length){
-      selos.push({ emoji: "🗳️", titulo: "Voto completo", desc: `${emojiDe(pessoa)} ${pessoa} avaliou todos os lugares sugeridos` });
+      selos.push({ emoji: "🗳️", titulo: "Voto completo", desc: `${pessoa} avaliou todos os lugares sugeridos` });
     }
     const cidadesVotadas = new Set(avaliados.map(l => l.cidade));
     if(CIDADES.length > 0 && cidadesVotadas.size === CIDADES.length){
-      selos.push({ emoji: "🧭", titulo: "Explorador(a)", desc: `${emojiDe(pessoa)} ${pessoa} votou em lugares das ${CIDADES.length} cidades` });
+      selos.push({ emoji: "🧭", titulo: "Explorador(a)", desc: `${pessoa} votou em lugares das ${CIDADES.length} cidades` });
     }
   });
 
