@@ -1761,13 +1761,6 @@ function setupLogin(){
         </select>
       </div>
       <div style="margin-bottom:14px">
-        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Sua caricatura (opcional)</label>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div id="login-avatar-preview" class="login-avatar-preview"></div>
-          <input id="login-avatar-url" type="text" placeholder="Cole o link da imagem" oninput="onAvatarUrlInput()" style="flex:1;padding:9px 10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.85rem;background:var(--paper-2);color:var(--ink)">
-        </div>
-      </div>
-      <div style="margin-bottom:14px">
         <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Senha</label>
         <input id="login-senha" type="password" placeholder="Sua senha" onkeyup="if(event.key==='Enter')submeterLogin()" style="width:100%;padding:10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.95rem;background:var(--paper-2);color:var(--ink)">
       </div>
@@ -1783,7 +1776,6 @@ function setupLogin(){
     </div>
   `;
   document.body.appendChild(modal);
-  renderAvatarPreview();
 }
 
 function abrirLogin(){
@@ -1817,15 +1809,6 @@ function modoEntrar(){
 
 function onLoginNomeChange(){
   modoEntrar();
-  const nome = document.getElementById("login-nome").value;
-  avatarUrlEmEdicao = nome ? avatarUrlDe(nome) : "";
-  document.getElementById("login-avatar-url").value = avatarUrlEmEdicao;
-  renderAvatarPreview();
-}
-
-function onAvatarUrlInput(){
-  avatarUrlEmEdicao = document.getElementById("login-avatar-url").value.trim();
-  renderAvatarPreview();
 }
 
 function renderAvatarPreview(){
@@ -1853,8 +1836,6 @@ function toggleLoginModo(){
 function logar(nome){
   USUARIO = nome;
   localStorage.setItem("family_trip_usuario", nome);
-  if(emojiEmEdicao) salvarEmojiEscolha(nome, emojiEmEdicao);
-  salvarAvatarEscolha(nome, avatarUrlEmEdicao);
   registrarAcesso(nome);
   syncAvatares(); // puxa avatares de todos da Sheets (se conectado)
   fecharLogin();
