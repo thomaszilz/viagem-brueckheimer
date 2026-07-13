@@ -1547,7 +1547,7 @@ function adicionarLocalSheets(){
 
 /* Auto-sync a cada 5 segundos se conectado ao Sheets */
 setInterval(() => {
-  if(USE_SHEETS){ syncFromSheets(); syncViagem(); syncEmojis(); syncAvatares(); syncAcessos(); syncBagagemCompartilhada(); syncPendenciasManuais(); }
+  if(USE_SHEETS){ syncFromSheets(); syncViagem(); syncAvatares(); syncAcessos(); syncBagagemCompartilhada(); syncPendenciasManuais(); }
 }, 5000);
 
 /* ================= LOGIN / CADASTRO ================= */
@@ -2821,14 +2821,14 @@ function calcularSelos(){
     locais.forEach(l => (l.votos||[]).forEach(p => { if(interesse[p] !== undefined) interesse[p]++; }));
     const topInteresse = top1(interesse);
     if(topInteresse){
-      selos.push({ emoji: "❤️", titulo: "Mais entusiasmado(a)", desc: `${emojiDe(topInteresse[0])} ${topInteresse[0]} tem interesse em mais lugares (${topInteresse[1]})` });
+      selos.push({ emoji: "❤️", titulo: "Mais entusiasmado(a)", desc: `${topInteresse[0]} tem interesse em mais lugares (${topInteresse[1]})` });
     }
 
     const seletivo = contagemZerada();
     locais.forEach(l => (l.naoInteresse||[]).forEach(p => { if(seletivo[p] !== undefined) seletivo[p]++; }));
     const topSeletivo = top1(seletivo);
     if(topSeletivo){
-      selos.push({ emoji: "🙅", titulo: "Mais seletivo(a)", desc: `${emojiDe(topSeletivo[0])} ${topSeletivo[0]} marcou mais "sem interesse" (${topSeletivo[1]})` });
+      selos.push({ emoji: "🙅", titulo: "Mais seletivo(a)", desc: `${topSeletivo[0]} marcou mais "sem interesse" (${topSeletivo[1]})` });
     }
 
     const votouTotal = contagemZerada();
@@ -2838,7 +2838,7 @@ function calcularSelos(){
     });
     const topVotou = top1(votouTotal);
     if(topVotou){
-      selos.push({ emoji: "📊", titulo: "Quem mais votou", desc: `${emojiDe(topVotou[0])} ${topVotou[0]} avaliou ${topVotou[1]} ${topVotou[1]===1?"lugar":"lugares"} no total` });
+      selos.push({ emoji: "📊", titulo: "Quem mais votou", desc: `${topVotou[0]} avaliou ${topVotou[1]} ${topVotou[1]===1?"lugar":"lugares"} no total` });
     }
 
     // Sugestor(a) oficial / Faro apurado — precisam do campo sugeridoPor (locais criados antes disso não contam)
@@ -2848,14 +2848,14 @@ function calcularSelos(){
       comAutor.forEach(l => { if(sugestoes[l.sugeridoPor] !== undefined) sugestoes[l.sugeridoPor]++; });
       const topSugestor = top1(sugestoes);
       if(topSugestor){
-        selos.push({ emoji: "💡", titulo: "Sugestor(a) oficial", desc: `${emojiDe(topSugestor[0])} ${topSugestor[0]} sugeriu mais lugares (${topSugestor[1]})` });
+        selos.push({ emoji: "💡", titulo: "Sugestor(a) oficial", desc: `${topSugestor[0]} sugeriu mais lugares (${topSugestor[1]})` });
       }
 
       const votosPorAutor = contagemZerada();
       comAutor.forEach(l => { if(votosPorAutor[l.sugeridoPor] !== undefined) votosPorAutor[l.sugeridoPor] += (l.votos||[]).length; });
       const topFaro = top1(votosPorAutor);
       if(topFaro){
-        selos.push({ emoji: "🎯", titulo: "Faro apurado", desc: `Os lugares sugeridos por ${emojiDe(topFaro[0])} ${topFaro[0]} somam mais votos de interesse (${topFaro[1]})` });
+        selos.push({ emoji: "🎯", titulo: "Faro apurado", desc: `Os lugares sugeridos por ${topFaro[0]} somam mais votos de interesse (${topFaro[1]})` });
       }
     }
 
@@ -2873,7 +2873,7 @@ function calcularSelos(){
   const acessos = carregarAcessos();
   const topAcessos = top1(acessos);
   if(topAcessos){
-    selos.push({ emoji: "🔑", titulo: "Mais presente", desc: `${emojiDe(topAcessos[0])} ${topAcessos[0]} é quem mais entrou no app (${topAcessos[1]}x)` });
+    selos.push({ emoji: "🔑", titulo: "Mais presente", desc: `${topAcessos[0]} é quem mais entrou no app (${topAcessos[1]}x)` });
   }
 
   const consenso = locais.filter(l => (l.votos||[]).length === VIAJANTES.length && VIAJANTES.length > 0).length;
@@ -3065,7 +3065,6 @@ renderResultados();
 renderMapaRota();
 renderBagagem();
 syncViagem();
-syncEmojis();
 syncAvatares();
 syncAcessos();
 syncBagagemCompartilhada();
