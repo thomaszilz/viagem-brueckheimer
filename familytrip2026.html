@@ -232,8 +232,18 @@
   .hamburger-btn {
     display: none; flex-shrink: 0; width: 40px; height: 40px; align-items: center; justify-content: center;
     border-radius: 10px; border: 1px solid rgba(var(--hairline),.2); background: var(--paper-2);
-    color: var(--cream-text); font-size: 1.15rem; cursor: pointer;
+    color: var(--cream-text); font-size: 1.15rem; cursor: pointer; position: relative;
   }
+  /* Indicador de pendências em aberto — aparece no ☰ e nos itens "Início" */
+  .badge-pendencias {
+    display: none; align-items: center; justify-content: center;
+    min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+    background: var(--river-red); color: #fff; font-size: .62rem; font-weight: 700;
+    line-height: 1; vertical-align: middle;
+  }
+  .hamburger-btn .badge-pendencias { position: absolute; top: -4px; right: -4px; margin-left: 0; }
+  .navbtn .badge-pendencias, .drawer-navbtn .badge-pendencias { margin-left: 6px; }
+  .drawer-navbtn .badge-pendencias { margin-left: auto; }
   .mobile-drawer-backdrop {
     position: fixed; inset: 0; background: rgba(10,7,4,.5); z-index: 150;
     opacity: 0; pointer-events: none; transition: opacity .2s ease;
@@ -671,6 +681,27 @@
   .post-it:hover .post-it-del { opacity:1; }
   .post-it-del:hover { color:#b8362a; }
 
+  /* Post-it automático (gerado pelo sistema) — visual levemente diferente do manual, pra ficar claro que não é pra "riscar" */
+  .post-it-auto { opacity: .92; }
+  .post-it-auto-tag {
+    display: block; margin-top: 8px; font-family: 'Work Sans', sans-serif;
+    text-transform: uppercase; letter-spacing: .04em; font-size: .58rem; font-weight: 700;
+    color: rgba(43,36,28,.45);
+  }
+  .post-it-clicavel { cursor: pointer; }
+  .post-it-clicavel:hover { text-decoration: underline; }
+
+  /* Responsável atribuído a um lembrete manual */
+  .post-it-responsavel {
+    display: flex; align-items: center; gap: 5px; margin-top: 10px;
+    background: rgba(43,36,28,.08); border: none; border-radius: 999px;
+    padding: 3px 9px 3px 3px; font-family: 'Work Sans', sans-serif; font-size: .68rem; font-weight: 700;
+    color: #2b241c; cursor: pointer; max-width: 100%;
+  }
+  .post-it-responsavel:hover { background: rgba(43,36,28,.16); }
+  .post-it-resp-img { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .post-it-resp-emoji { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:rgba(255,255,255,.5); font-size:.6rem; flex-shrink:0; }
+
   @media (max-width: 620px) {
     .mural-quadro { gap:14px; padding:20px 14px 26px; justify-content:center; }
     .post-it { width:130px; min-height:96px; padding:18px 10px 10px; font-size:.82rem; }
@@ -684,9 +715,9 @@
 
 <div class="navbar">
   <div class="navbar-row">
-    <button class="hamburger-btn" id="hamburger-btn" type="button" aria-label="Abrir menu">☰</button>
+    <button class="hamburger-btn" id="hamburger-btn" type="button" aria-label="Abrir menu">☰<span class="badge-pendencias"></span></button>
     <div class="navbar-inner" id="navbar">
-      <button class="navbtn active" data-panel="inicio">Início</button>
+      <button class="navbtn active" data-panel="inicio">Início<span class="badge-pendencias"></span></button>
       <button class="navbtn" data-panel="viagem">Viagem</button>
       <button class="navbtn" data-panel="votacao">Votação</button>
       <button class="navbtn" data-panel="resultados">Resultados</button>
@@ -720,7 +751,7 @@
     <span>✈ Menu</span>
     <button type="button" id="drawer-close" aria-label="Fechar menu">×</button>
   </div>
-  <button type="button" class="drawer-navbtn active" data-panel="inicio">🏠 Início</button>
+  <button type="button" class="drawer-navbtn active" data-panel="inicio">🏠 Início<span class="badge-pendencias"></span></button>
   <button type="button" class="drawer-navbtn" data-panel="viagem">🗓️ Viagem</button>
   <button type="button" class="drawer-navbtn" data-panel="votacao">🗳️ Votação</button>
   <button type="button" class="drawer-navbtn" data-panel="resultados">🏆 Resultados</button>
@@ -2614,13 +2645,17 @@ function renderInicio(){
             <span class="post-it-flag">${p.feito ? "✅" : flagDaUrgencia(p.urgencia)}</span>
             <button type="button" class="post-it-del" data-pendencia-remover="${i}" title="Remover">×</button>
             <p>${esc(p.texto)}</p>
+            <button type="button" class="post-it-responsavel" data-pendencia-responsavel="${i}" title="${p.responsavel ? "Responsável: " + esc(p.responsavel) : "Atribuir responsável"}">
+              ${p.responsavel ? avatarHtmlDe(p.responsavel, "post-it-resp") + " " + esc(p.responsavel) : "+ responsável"}
+            </button>
           </div>
         `).join("")}
         ${pendencias.map((p,i) => `
-          <div class="post-it post-it-${((i + pendenciasManuais.length) % 4) + 1}">
+          <div class="post-it post-it-${((i + pendenciasManuais.length) % 4) + 1} post-it-auto ${p.acao ? "post-it-clicavel" : ""}" ${p.acao ? `data-pendencia-acao-painel="${esc(p.acao.painel)}" data-pendencia-acao-cidade="${esc(p.acao.cidade || "")}" title="Clique para resolver"` : ""}>
             <span class="post-it-pin"></span>
             <span class="post-it-flag">${flagDaUrgencia(p.urgencia)}</span>
             <p>${esc(p.texto)}</p>
+            <span class="post-it-auto-tag">automático${p.acao ? " · toque para resolver" : ""}</span>
           </div>
         `).join("")}
         ${(!pendencias.length && pendenciasManuais.every(p=>p.feito)) ? `
@@ -2651,6 +2686,16 @@ function renderInicio(){
       if(ev.target.closest("[data-mural-add]")){ adicionarPendenciaManual(); return; }
       const del = ev.target.closest("[data-pendencia-remover]");
       if(del){ removerPendenciaManual(+del.getAttribute("data-pendencia-remover")); return; }
+      const resp = ev.target.closest("[data-pendencia-responsavel]");
+      if(resp){ atribuirResponsavelPendencia(+resp.getAttribute("data-pendencia-responsavel")); return; }
+      const auto = ev.target.closest("[data-pendencia-acao-painel]");
+      if(auto){
+        const painel = auto.getAttribute("data-pendencia-acao-painel");
+        const cidade = auto.getAttribute("data-pendencia-acao-cidade");
+        irParaPainel(painel);
+        if(painel === "votacao" && cidade) mudarCidade(cidade);
+        return;
+      }
       const post = ev.target.closest("[data-pendencia-manual]");
       if(post) alternarPendenciaManual(+post.getAttribute("data-pendencia-manual"));
     });
@@ -2658,6 +2703,7 @@ function renderInicio(){
 
   renderHeroStats();
   atualizarContagemViva();
+  atualizarBadgesPendencias();
 }
 
 /* ---- Contagem regressiva ao vivo (dias/horas/min/seg), atualiza a cada segundo ---- */
@@ -3059,8 +3105,10 @@ function adicionarPendenciaManual(){
   const texto = prompt("O que você quer lembrar a família? (ex: Levar protetor solar)");
   const limpo = (texto || "").trim();
   if(!limpo) return;
+  const respInput = prompt(`Quem fica responsável por isso? (opcional)\nNomes: ${VIAJANTES.join(", ")}\nDeixe em branco pra ser de todo mundo.`, "");
+  const responsavel = VIAJANTES.find(v => v.toLowerCase() === (respInput||"").trim().toLowerCase()) || "";
   const lista = carregarPendenciasManuais();
-  lista.push({ texto: limpo, urgencia: "media", feito: false });
+  lista.push({ texto: limpo, urgencia: "media", feito: false, responsavel });
   salvarPendenciasManuais(lista);
   renderInicio();
 }
@@ -3070,18 +3118,39 @@ function removerPendenciaManual(idx){
   salvarPendenciasManuais(lista);
   renderInicio();
 }
+function atribuirResponsavelPendencia(idx){
+  const lista = carregarPendenciasManuais();
+  const atual = lista[idx]?.responsavel || "";
+  const nome = prompt(`Quem fica responsável por isso?\nNomes: ${VIAJANTES.join(", ")}\nDeixe em branco pra tirar a atribuição.`, atual);
+  if(nome === null) return;
+  const responsavel = VIAJANTES.find(v => v.toLowerCase() === nome.trim().toLowerCase()) || "";
+  if(lista[idx]){ lista[idx].responsavel = responsavel; salvarPendenciasManuais(lista); }
+  renderInicio();
+}
+// Total de pendências em aberto (manuais não concluídas + automáticas ativas) — usado nos indicadores/badge
+function contarPendenciasAbertas(){
+  return carregarPendenciasManuais().filter(p => !p.feito).length + calcularPendencias().length;
+}
+function atualizarBadgesPendencias(){
+  const total = contarPendenciasAbertas();
+  document.querySelectorAll(".badge-pendencias").forEach(b => {
+    if(total > 0){ b.textContent = String(total); b.style.display = "inline-flex"; }
+    else { b.style.display = "none"; }
+  });
+}
 
+// Cada pendência automática pode carregar uma "acao" (painel + cidade opcional) — clicar nela navega direto pra resolver
 function calcularPendencias(){
   const v = carregarViagem();
   const locais = carregarLocais();
   const pendencias = [];
 
   if(!v.confirmado){
-    pendencias.push({ texto: "Comprar as passagens! As datas ainda estão provisórias.", urgencia: "alta" });
+    pendencias.push({ texto: "Comprar as passagens! As datas ainda estão provisórias.", urgencia: "alta", acao: { painel: "viagem" } });
   }
 
   if(locais.length === 0){
-    pendencias.push({ texto: "Nenhum lugar sugerido ainda — bora começar a votação!", urgencia: "alta" });
+    pendencias.push({ texto: "Nenhum lugar sugerido ainda — bora começar a votação!", urgencia: "alta", acao: { painel: "votacao" } });
   } else {
     CIDADES.forEach(cid => {
       const ls = locais.filter(l => l.cidade === cid);
@@ -3090,14 +3159,14 @@ function calcularPendencias(){
       ls.forEach(l => { (l.votos||[]).forEach(p=>votantes.add(p)); (l.naoInteresse||[]).forEach(p=>votantes.add(p)); });
       const faltam = VIAJANTES.length - votantes.size;
       if(faltam > 0){
-        pendencias.push({ texto: `${cid}: faltam ${faltam} ${faltam===1?"pessoa":"pessoas"} votar${faltam===1?"":"em"}`, urgencia: faltam >= 3 ? "alta" : "media" });
+        pendencias.push({ texto: `${cid}: faltam ${faltam} ${faltam===1?"pessoa":"pessoas"} votar${faltam===1?"":"em"}`, urgencia: faltam >= 3 ? "alta" : "media", acao: { painel: "votacao", cidade: cid } });
       }
     });
   }
 
-  const aConfirmar = locais.filter(l => l.bairro === BAIRRO_A_CONFIRMAR).length;
-  if(aConfirmar > 0){
-    pendencias.push({ texto: `${aConfirmar} ${aConfirmar===1?"lugar está":"lugares estão"} com bairro "a confirmar"`, urgencia: "baixa" });
+  const aConfirmar = locais.filter(l => l.bairro === BAIRRO_A_CONFIRMAR);
+  if(aConfirmar.length > 0){
+    pendencias.push({ texto: `${aConfirmar.length} ${aConfirmar.length===1?"lugar está":"lugares estão"} com bairro "a confirmar"`, urgencia: "baixa", acao: { painel: "votacao", cidade: aConfirmar[0].cidade } });
   }
 
   const peso = { alta: 0, media: 1, baixa: 2 };
