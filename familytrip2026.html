@@ -1,0 +1,3182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brueckheimer 2026 — Argentina &amp; Chile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,420;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,500&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Work+Sans:wght@400;500;600;700;800&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e2643b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Brueckheimer 2026">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23e2643b'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E">
+<style>
+  :root { color-scheme: light; }
+  :root {
+    /* Paleta "verão europeu": branco quente, azul empoeirado, terracota, areia */
+    --desk: #fdf6ec;
+    --desk-2: #f7e9d6;
+    --grain: rgba(var(--hairline),.025);
+    --paper: #ffffff;
+    --paper-2: #fbf2e4;
+    --ink: #2b241c;
+    --ink-soft: #7c6f5c;
+    --gold: #d98a3d;
+    --gold-deep: #a9691f;
+    --terracotta: #e2643b;
+    --terracotta-deep: #b84b29;
+    --teal: #3c7a73;
+    --teal-deep: #24504a;
+    --river-red: #c24545;
+    --boca-blue: #4e6e8e;
+    --cream-text: #2b241c;
+    --shadow: rgba(var(--hairline),.16);
+    --tape: rgba(226,100,59,.5);
+    --hairline: 43,36,28; /* RGB (sem alpha) usado em rgba(var(--hairline),X) — se adapta ao tema */
+  }
+  /* ---- Modo escuro: mesma paleta "verão europeu", em noite mediterrânea ---- */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --hairline: 245,234,217;
+    --desk: #1c1712;
+    --desk-2: #262019;
+    --grain: rgba(255,255,255,.02);
+    --paper: #2a231b;
+    --paper-2: #332b21;
+    --ink: #f5ead9;
+    --ink-soft: #c9b89e;
+    --gold: #eabb63;
+    --gold-deep: #c99433;
+    --terracotta: #f0714a;
+    --terracotta-deep: #d1552f;
+    --teal: #5aa39b;
+    --teal-deep: #397a72;
+    --river-red: #e0827e;
+    --boca-blue: #8fb4d6;
+    --cream-text: #f5ead9;
+    --shadow: rgba(0,0,0,.5);
+    --tape: rgba(240,113,74,.5);
+  }
+  :root[data-theme="dark"] .navbar { background: rgba(28,23,18,.86); }
+  :root[data-theme="dark"] .mapa-leaflet .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.8); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(ellipse 900px 500px at 12% -8%, rgba(78,110,142,.10), transparent 60%),
+      radial-gradient(ellipse 700px 460px at 100% 10%, rgba(226,100,59,.09), transparent 55%),
+      linear-gradient(180deg, var(--desk) 0%, var(--desk-2) 100%);
+    background-attachment: fixed;
+    color: var(--cream-text);
+    transition: background .3s ease, color .3s ease;
+    font-family: 'Work Sans', -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ---------- Type ---------- */
+  h1, h2, h3, .display {
+    font-family: 'Fraunces', Georgia, serif;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow {
+    font-family: 'Work Sans', -apple-system, "Segoe UI", Roboto, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    padding: 88px 20px 60px;
+    text-align: left;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 620px 420px at 96% -14%, rgba(226,100,59,.22), transparent 62%),
+      radial-gradient(ellipse 520px 380px at -6% 100%, rgba(78,110,142,.22), transparent 60%);
+  }
+  .hero-inner {
+    max-width: 1180px; margin: 0 auto; position: relative;
+    display: flex; align-items: center; gap: 44px; flex-wrap: wrap; justify-content: space-between;
+  }
+  .hero-texto { flex: 1; min-width: 280px; }
+  .hero-foto-wrap { width: 220px; height: 220px; flex-shrink: 0; }
+  @media (max-width: 720px) { .hero-foto-wrap { width: 100%; height: 200px; order: -1; } }
+  .hero-foto-img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 24px;
+    box-shadow: 0 20px 44px -16px var(--shadow); border: 4px solid var(--paper);
+  }
+  .hero-foto-placeholder {
+    width: 100%; height: 100%; border-radius: 24px; border: 2px dashed rgba(226,100,59,.4);
+    background: rgba(226,100,59,.05); display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; cursor: pointer; color: var(--terracotta-deep); font-family: 'Work Sans', sans-serif;
+    font-weight: 700; font-size: .82rem; text-align: center; padding: 16px;
+  }
+  .hero-foto-placeholder:hover { background: rgba(226,100,59,.1); }
+  .hero-foto-placeholder .icone { font-size: 1.8rem; }
+  .hero-foto-editar {
+    position: absolute; bottom: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(var(--hairline),.65); color: #fff; border: none; cursor: pointer; font-size: .85rem;
+  }
+  .hero-foto-wrap { position: relative; }
+  .hero-dream {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(100deg, var(--terracotta), var(--terracotta-deep));
+    box-shadow: 0 8px 20px rgba(226,100,59,.3);
+    font-size: .82rem;
+    letter-spacing: .02em;
+    margin-bottom: 22px;
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 999px;
+  }
+  .hero .eyebrow { color: var(--boca-blue); margin-bottom: 12px; display: block; font-weight: 800; }
+  .hero h1 {
+    font-family: 'Bricolage Grotesque', 'Work Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-size: clamp(3rem, 8.2vw, 6.2rem);
+    color: var(--ink);
+    line-height: .94;
+    font-weight: 800;
+    letter-spacing: -.02em;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 500;
+    background: linear-gradient(100deg, var(--terracotta), var(--gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero .sub {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 700;
+    color: var(--teal-deep);
+    font-size: clamp(1rem, 2.2vw, 1.2rem);
+    margin-top: 18px;
+    letter-spacing: .01em;
+  }
+  .hero .note {
+    color: var(--ink-soft);
+    font-size: .96rem;
+    margin-top: 12px;
+    max-width: 58ch;
+    line-height: 1.55;
+  }
+  .hero-stats { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 34px; }
+  .hero-stat { display: flex; flex-direction: column; }
+  .hero-stat b { font-family: 'Fraunces', Georgia, serif; font-size: 1.9rem; font-weight: 700; color: var(--ink); line-height: 1; }
+  .hero-stat span { font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); font-weight: 700; margin-top: 6px; }
+  /* ---------- Sticky nav ---------- */
+  .navbar {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(253,248,240,.86);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(var(--hairline),.15);
+  }
+  .navbar-row {
+    max-width: 1180px; margin: 0 auto;
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px;
+  }
+  .navbar-inner {
+    display: flex; gap: 6px;
+    padding: 12px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    flex: 1;
+  }
+  .navbar-inner::-webkit-scrollbar { display: none; }
+  .view-toggle {
+    display: flex; gap: 2px; background: rgba(var(--hairline),.06); border-radius: 999px; padding: 3px;
+    flex-shrink: 0;
+  }
+  .view-toggle button {
+    border: none; background: transparent; cursor: pointer; border-radius: 999px;
+    width: 34px; height: 34px; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+    color: var(--ink-soft); transition: all .15s ease;
+  }
+  .view-toggle button.active { background: var(--paper); color: var(--terracotta); box-shadow: 0 3px 8px rgba(var(--hairline),.15); }
+  .navbtn {
+    font-family: 'Work Sans', -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-weight: 700; font-size: .85rem;
+    color: var(--cream-text); opacity: .55;
+    background: transparent; border: 1px solid transparent; cursor: pointer;
+    padding: 8px 16px; border-radius: 999px;
+    white-space: nowrap;
+    transition: opacity .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .navbtn:hover { opacity: .85; }
+  .navbtn.active { opacity: 1; background: rgba(217,138,61,.15); color: var(--gold); border-color: rgba(217,138,61,.4); }
+  .navbtn:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  section.panel { display: none; padding-top: 44px; }
+  section.panel.active { display: block; animation: fadeIn .3s ease; }
+  @media (prefers-reduced-motion: reduce) { section.panel.active { animation: none; } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .panel-head { margin-bottom: 30px; position: relative; padding-left: 18px; border-left: 3px solid var(--gold); }
+  .panel-head .eyebrow { color: var(--gold); }
+  .panel-head h2 {
+    font-size: clamp(1.7rem, 4vw, 2.5rem);
+    color: var(--cream-text);
+    margin-top: 8px;
+  }
+  .panel-head p { color: var(--cream-text); opacity: .65; margin-top: 8px; max-width: 62ch; font-size: .95rem; }
+
+  /* ---------- Votação panel ---------- */
+  .cities-tabs { display: flex; gap: 8px; margin-bottom: 26px; flex-wrap: wrap; }
+  .city-tab {
+    padding: 9px 18px; border: 1px solid rgba(var(--hairline),.22); border-radius: 999px;
+    background: transparent; color: var(--cream-text); opacity: .6; font-weight: 700; font-size: .87rem;
+    cursor: pointer; transition: all .15s ease; font-family: inherit;
+  }
+  .city-tab:hover { opacity: .85; }
+  .city-tab.active { opacity: 1; background: rgba(217,138,61,.16); border-color: var(--gold); color: var(--gold); }
+
+  .votacao-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 40px; align-items: start; }
+  @media (max-width: 820px) { .votacao-grid { grid-template-columns: 1fr; } }
+
+  .votacao-form {
+    background: var(--paper); border: 1px solid rgba(var(--hairline),.08);
+    border-radius: 18px; padding: 26px 28px; position: sticky; top: 84px;
+    box-shadow: 0 16px 32px -12px var(--shadow);
+  }
+  .votacao-form h3 { font-family: 'Fraunces', Georgia, serif; color: var(--gold); font-size: 1.1rem; margin: 0 0 16px; }
+  .sugestoes-list {
+    display: none; background: rgba(var(--hairline),.08); border: 1px solid rgba(var(--hairline),.15); border-top: none;
+    border-radius: 0 0 6px 6px; max-height: 120px; overflow-y: auto; margin-top: -4px; padding: 8px 0;
+    position: relative; z-index: 10;
+  }
+  .votacao-form .field { margin-bottom: 14px; }
+  .votacao-form label { display: block; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: var(--cream-text); opacity: .7; margin-bottom: 4px; font-weight: 700; }
+  .votacao-form input, .votacao-form select, .votacao-form textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid rgba(var(--hairline),.25);
+    background: rgba(var(--hairline),.05); color: var(--cream-text); border-radius: 6px;
+    font-family: inherit; font-size: .88rem;
+  }
+  .votacao-form input::placeholder, .votacao-form textarea::placeholder { color: rgba(var(--hairline),.4); }
+  .votacao-form input:focus, .votacao-form select:focus, .votacao-form textarea:focus {
+    outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,138,61,.2);
+  }
+  .votacao-form textarea { min-height: 60px; resize: vertical; }
+  .votacao-form button {
+    width: 100%; padding: 13px; margin-top: 10px;
+    background: linear-gradient(100deg, var(--terracotta), var(--terracotta-deep)); color: #fff; border: none; border-radius: 10px;
+    font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em;
+    cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+    box-shadow: 0 10px 22px -8px rgba(226,100,59,.55);
+  }
+  .votacao-form button:hover { transform: translateY(-1px); box-shadow: 0 14px 26px -8px rgba(226,100,59,.6); }
+
+  .votacao-places { flex: 1; }
+  .place-card {
+    background: var(--paper); color: var(--ink); border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 4px 12px var(--shadow);
+    border: 1px solid rgba(var(--hairline),.12);
+  }
+  .place-card .place-del {
+    background: transparent; border: none; color: var(--ink-soft);
+    cursor: pointer; font-size: 1.3rem; line-height: 1; padding: 0 4px;
+  }
+  .place-card .place-del:hover { color: #b33a3a; }
+  .place-card.consenso { border-left: 4px solid var(--teal); background: #fafaf7; }
+  .place-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+  .place-card h4 { font-family: 'Fraunces', Georgia, serif; font-size: 1.05rem; color: var(--teal-deep); margin: 0; }
+  .place-card .place-info { font-size: .75rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 8px; }
+  .place-card .place-info span { display: inline-block; margin-right: 12px; }
+  .place-card .place-notes { font-size: .85rem; color: var(--ink-soft); margin-bottom: 10px; font-style: italic; }
+  .place-voters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .voter-badge { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 700; padding: 3px 10px 3px 8px; border-radius: 999px; background: var(--ink); color: #fff; }
+  .place-card .voters-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .place-card .vote-meter {
+    flex: 1; height: 6px; background: rgba(var(--hairline),.15); border-radius: 3px; overflow: hidden;
+  }
+  .place-card .vote-meter i { display: block; height: 100%; background: var(--gold); border-radius: 3px; transition: width .2s ease; }
+  .place-card.consenso .vote-meter i { background: var(--teal); }
+  .place-card .vote-count { font-size: .8rem; font-weight: 700; color: var(--ink-soft); min-width: 50px; text-align: right; }
+  .place-card .place-actions { display: flex; gap: 6px; }
+  .place-card button { padding: 6px 12px; font-size: .75rem; border: 1px solid var(--ink-soft); background: transparent;
+    color: var(--ink-soft); border-radius: 4px; cursor: pointer; transition: all .15s ease;
+  }
+  .place-card button:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .place-card button.voted { background: var(--gold); color: #2b241c; border-color: var(--gold); }
+  .place-card button.vote-eu { width: 100%; padding: 9px; font-size: .82rem; font-weight: 700; }
+  .place-card .interesse-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .place-card .int-btn { flex: 1; padding: 9px; font-size: .8rem; font-weight: 700; border-radius: 6px;
+    cursor: pointer; border: 1px solid var(--ink-soft); background: transparent; color: var(--ink-soft); transition: all .15s ease; }
+  .place-card .int-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .place-card .int-sim.ativo { background: var(--gold); color: #2b241c; border-color: var(--gold); }
+  .place-card .int-nao.ativo { background: #b33a3a; color: #fff; border-color: #b33a3a; }
+  .place-card .sem-interesse-line { font-size: .75rem; color: #b33a3a; margin: 6px 0 0; opacity: .9; }
+  .place-media { margin: 4px 0 12px; }
+  .place-media img { width: 100%; max-height: 170px; object-fit: cover; border-radius: 6px; margin-bottom: 8px; display: block; }
+  .place-media .media-desc { font-size: .82rem; color: var(--ink-soft); line-height: 1.45; margin: 0 0 8px; }
+  .place-media .media-loading { font-size: .78rem; color: var(--ink-soft); font-style: italic; }
+  .media-editar-btn {
+    display: inline-block; margin: 0 0 8px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px dashed var(--terracotta); background: transparent; color: var(--terracotta-deep);
+    font-size: .74rem; font-weight: 700;
+  }
+  .media-editar-btn:hover { background: rgba(226,100,59,.08); }
+  .place-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .place-links a { font-size: .74rem; color: var(--teal-deep); text-decoration: none; font-weight: 700;
+    border: 1px solid rgba(47,107,99,.35); padding: 3px 9px; border-radius: 999px; }
+  .place-links a:hover { background: rgba(47,107,99,.1); }
+  .consenso-banner { display: flex; align-items: center; gap: 6px; font-size: .7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .04em; color: var(--teal); margin-top: 6px;
+  }
+
+  footer { text-align: center; padding: 40px 20px 20px; opacity: .4; font-size: .78rem; }
+
+  @media (max-width: 620px) {
+    .hero { padding: 40px 16px 30px; }
+    .navbtn { padding: 10px 14px; min-height: 40px; }
+  }
+  /* ===== HOME: capa de álbum ===== */
+  .album-cover { margin-bottom: 26px; }
+  .album-frame {
+    position: relative;
+    background: linear-gradient(155deg, rgba(226,100,59,.10), rgba(78,110,142,.10)), var(--paper);
+    border: 1px solid rgba(var(--hairline),.08);
+    border-radius: 24px;
+    padding: 44px 28px;
+    text-align: center;
+    box-shadow: 0 22px 48px -20px var(--shadow);
+    overflow: hidden;
+  }
+  .album-frame::before {
+    content: ""; position: absolute; inset: 10px; border: 1.5px dashed rgba(217,138,61,.35);
+    border-radius: 16px; pointer-events: none;
+  }
+  .album-eyebrow {
+    display: block; font-family: 'Work Sans', sans-serif; font-weight: 800; letter-spacing: .16em;
+    text-transform: uppercase; font-size: .72rem; color: var(--terracotta); margin-bottom: 12px;
+  }
+  .album-title {
+    font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.3rem, 3vw, 1.9rem); color: var(--ink);
+    font-weight: 700; max-width: 46ch; margin: 0 auto; line-height: 1.22;
+  }
+  .album-familia { display: flex; justify-content: center; gap: 18px; margin: 24px 0 16px; flex-wrap: wrap; }
+  .album-pessoa { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+  .album-nome { font-size: .74rem; font-weight: 700; color: var(--ink-soft); }
+  .album-avatar {
+    width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; background: var(--paper-2); border: 2px solid rgba(var(--hairline),.08); overflow: hidden;
+    box-shadow: 0 8px 16px -8px var(--shadow); transition: transform .15s ease;
+  }
+  .album-avatar:hover { transform: translateY(-3px) scale(1.06); }
+  .album-avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .album-avatar-emoji { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  .album-caption { font-family: 'Fraunces', Georgia, serif; font-style: italic; color: var(--ink-soft); font-size: .96rem; margin: 0; }
+
+  /* ---- Avatares (caricatura ou emoji) em outros contextos ---- */
+  .voter-badge-img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; vertical-align: middle; }
+  .voter-badge-emoji { vertical-align: middle; }
+  .authbar-avatar-img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(217,138,61,.5); }
+  .authbar-avatar-emoji { font-size: 1.1rem; }
+  .login-avatar-preview {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    background: var(--paper-2); border: 1px solid rgba(var(--hairline),.15);
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+  }
+  .login-avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+  .home-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:720px){ .home-grid { grid-template-columns:1fr; } }
+  .home-count { grid-column:1 / -1; text-align:center; background:linear-gradient(160deg, rgba(217,138,61,.18), rgba(47,107,99,.15)); border:1px solid rgba(217,138,61,.3); border-radius:14px; padding:30px 20px; }
+  .home-count .count-num { font-family:'Fraunces',Georgia,serif; font-size:3.6rem; line-height:1; color:var(--gold); font-weight:700; }
+  .home-count .count-label { font-size:.9rem; color:var(--cream-text); text-transform:uppercase; letter-spacing:.08em; margin-top:8px; }
+  .contagem-viva { display:flex; justify-content:center; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .contagem-item { display:flex; flex-direction:column; align-items:center; min-width:64px; }
+  .contagem-num { font-family:'Fraunces',Georgia,serif; font-size:2.6rem; line-height:1; color:var(--gold); font-weight:700; font-variant-numeric:tabular-nums; }
+  .contagem-label { font-size:.68rem; color:var(--cream-text); opacity:.75; text-transform:uppercase; letter-spacing:.08em; margin-top:4px; }
+  @media (max-width:480px){ .contagem-num { font-size:2rem; } .contagem-item { min-width:52px; } }
+  .home-count .count-sub { font-size:.85rem; color:var(--cream-text); opacity:.75; margin-top:12px; }
+  .count-status { display:inline-block; margin-top:14px; font-size:.75rem; font-weight:700; padding:5px 14px; border-radius:999px; }
+  .count-status.prov { background:rgba(217,138,61,.2); color:var(--gold); border:1px solid rgba(217,138,61,.45); }
+  .count-status.ok { background:rgba(47,107,99,.25); color:#8fd8cc; border:1px solid rgba(47,107,99,.55); }
+  .viagem-status { display:flex; align-items:center; gap:9px; margin-top:16px; padding-top:14px; border-top:1px solid rgba(var(--hairline),.2); font-size:.85rem; color:var(--cream-text); cursor:pointer; }
+  .viagem-status input { width:17px; height:17px; accent-color:var(--gold); cursor:pointer; }
+  .home-cidades { grid-column:1 / -1; display:flex; gap:12px; flex-wrap:wrap; }
+  .home-cidade { flex:1; min-width:150px; background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:14px; padding:16px 18px; box-shadow:0 10px 22px -14px var(--shadow); }
+  .home-cidade-nome { font-family:'Fraunces',Georgia,serif; color:var(--gold); font-weight:700; font-size:1.05rem; }
+  .home-cidade-info { font-size:.8rem; color:var(--cream-text); opacity:.75; margin-top:3px; }
+  .home-cidade-votos { font-size:.8rem; color:var(--cream-text); margin-top:8px; }
+  .home-progresso, .home-recentes { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:16px; padding:20px 22px; box-shadow:0 14px 30px -14px var(--shadow); }
+  .home-progresso h3, .home-recentes h3 { font-family:'Fraunces',Georgia,serif; color:var(--cream-text); font-size:1rem; margin:0 0 12px; }
+  .prog-row { display:grid; grid-template-columns:96px 1fr auto; align-items:center; gap:10px; margin-bottom:10px; font-size:.82rem; color:var(--cream-text); }
+  .prog-bar { height:7px; background:rgba(var(--hairline),.15); border-radius:4px; overflow:hidden; }
+  .prog-bar i { display:block; height:100%; background:var(--gold); border-radius:4px; transition:width .3s ease; }
+  .rec-item { font-size:.86rem; color:var(--cream-text); padding:7px 0; border-bottom:1px solid rgba(var(--hairline),.1); }
+  .rec-item:last-child { border-bottom:none; }
+  .rec-item span { opacity:.6; }
+  .home-vazio { font-size:.85rem; color:var(--cream-text); opacity:.6; margin:0; }
+  /* ===== RESULTADOS ===== */
+  .res-cidade { margin-bottom:26px; }
+  .res-cidade h3 { font-family:'Fraunces',Georgia,serif; color:var(--gold); font-size:1.15rem; margin:0 0 12px; display:flex; align-items:baseline; gap:10px; }
+  .res-cidade h3 span { font-size:.8rem; color:var(--cream-text); opacity:.6; font-family:inherit; font-weight:400; }
+  .res-row { display:grid; grid-template-columns:36px 1fr 120px; align-items:center; gap:12px; background:var(--paper); color:var(--ink); border-radius:12px; padding:12px 14px; margin-bottom:8px; border:1px solid rgba(var(--hairline),.1); }
+  .res-row.res-consenso { border-left:4px solid var(--teal); }
+  .res-rank { font-family:'Fraunces',Georgia,serif; font-size:1.3rem; font-weight:700; color:var(--ink-soft); text-align:center; }
+  .res-nome { font-weight:700; color:var(--teal-deep); }
+  .res-selo { font-size:.68rem; background:var(--teal); color:#fff; padding:1px 7px; border-radius:999px; margin-left:4px; vertical-align:middle; }
+  .res-meta { font-size:.75rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin-top:2px; }
+  .res-nao { font-size:.72rem; color:#b33a3a; margin-top:3px; }
+  .res-votos { text-align:right; }
+  .res-bar { height:6px; background:rgba(var(--hairline),.15); border-radius:3px; overflow:hidden; }
+  .res-bar i { display:block; height:100%; background:var(--gold); transition:width .3s ease; }
+  .res-consenso .res-bar i { background:var(--teal); }
+  .res-num { font-size:.8rem; font-weight:700; color:var(--ink-soft); text-align:right; margin-top:4px; }
+  /* ===== VIAGEM ===== */
+  .viagem-card { background: var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:18px; padding:26px 28px; max-width:640px; box-shadow:0 16px 32px -14px var(--shadow); }
+  .viagem-inicio-linha { display:flex; gap:20px; flex-wrap:wrap; }
+  .viagem-inicio label { display:block; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--cream-text); opacity:.7; margin-bottom:6px; font-weight:700; }
+  .viagem-inicio input[type=date], .viagem-inicio input[type=time] { padding:9px 12px; border:1px solid rgba(var(--hairline),.25); background:rgba(var(--hairline),.06); color:var(--cream-text); border-radius:6px; font-family:inherit; font-size:.95rem; }
+  .viagem-cidades { margin:20px 0 0; display:flex; flex-direction:column; gap:10px; }
+  .viagem-trecho { display:grid; grid-template-columns:auto 1fr auto; gap:4px 14px; align-items:center; background:var(--paper-2); border:1px solid rgba(var(--hairline),.08); border-radius:12px; padding:14px 18px; }
+  .viagem-trecho-ordem { grid-column:1; grid-row:1 / span 3; display:flex; flex-direction:column; gap:4px; }
+  .ordem-btn { width:26px; height:22px; border-radius:5px; border:1px solid rgba(var(--hairline),.25); background:transparent; color:var(--ink-soft); font-size:.62rem; cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center; }
+  .ordem-btn:hover:not(:disabled) { background:var(--boca-blue); color:#fff; border-color:var(--boca-blue); }
+  .ordem-btn:disabled { opacity:.25; cursor:default; }
+  .viagem-trecho-nome { grid-column:2; font-family:'Fraunces',Georgia,serif; color:var(--gold); font-size:1.05rem; font-weight:700; }
+  .viagem-trecho-datas { grid-column:2; font-size:.82rem; color:var(--cream-text); opacity:.75; }
+  .viagem-trecho-clima { grid-column:2; font-size:.78rem; color:var(--gold); margin-top:2px; }
+  .viagem-trecho-clima span { color:var(--ink-soft); opacity:.7; font-size:.72rem; }
+  .viagem-trecho-noites { grid-column:3; grid-row:1 / span 3; display:flex; align-items:center; gap:10px; color:var(--cream-text); font-size:.9rem; white-space:nowrap; }
+  .noite-btn { width:30px; height:30px; border-radius:6px; border:1px solid rgba(var(--hairline),.4); background:transparent; color:var(--cream-text); font-size:1.1rem; cursor:pointer; line-height:1; }
+  .noite-btn:hover { background:var(--gold); color:#2b241c; border-color:var(--gold); }
+  .viagem-hint { font-size:.78rem; color:var(--ink-soft); margin:10px 0 0; }
+  .viagem-resumo { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:18px; padding-top:16px; border-top:1px solid rgba(var(--hairline),.2); font-size:.88rem; color:var(--cream-text); }
+  /* ===== MAPA (Leaflet real) ===== */
+  .mapa-modo-toggle { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .mapa-modo-btn {
+    padding: 12px 18px; min-height: 44px; border-radius: 999px; border: 1px solid rgba(var(--hairline),.18);
+    background: var(--paper); color: var(--ink-soft); font-weight: 700; font-size: .85rem;
+    cursor: pointer; transition: all .15s ease;
+  }
+  .mapa-modo-btn:hover { border-color: var(--terracotta); }
+  .mapa-modo-btn.ativo { background: linear-gradient(100deg, var(--terracotta), var(--terracotta-deep)); color: #fff; border-color: transparent; box-shadow: 0 8px 18px -8px rgba(226,100,59,.5); }
+
+  .mapa-leaflet {
+    height: 480px; width: 100%; border-radius: 20px; border: 1px solid rgba(var(--hairline),.1);
+    box-shadow: 0 18px 40px -16px var(--shadow); background: var(--paper-2);
+  }
+  @media (max-width: 620px) { .mapa-leaflet { height: 380px; } }
+
+  .mapa-pin-marcador {
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-family: 'Work Sans', sans-serif; font-weight: 800; font-size: .9rem;
+    border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,.35);
+  }
+  .mapa-pin-casa {
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: #8a6539; font-size: 1rem; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,.35);
+  }
+  .mapa-km-label {
+    font-family: 'Work Sans', sans-serif; font-size: .72rem; font-weight: 700; color: var(--ink-soft);
+    background: var(--paper); padding: 2px 7px; border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    white-space: nowrap; text-align: center;
+  }
+  .mapa-carregando { font-size: .85rem; color: var(--ink-soft); font-style: italic; }
+
+  .mapa-info { max-width: 460px; margin: 14px auto 0; }
+  .mapa-info-card {
+    background: var(--paper); border: 1px solid rgba(var(--hairline),.1); border-radius: 14px; padding: 16px 20px;
+    box-shadow: 0 12px 28px -14px var(--shadow); max-height: 70vh; overflow-y: auto;
+  }
+  .mapa-info-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .mapa-info-head h4 { font-family: 'Fraunces', Georgia, serif; color: var(--teal-deep); font-size: 1.2rem; }
+  .mapa-info-close { background: transparent; border: none; font-size: 1.3rem; color: var(--ink-soft); cursor: pointer; line-height: 1; }
+  .mapa-info-card p { font-size: .87rem; color: var(--ink-soft); margin: 4px 0; }
+  .mapa-info-votos { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .mapa-info-bar { flex: 1; height: 6px; background: rgba(var(--hairline),.15); border-radius: 3px; overflow: hidden; }
+  .mapa-info-bar i { display: block; height: 100%; border-radius: 3px; transition: width .2s ease; }
+  .mapa-info-votos span { font-size: .78rem; color: var(--ink-soft); white-space: nowrap; }
+  .mapa-info-btn {
+    margin-top: 10px; padding: 9px 16px; border: none; border-radius: 999px; cursor: pointer;
+    background: linear-gradient(100deg, var(--terracotta), var(--terracotta-deep)); color: #fff;
+    font-weight: 700; font-size: .82rem;
+  }
+  .mapa-stats { display: flex; justify-content: center; gap: 34px; flex-wrap: wrap; margin: 22px 0 6px; }
+  .mapa-stat { display: flex; flex-direction: column; align-items: center; }
+  .mapa-stat b { font-family: 'Fraunces', Georgia, serif; font-size: 1.7rem; font-weight: 700; color: var(--ink); line-height: 1; }
+  .mapa-stat span { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); font-weight: 700; margin-top: 5px; text-align: center; }
+  .mapa-legenda { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 10px; font-size: .82rem; color: var(--ink-soft); }
+  .mapa-legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+  /* ===== BAGAGEM ===== */
+  .bagagem-secao { margin-bottom:40px; }
+  .bagagem-secao > h3 { font-family:'Fraunces',Georgia,serif; color:var(--ink); font-size:1.3rem; margin:0 0 4px; }
+  .bagagem-dica { font-size:.85rem; color:var(--ink-soft); margin:0 0 16px; }
+  .bagagem-progresso { display:flex; align-items:center; gap:14px; margin-bottom:26px; max-width:420px; }
+  .bagagem-progresso .prog-bar { flex:1; height:8px; background:rgba(var(--hairline),.1); border-radius:4px; overflow:hidden; }
+  .bagagem-progresso .prog-bar i { display:block; height:100%; background:var(--teal); border-radius:4px; transition:width .3s ease; }
+  .bagagem-progresso span { font-size:.82rem; font-weight:700; color:var(--ink-soft); white-space:nowrap; }
+  .bagagem-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px; }
+  .bagagem-cat { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:16px; padding:18px 20px; box-shadow:0 12px 26px -16px var(--shadow); }
+  .bagagem-cat h4 { font-family:'Fraunces',Georgia,serif; color:var(--terracotta-deep); font-size:1.05rem; margin:0 0 12px; }
+  .bagagem-lista { list-style:none; margin:0; padding:0; }
+  .bagagem-lista li { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid rgba(var(--hairline),.06); }
+  .bagagem-lista li:last-child { border-bottom:none; }
+  .bagagem-lista label { display:flex; align-items:center; gap:9px; font-size:.88rem; color:var(--ink); cursor:pointer; flex:1; }
+  .bagagem-lista input[type=checkbox] { width:17px; height:17px; accent-color:var(--teal); cursor:pointer; flex-shrink:0; }
+  .bagagem-lista li.feito label span { text-decoration:line-through; opacity:.5; }
+  .bagagem-marcador { font-size:.9rem; flex-shrink:0; }
+  .bagagem-del { background:transparent; border:none; color:var(--ink-soft); opacity:.4; cursor:pointer; font-size:1rem; line-height:1; flex-shrink:0; }
+  .bagagem-del:hover { opacity:1; color:var(--river-red); }
+  .bagagem-add { display:flex; gap:6px; margin-top:12px; }
+  .bagagem-add input { flex:1; padding:7px 10px; border:1px solid rgba(var(--hairline),.18); border-radius:6px; font-size:.82rem; background:transparent; color:var(--ink); font-family:inherit; }
+  .bagagem-add button { width:32px; border:none; border-radius:6px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; font-size:1rem; }
+
+  /* ===== EMOJI PICKER (login) ===== */
+  .emoji-grade { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+  .emoji-opt {
+    aspect-ratio:1; border-radius:8px; border:1px solid rgba(var(--hairline),.15); background:var(--paper-2);
+    font-size:1.25rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition: all .12s ease;
+  }
+  .emoji-opt:hover { transform:scale(1.08); border-color:var(--gold); }
+  .emoji-opt.ativo { background:rgba(217,138,61,.18); border-color:var(--gold); box-shadow:0 0 0 2px rgba(217,138,61,.35); }
+
+  /* ===== SELOS (conquistas, agora na Home) ===== */
+  .selos-secao { margin-top:34px; }
+  .selos-secao h3 { font-family:'Fraunces',Georgia,serif; color:var(--ink); font-size:1.2rem; margin:0 0 14px; }
+  .selos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; }
+  .selo-card { background:var(--paper); border:1px solid rgba(217,138,61,.25); border-radius:14px; padding:18px; text-align:center; box-shadow:0 12px 26px -16px var(--shadow); }
+  .selo-emoji { font-size:2.2rem; margin-bottom:8px; }
+  .selo-titulo { font-family:'Fraunces',Georgia,serif; font-weight:700; color:var(--terracotta-deep); font-size:1rem; margin-bottom:4px; }
+  .selo-desc { font-size:.8rem; color:var(--ink-soft); line-height:1.4; }
+
+  /* ===== MURAL DE AVISOS (post-its de cortiça) ===== */
+  .mural-avisos { margin-top:34px; }
+  .mural-cabecalho { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .mural-titulo {
+    font-family:'Kalam',cursive; font-weight:700; font-size:1.3rem; color:var(--ink);
+    transform:rotate(-1deg); display:inline-block;
+  }
+  .mural-add-btn {
+    padding:8px 16px; border-radius:999px; border:none; cursor:pointer; font-weight:700; font-size:.8rem;
+    background:linear-gradient(100deg,var(--terracotta),var(--terracotta-deep)); color:#fff;
+    box-shadow:0 8px 18px -8px rgba(226,100,59,.5);
+  }
+  .mural-quadro {
+    display:flex; flex-wrap:wrap; gap:22px; padding:28px 24px 34px; border-radius:16px;
+    background:
+      radial-gradient(circle at 18% 28%, rgba(0,0,0,.09) 0, transparent 3%),
+      radial-gradient(circle at 62% 68%, rgba(0,0,0,.07) 0, transparent 2.5%),
+      radial-gradient(circle at 82% 18%, rgba(0,0,0,.08) 0, transparent 3%),
+      radial-gradient(circle at 38% 86%, rgba(0,0,0,.06) 0, transparent 2%),
+      radial-gradient(circle at 92% 58%, rgba(0,0,0,.07) 0, transparent 2.5%),
+      radial-gradient(circle at 8% 72%, rgba(0,0,0,.06) 0, transparent 2%),
+      radial-gradient(circle at 50% 12%, rgba(0,0,0,.05) 0, transparent 2%),
+      linear-gradient(155deg, #c9975f, #a97b45);
+    box-shadow: inset 0 2px 10px rgba(0,0,0,.25), 0 16px 34px -18px var(--shadow);
+    border: 10px solid #8a6539;
+  }
+  .post-it {
+    position:relative; width:180px; min-height:130px; padding:22px 14px 14px;
+    font-family:'Kalam',cursive; font-size:1rem; line-height:1.35; color:#2b241c;
+    box-shadow: 3px 6px 14px rgba(0,0,0,.3);
+  }
+  .post-it p { margin:0; }
+  .post-it:nth-child(4n+1) { background:#fdf1a8; transform:rotate(-3deg); }
+  .post-it:nth-child(4n+2) { background:#ffd3e6; transform:rotate(2deg); }
+  .post-it:nth-child(4n+3) { background:#c9ecff; transform:rotate(-1.5deg); }
+  .post-it:nth-child(4n) { background:#d4f5d1; transform:rotate(2.5deg); }
+  .post-it:hover { transform:rotate(0deg) scale(1.04); z-index:2; transition:transform .15s ease; }
+  .post-it-pin {
+    position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+    width:14px; height:14px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #ff8a7a, #b8362a);
+    box-shadow:0 3px 5px rgba(0,0,0,.4);
+  }
+  .post-it-flag { position:absolute; top:8px; right:10px; font-size:1.1rem; }
+  .post-it[data-pendencia-manual] { cursor:pointer; }
+  .post-it-feito { opacity:.55; }
+  .post-it-feito p { text-decoration:line-through; }
+  .post-it-del {
+    position:absolute; top:6px; left:8px; background:transparent; border:none; cursor:pointer;
+    font-size:1rem; line-height:1; color:rgba(43,36,28,.35); padding:0; opacity:0; transition:opacity .15s ease;
+  }
+  .post-it:hover .post-it-del { opacity:1; }
+  .post-it-del:hover { color:#b8362a; }
+</style>
+</head>
+<body>
+
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-texto">
+      <span class="hero-dream">✈ Família Brueckheimer · um sonho antigo, finalmente saindo do papel</span>
+      <span class="eyebrow">Planejamento da viagem em família</span>
+      <h1>Argentina <em>&amp;</em> Chile</h1>
+      <div class="sub">Buenos Aires · Santiago · Viña del Mar</div>
+      <div class="note">Primeiro a família sugere e vota os lugares de cada cidade. Depois montamos o roteiro juntos, com o que todo mundo escolheu. As datas e noites de cada cidade ficam na aba <strong>Viagem</strong>.</div>
+      <div class="hero-stats" id="hero-stats"></div>
+    </div>
+    <div class="hero-foto-wrap" id="hero-foto-wrap"></div>
+  </div>
+</div>
+
+<div class="navbar">
+  <div class="navbar-row">
+    <div class="navbar-inner" id="navbar">
+      <button class="navbtn active" data-panel="inicio">Início</button>
+      <button class="navbtn" data-panel="viagem">Viagem</button>
+      <button class="navbtn" data-panel="votacao">Votação</button>
+      <button class="navbtn" data-panel="resultados">Resultados</button>
+      <button class="navbtn" data-panel="mapa">Mapa</button>
+      <button class="navbtn" data-panel="bagagem">Bagagem</button>
+    </div>
+    <div class="view-toggle" id="view-toggle" title="Modo de visualização">
+      <button type="button" data-theme-btn="light" title="Modo claro">☀</button>
+      <button type="button" data-theme-btn="dark" title="Modo escuro">☾</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="panel active" id="panel-inicio">
+    <div class="panel-head">
+      <span class="eyebrow">Painel</span>
+      <h2>Nossa viagem</h2>
+      <p>Tudo o que importa num lugar só: a contagem regressiva, as cidades e como anda a votação.</p>
+    </div>
+    <div id="inicio-conteudo"></div>
+  </section>
+
+  <section class="panel" id="panel-viagem">
+    <div class="panel-head">
+      <span class="eyebrow">A viagem</span>
+      <h2>Cidades, datas e noites</h2>
+      <p>Defina o dia de embarque e quantas noites a família fica em cada cidade. As datas de cada trecho são calculadas sozinhas.</p>
+    </div>
+    <div id="viagem-conteudo"></div>
+  </section>
+
+  <section class="panel" id="panel-votacao">
+    <div class="panel-head">
+      <span class="eyebrow">Locais para visitar</span>
+      <h2>Votação por cidade</h2>
+      <p>Escolha a cidade, sugira locais e diga se tem interesse (ou não) em cada um. Quando todos marcarem interesse, o lugar ganha o selo consenso e entra como prioridade para o roteiro.</p>
+    </div>
+
+    <div class="cities-tabs" id="cities-tabs">
+      <button class="city-tab active" data-city="Buenos Aires" onclick="mudarCidade('Buenos Aires')">Buenos Aires</button>
+      <button class="city-tab" data-city="Santiago" onclick="mudarCidade('Santiago')">Santiago</button>
+      <button class="city-tab" data-city="Viña del Mar" onclick="mudarCidade('Viña del Mar')">Viña del Mar</button>
+    </div>
+
+    <div class="votacao-grid">
+      <div class="votacao-form">
+        <h3 id="form-titulo-cidade">Sugerir um lugar - Buenos Aires</h3>
+        <div class="field">
+          <label for="votacao-nome">Nome do local</label>
+          <input id="votacao-nome" type="text" placeholder="ex: Parque Centenario" onkeyup="mostrarSugestoes()">
+          <div id="sugestoes-list" class="sugestoes-list"></div>
+        </div>
+        <div class="field">
+          <label for="votacao-bairro" id="votacao-bairro-label">Bairro / Região</label>
+          <select id="votacao-bairro">
+            <option value="">Escolha o bairro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="votacao-categoria">Categoria</label>
+          <select id="votacao-categoria" onchange="onCategoriaChange()">
+            <option value="">Escolha a categoria</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="votacao-notas">Por que vale a pena? (opcional)</label>
+          <textarea id="votacao-notas" placeholder="ex: Vista panorâmica, atmosfera, lugar imperdível..."></textarea>
+        </div>
+        <button onclick="adicionarLocalSheets()">Adicionar local</button>
+      </div>
+      <div class="votacao-places" id="votacao-places"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-resultados">
+    <div class="panel-head">
+      <span class="eyebrow">Placar</span>
+      <h2>Resultados da votação</h2>
+      <p>Os lugares mais queridos de cada cidade. Quem bate o consenso da família vira prioridade no roteiro.</p>
+    </div>
+    <div id="resultados-conteudo"></div>
+  </section>
+
+  <section class="panel" id="panel-mapa">
+    <div class="panel-head">
+      <span class="eyebrow">Geografia real</span>
+      <h2>Mapa</h2>
+      <p>Mapa de verdade (OpenStreetMap). Alterne entre a <strong>rota</strong> entre as cidades e <strong>todos os lugares sugeridos</strong> na votação, plotados pelo bairro indicado.</p>
+    </div>
+    <div id="mapa-conteudo"></div>
+  </section>
+
+  <section class="panel" id="panel-bagagem">
+    <div class="panel-head">
+      <span class="eyebrow">Não esquecer</span>
+      <h2>Lista de bagagem</h2>
+      <p>Uma lista compartilhada com a família (sincroniza entre todos) e uma lista pessoal, só sua.</p>
+    </div>
+    <div id="bagagem-conteudo"></div>
+  </section>
+
+</div>
+
+<footer>Fotos e informações: Wikipédia / Wikidata · Planejamento colaborativo da família — datas e locais sujeitos à votação.</footer>
+
+<script>
+/* ================= MODO DE VISUALIZAÇÃO (claro/escuro) ================= */
+function aplicarTema(tema){
+  document.documentElement.setAttribute("data-theme", tema);
+  localStorage.setItem("family_trip_tema", tema);
+  document.querySelectorAll(".view-toggle button").forEach(b => {
+    b.classList.toggle("active", b.getAttribute("data-theme-btn") === tema);
+  });
+}
+(function initTema(){
+  const salvo = localStorage.getItem("family_trip_tema");
+  const tema = (salvo === "dark" || salvo === "light") ? salvo
+    : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  aplicarTema(tema);
+})();
+document.getElementById("view-toggle").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-theme-btn]");
+  if(!btn) return;
+  aplicarTema(btn.getAttribute("data-theme-btn"));
+});
+
+/* ================= NAV & FILTER WIRING ================= */
+document.getElementById("navbar").addEventListener("click", e => {
+  const btn = e.target.closest(".navbtn");
+  if (!btn) return;
+  document.querySelectorAll(".navbtn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  btn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  document.querySelectorAll("section.panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("panel-" + btn.dataset.panel).classList.add("active");
+  if(btn.dataset.panel === "mapa") renderMapaRota();
+  if(btn.dataset.panel === "viagem") renderViagem();
+  if(btn.dataset.panel === "inicio") renderInicio();
+  if(btn.dataset.panel === "resultados") renderResultados();
+  if(btn.dataset.panel === "bagagem") renderBagagem();
+});
+
+/* keyboard support for role="button" elements (crew chips, postcards, map pins) */
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches('[role="button"]')) {
+    e.preventDefault();
+    e.target.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  }
+});
+
+/* ================= VOTAÇÃO ================= */
+const VIAJANTES = ["Thomas", "Júlia", "Mateus", "Paula", "Juliane"];
+const VIAJANTES_EMOJI = { Thomas: "🧭", "Júlia": "🌻", Mateus: "⚡", Paula: "🌊", Juliane: "🎨" };
+const CIDADES = ["Buenos Aires", "Santiago", "Viña del Mar"];
+
+/* Coordenadas reais (lat, lon) das cidades da viagem */
+const CIDADES_COORDS = {
+  "Buenos Aires": [-34.6037, -58.3816],
+  "Santiago": [-33.4489, -70.6693],
+  "Viña del Mar": [-33.0245, -71.5518]
+};
+/* Ponto de origem/retorno da viagem — não entra na votação, só aparece no mapa como saída/chegada */
+const PORTO_ALEGRE_COORD = [-30.0346, -51.2177];
+
+function haversineKm(a, b){
+  const R = 6371;
+  const dLat = (b[0]-a[0]) * Math.PI/180;
+  const dLon = (b[1]-a[1]) * Math.PI/180;
+  const s = Math.sin(dLat/2)**2 + Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(s)));
+}
+
+/* ---- Geocodificação (Nominatim/OpenStreetMap, gratuito, sem chave) ---- */
+const STORE_GEOCODE = "family_trip_geocode_cache";
+function carregarGeocodeCache(){ try { return JSON.parse(localStorage.getItem(STORE_GEOCODE) || "{}"); } catch(e){ return {}; } }
+function salvarGeocodeCache(c){ localStorage.setItem(STORE_GEOCODE, JSON.stringify(c)); }
+
+async function geocodificarBairro(bairro, cidade){
+  if(!bairro || bairro === BAIRRO_A_CONFIRMAR) return CIDADES_COORDS[cidade] || null;
+  const cache = carregarGeocodeCache();
+  const chave = `${bairro}|${cidade}`.toLowerCase();
+  if(cache[chave]) return cache[chave];
+  try {
+    const query = encodeURIComponent(`${bairro}, ${cidade}`);
+    const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`);
+    const data = await resp.json();
+    if(data && data[0]){
+      const coord = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      cache[chave] = coord;
+      salvarGeocodeCache(cache);
+      return coord;
+    }
+  } catch(e){ console.log("Geocode error:", e); }
+  return CIDADES_COORDS[cidade] || null;
+}
+
+const CATEGORIA_COR = {
+  "Parque": "#3c7a73", "Museu": "#4e6e8e", "Histórico": "#a9691f", "Arte": "#c24545",
+  "Vida Noturna": "#8e44ad", "Natureza": "#2e7d32", "Compras": "#d98a3d",
+  "Restaurante": "#e2643b", "Bar / Café": "#795548", "Praia": "#0288d1",
+  "Mirante / Vista": "#00897b", "Passeio / Tour": "#f57c00", "Hospedagem": "#5c6bc0"
+};
+function corCategoria(cat){ return CATEGORIA_COR[cat] || "#7c6f5c"; }
+const BAIRROS_POR_CIDADE = {
+  "Buenos Aires": ["Palermo", "Recoleta", "San Telmo", "Puerto Madero", "Centro", "La Boca", "Retiro"],
+  "Santiago": ["Providencia", "Las Condes", "Lastarria", "Bellavista", "Centro", "Barrio Brasil", "Nunoa"],
+  "Viña del Mar": ["Centro", "Playa Ancha", "Viña del Mar N", "Recreo", "Forestal", "Valparaíso"]
+};
+
+let cidadeSelecionada = "Buenos Aires";
+const STORE_LOCAIS = "family_trip_locais_2026";
+
+function carregarLocais(){
+  try {
+    const saved = localStorage.getItem(STORE_LOCAIS);
+    return saved ? JSON.parse(saved) : [];
+  } catch(e) {
+    return [];
+  }
+}
+
+function salvarLocais(locais){
+  localStorage.setItem(STORE_LOCAIS, JSON.stringify(locais));
+}
+
+// Escapa texto para inserir com segurança no HTML (evita quebrar a lista)
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
+/* ========= BUSCA DE FOTOS/INFO NA INTERNET (Wikipédia, sem chave) ========= */
+const INFO_CACHE_KEY = "family_trip_info_cache_v2";
+let infoCache = {};
+try { infoCache = JSON.parse(localStorage.getItem(INFO_CACHE_KEY) || "{}"); } catch(e){ infoCache = {}; }
+const infoPendentes = new Set();
+let infoRenderAgendado = false;
+
+function infoKey(nome){ return String(nome || "").toLowerCase().trim(); }
+function salvarInfoCache(){ try { localStorage.setItem(INFO_CACHE_KEY, JSON.stringify(infoCache)); } catch(e){} }
+
+function agendarRenderVotacao(){
+  if(infoRenderAgendado) return;
+  infoRenderAgendado = true;
+  setTimeout(() => {
+    infoRenderAgendado = false;
+    renderVotacao();
+    if(mapaInfoLocalId){
+      const l = carregarLocais().find(x => String(x.id) === String(mapaInfoLocalId));
+      if(l) mostrarInfoLocalMapa(l);
+    }
+  }, 300);
+}
+
+// Busca descrição + foto + Instagram/site do lugar. Fica em cache (não repete a cada sync).
+function buscarInfoLocal(local){
+  const key = infoKey(local.nome);
+  if(infoCache[key] !== undefined || infoPendentes.has(key)) return;
+  infoPendentes.add(key);
+
+  const tentativas = [
+    "https://pt.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(local.nome),
+    "https://es.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(local.nome)
+  ];
+
+  (async () => {
+    let resultado = null;
+    let qid = "";
+    for(const url of tentativas){
+      try {
+        const r = await fetch(url);
+        if(!r.ok) continue;
+        const d = await r.json();
+        if(d && d.extract && d.type !== "disambiguation"){
+          resultado = {
+            found: true,
+            descricao: d.extract,
+            imagem: (d.thumbnail && /^https:\/\//.test(d.thumbnail.source)) ? d.thumbnail.source : "",
+            link: (d.content_urls && d.content_urls.desktop) ? d.content_urls.desktop.page : "",
+            instagram: "",
+            site: ""
+          };
+          qid = d.wikibase_item || "";
+          break;
+        }
+      } catch(e){ /* CORS/rede: ignora e tenta a próxima */ }
+    }
+
+    // Complementa via Wikidata: Instagram (P2003) e site oficial (P856)
+    if(resultado && qid){
+      try {
+        const wr = await fetch("https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + qid + "&props=claims&format=json&origin=*");
+        if(wr.ok){
+          const wd = await wr.json();
+          const claims = wd && wd.entities && wd.entities[qid] && wd.entities[qid].claims;
+          if(claims){
+            const ig = claims.P2003 && claims.P2003[0] && claims.P2003[0].mainsnak && claims.P2003[0].mainsnak.datavalue;
+            if(ig && ig.value) resultado.instagram = String(ig.value).replace(/^@/, "");
+            const site = claims.P856 && claims.P856[0] && claims.P856[0].mainsnak && claims.P856[0].mainsnak.datavalue;
+            if(site && /^https?:\/\//.test(site.value)) resultado.site = String(site.value);
+          }
+        }
+      } catch(e){ /* Wikidata indisponível: segue sem esses campos */ }
+    }
+
+    infoCache[key] = resultado || { found: false };
+    infoPendentes.delete(key);
+    salvarInfoCache();
+    agendarRenderVotacao();
+  })();
+}
+
+function linksHtml(local, info){
+  const q = encodeURIComponent((local.nome || "") + " " + (local.cidade || ""));
+  const igQ = encodeURIComponent("site:instagram.com " + (local.nome || "") + " " + (local.cidade || ""));
+  const parts = [];
+
+  if(info && info.instagram){
+    parts.push(`<a href="https://www.instagram.com/${encodeURIComponent(info.instagram)}/" target="_blank" rel="noopener">📸 Instagram</a>`);
+  } else {
+    parts.push(`<a href="https://www.google.com/search?q=${igQ}" target="_blank" rel="noopener">📸 Instagram</a>`);
+  }
+  if(info && info.site){
+    parts.push(`<a href="${esc(info.site)}" target="_blank" rel="noopener">🌐 Site</a>`);
+  }
+  if(info && info.found && info.link){
+    parts.push(`<a href="${esc(info.link)}" target="_blank" rel="noopener">📖 Wikipédia</a>`);
+  }
+  parts.push(`<a href="https://www.google.com/search?tbm=isch&q=${q}" target="_blank" rel="noopener">🔍 Fotos</a>`);
+  parts.push(`<a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">📍 Mapa</a>`);
+
+  return `<div class="place-links">${parts.join("")}</div>`;
+}
+
+function mediaHtml(local){
+  const info = infoCache[infoKey(local.nome)];
+  if(info === undefined){
+    buscarInfoLocal(local);
+    return `<div class="place-media"><span class="media-loading">Buscando fotos e informações…</span>${linksHtml(local, null)}</div>`;
+  }
+  if(info.found){
+    const desc = info.descricao.length > 240 ? info.descricao.slice(0, 240) + "…" : info.descricao;
+    return `<div class="place-media">
+      ${info.imagem ? `<img src="${esc(info.imagem)}" alt="${esc(local.nome)}" loading="lazy">` : ""}
+      <p class="media-desc">${esc(desc)}</p>
+      ${linksHtml(local, info)}
+    </div>`;
+  }
+  // Não achou na Wikipédia — usa o que a família adicionou na mão, ou oferece pra adicionar
+  const temManual = local.descricaoManual || local.fotoManual;
+  return `<div class="place-media">
+    ${local.fotoManual ? `<img src="${esc(local.fotoManual)}" alt="${esc(local.nome)}" loading="lazy" onerror="this.style.display='none'">` : ""}
+    ${local.descricaoManual ? `<p class="media-desc">${esc(local.descricaoManual)}</p>` : ""}
+    <button type="button" class="media-editar-btn" onclick="editarMediaManual(${JSON.stringify(local.id)})">${temManual ? "✏️ Editar descrição/foto" : "➕ Adicionar descrição e foto"}</button>
+    ${linksHtml(local, info)}
+  </div>`;
+}
+
+function editarMediaManual(localId){
+  const locais = carregarLocais();
+  const local = locais.find(l => String(l.id) === String(localId));
+  if(!local) return;
+  const desc = prompt("Descrição curta do lugar (o que tem lá, por que vale a pena visitar):", local.descricaoManual || "");
+  if(desc === null) return;
+  const foto = prompt("Link de uma foto (opcional, cole a URL):", local.fotoManual || "");
+  if(foto === null) return;
+  local.descricaoManual = (desc || "").trim();
+  local.fotoManual = (foto || "").trim();
+  salvarLocais(locais);
+  renderVotacao();
+  if(mapaInfoLocalId){
+    const l2 = carregarLocais().find(x => String(x.id) === String(mapaInfoLocalId));
+    if(l2) mostrarInfoLocalMapa(l2);
+  }
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=updateLocalMedia", {
+      method: "POST", redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ id: local.id, descricaoManual: local.descricaoManual, fotoManual: local.fotoManual })
+    }).catch(err => console.log("Media update error:", err));
+  }
+}
+
+function mudarCidade(cidade){
+  cidadeSelecionada = cidade;
+  document.querySelectorAll(".city-tab").forEach(btn => btn.classList.remove("active"));
+  document.querySelector(`[data-city="${cidade}"]`).classList.add("active");
+  document.getElementById("form-titulo-cidade").textContent = `Sugerir um lugar - ${cidade}`;
+  atualizarBairros(cidade);
+  renderVotacao();
+}
+
+const BAIRRO_A_CONFIRMAR = "A confirmar";
+
+function atualizarBairros(cidade){
+  const select = document.getElementById("votacao-bairro");
+  const bairros = BAIRROS_POR_CIDADE[cidade] || [];
+  select.innerHTML = `<option value="">Escolha o bairro</option>` +
+    bairros.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join("") +
+    `<option value="${BAIRRO_A_CONFIRMAR}">🤷 Não sei / verificar depois</option>`;
+}
+
+/* ================= CATEGORIAS (com opção de criar novas) ================= */
+const CATEGORIAS_PADRAO = [
+  "Parque", "Museu", "Histórico", "Arte", "Vida Noturna", "Natureza", "Compras",
+  "Restaurante", "Bar / Café", "Praia", "Mirante / Vista", "Passeio / Tour", "Hospedagem"
+];
+const STORE_CATEGORIAS = "family_trip_categorias_extra";
+
+function carregarCategoriasExtra(){
+  try { return JSON.parse(localStorage.getItem(STORE_CATEGORIAS) || "[]"); } catch(e){ return []; }
+}
+function salvarCategoriasExtra(lista){
+  localStorage.setItem(STORE_CATEGORIAS, JSON.stringify(lista));
+}
+function todasCategorias(){
+  const extras = carregarCategoriasExtra();
+  return CATEGORIAS_PADRAO.concat(extras.filter(c => !CATEGORIAS_PADRAO.includes(c)));
+}
+
+function atualizarCategorias(selecionar){
+  const select = document.getElementById("votacao-categoria");
+  const categorias = todasCategorias();
+  select.innerHTML = `<option value="">Escolha a categoria</option>` +
+    categorias.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("") +
+    `<option value="__nova__">➕ Criar nova categoria…</option>`;
+  if(selecionar) select.value = selecionar;
+}
+
+function onCategoriaChange(){
+  const select = document.getElementById("votacao-categoria");
+  if(select.value !== "__nova__") return;
+  const nome = prompt("Nome da nova categoria (ex: Futebol, Vinícola, Trilha):");
+  const limpo = (nome || "").trim();
+  if(!limpo){ select.value = ""; return; }
+  const extras = carregarCategoriasExtra();
+  if(!extras.includes(limpo) && !CATEGORIAS_PADRAO.includes(limpo)){
+    extras.push(limpo);
+    salvarCategoriasExtra(extras);
+  }
+  atualizarCategorias(limpo);
+}
+
+/* ================= DETECÇÃO DE DUPLICATAS ================= */
+function calcularSimilaridade(str1, str2){
+  const s1 = str1.toLowerCase().trim();
+  const s2 = str2.toLowerCase().trim();
+
+  // Se são iguais, retorna 100%
+  if(s1 === s2) return 1;
+
+  // Palavras-chave comuns indicam similaridade
+  const palavras1 = s1.split(/\s+/).filter(p => p.length > 2);
+  const palavras2 = s2.split(/\s+/).filter(p => p.length > 2);
+  const comunsCount = palavras1.filter(p => palavras2.includes(p)).length;
+
+  // Levenshtein distance simplificado
+  const maxLen = Math.max(s1.length, s2.length);
+  let distancia = 0;
+  for(let i = 0; i < Math.min(s1.length, s2.length); i++){
+    if(s1[i] !== s2[i]) distancia++;
+  }
+  distancia += Math.abs(s1.length - s2.length);
+
+  const similarity = 1 - (distancia / (maxLen + 1));
+
+  // Se tem palavras em comum E são parecidas, é provável duplicata
+  const temPalavrasComuns = comunsCount >= Math.min(palavras1.length, palavras2.length) * 0.6;
+  const muitoParecido = similarity > 0.7;
+
+  if(temPalavrasComuns && muitoParecido) return 0.95;
+  if(temPalavrasComuns) return 0.8;
+  if(muitoParecido) return similarity;
+
+  return similarity;
+}
+
+function encontrarSimilares(nome){
+  if(!nome || nome.length < 2) return [];
+
+  const todosLocais = carregarLocais();
+  const locaisCidade = todosLocais.filter(l => l.cidade === cidadeSelecionada);
+
+  return locaisCidade
+    .map(l => ({
+      nome: l.nome,
+      similaridade: calcularSimilaridade(nome, l.nome)
+    }))
+    .filter(l => l.similaridade > 0.6)
+    .sort((a, b) => b.similaridade - a.similaridade);
+}
+
+function mostrarSugestoes(){
+  const input = document.getElementById("votacao-nome").value.trim();
+  const listDiv = document.getElementById("sugestoes-list");
+
+  if(!input || input.length < 2){
+    listDiv.style.display = "none";
+    return;
+  }
+
+  const similares = encontrarSimilares(input);
+
+  if(similares.length === 0){
+    listDiv.style.display = "none";
+    return;
+  }
+
+  listDiv.innerHTML = similares.slice(0, 5).map(s => `
+    <div style="padding:8px 12px;border-bottom:1px solid rgba(var(--hairline),.1);cursor:pointer;color:var(--cream-text);font-size:.85rem;transition:background .15s ease" onmouseover="this.style.background='rgba(var(--hairline),.12)'" onmouseout="this.style.background='transparent'" onclick="selecionarSugestao('${s.nome.replace(/'/g, "\\'")}')" title="Similaridade: ${Math.round(s.similaridade * 100)}%">
+      ${s.nome}
+      <span style="color:var(--cream-text);opacity:.5;font-size:.75rem">(${Math.round(s.similaridade * 100)}% similar)</span>
+    </div>
+  `).join("");
+
+  listDiv.style.display = "block";
+}
+
+function selecionarSugestao(nome){
+  document.getElementById("votacao-nome").value = nome;
+  document.getElementById("sugestoes-list").style.display = "none";
+}
+
+function verificarDuplicatas(){
+  const nome = document.getElementById("votacao-nome").value.trim();
+  if(!nome) return null;
+
+  const similares = encontrarSimilares(nome);
+  return similares.filter(s => s.similaridade > 0.75);
+}
+
+function adicionarLocal(){
+  const nome = document.getElementById("votacao-nome").value.trim();
+  const bairro = document.getElementById("votacao-bairro").value;
+  const categoria = document.getElementById("votacao-categoria").value;
+  const notas = document.getElementById("votacao-notas").value.trim();
+
+  if(!nome || !bairro || !categoria){
+    alert("Preencha nome, bairro e categoria");
+    return;
+  }
+
+  // Verificar duplicatas
+  const duplicatas = verificarDuplicatas();
+  if(duplicatas && duplicatas.length > 0){
+    const nomesSimulares = duplicatas.map(d => `"${d.nome}"`).join(", ");
+    const confirmar = confirm(`⚠️ Locais similares encontrados: ${nomesSimulares}\n\nTem certeza que "${nome}" é diferente? Clique OK para adicionar mesmo assim, ou Cancelar para revisar.`);
+    if(!confirmar) return;
+  }
+
+  const locais = carregarLocais();
+  locais.push({
+    id: Date.now() + Math.random(),
+    cidade: cidadeSelecionada,
+    nome: nome,
+    bairro: bairro,
+    categoria: categoria,
+    notas: notas,
+    votos: [],
+    data: new Date().toLocaleDateString("pt-BR")
+  });
+
+  salvarLocais(locais);
+  document.getElementById("votacao-nome").value = "";
+  document.getElementById("votacao-bairro").value = "";
+  document.getElementById("votacao-categoria").value = "";
+  document.getElementById("votacao-notas").value = "";
+  document.getElementById("sugestoes-list").style.display = "none";
+  renderVotacao();
+}
+
+function definirInteresse(localId, pessoa, tipo){
+  const locais = carregarLocais();
+  const local = locais.find(l => String(l.id) === String(localId));
+  if(!local) return;
+  if(!Array.isArray(local.votos)) local.votos = [];
+  if(!Array.isArray(local.naoInteresse)) local.naoInteresse = [];
+
+  const iV = local.votos.indexOf(pessoa);
+  const iN = local.naoInteresse.indexOf(pessoa);
+
+  if(tipo === "nao"){
+    if(iN > -1){ local.naoInteresse.splice(iN, 1); }          // já marcado "sem interesse" → desmarca
+    else { local.naoInteresse.push(pessoa); if(iV > -1) local.votos.splice(iV, 1); }
+  } else { // interesse
+    if(iV > -1){ local.votos.splice(iV, 1); }                 // já tinha interesse → desmarca
+    else { local.votos.push(pessoa); if(iN > -1) local.naoInteresse.splice(iN, 1); }
+  }
+
+  salvarLocais(locais);
+  renderVotacao();
+}
+
+function removerLocal(localId){
+  let locais = carregarLocais();
+  locais = locais.filter(l => String(l.id) !== String(localId));
+  salvarLocais(locais);
+  renderVotacao();
+}
+
+function removerLocalSheets(localId){
+  if(!confirm("Remover este local?")) return;
+
+  // Remove localmente na hora
+  removerLocal(localId);
+
+  if(!USE_SHEETS) return;
+
+  fetch(SHEETS_API_URL + "?action=deleteLocal", {
+    method: "POST",
+    redirect: "follow",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ id: localId })
+  })
+    .then(r => r.json())
+    .then(data => { if(data && data.success) setTimeout(syncFromSheets, 800); })
+    .catch(err => console.log("Delete error:", err));
+}
+
+function renderVotacao(){
+  const todosLocais = carregarLocais();
+  const locais = todosLocais.filter(l => l.cidade === cidadeSelecionada);
+  const container = document.getElementById("votacao-places");
+
+  if(locais.length === 0){
+    container.innerHTML = `<p style="color:var(--cream-text);opacity:.6;padding:20px;text-align:center">Nenhum local sugerido ainda para ${cidadeSelecionada}. Complete o formulário ao lado para começar!</p>`;
+    return;
+  }
+
+  locais.forEach(l => {
+    if(!Array.isArray(l.votos)) l.votos = [];
+    if(!Array.isArray(l.naoInteresse)) l.naoInteresse = [];
+  });
+  locais.sort((a, b) => b.votos.length - a.votos.length);
+
+  const cores = {Thomas:"#2f6b63", "Júlia":"#c1543a", Mateus:"#24406e", Paula:"#b33a3a", Juliane:"#e8b23d"};
+
+  container.innerHTML = locais.map(local => {
+    const isConsenso = local.votos.length === VIAJANTES.length;
+    const pct = (local.votos.length / VIAJANTES.length) * 100;
+    const corBarra = isConsenso ? "#2f6b63" : "#e8b23d";
+    const semInteresse = local.naoInteresse.length;
+
+    return `
+      <div class="place-card ${isConsenso ? "consenso" : ""}">
+        <div class="place-card-head">
+          <h4>${esc(local.nome)}</h4>
+          <button type="button" class="place-del" data-act="del" data-id="${esc(local.id)}" title="Remover">×</button>
+        </div>
+        <div class="place-info">
+          <span><strong>${local.bairro === BAIRRO_A_CONFIRMAR ? "🤷 A confirmar" : esc(local.bairro)}</strong></span>
+          <span>${esc(local.categoria)}</span>
+        </div>
+        ${local.notas ? `<div class="place-notes">${esc(local.notas)}</div>` : ""}
+        ${mediaHtml(local)}
+        <div class="place-voters">
+          ${local.votos.map(v => `<div class="voter-badge" style="background:${cores[v] || "#6b5a42"}" title="${esc(v)}">${avatarHtmlDe(v, "voter-badge")} ${esc(v)}</div>`).join("")}
+        </div>
+        <div class="voters-row">
+          <div class="vote-meter"><i style="width:${pct}%;background:${corBarra}"></i></div>
+          <div class="vote-count">${local.votos.length}/${VIAJANTES.length} com interesse</div>
+        </div>
+        ${semInteresse ? `<div class="sem-interesse-line">✗ ${semInteresse} sem interesse: ${local.naoInteresse.map(v => `${emojiDe(v)} ${esc(v)}`).join(", ")}</div>` : ""}
+        ${isConsenso ? '<div class="consenso-banner">✓ Consenso total</div>' : ""}
+        ${USUARIO
+          ? (() => {
+              const temInteresse = local.votos.includes(USUARIO);
+              const semInt = local.naoInteresse.includes(USUARIO);
+              return `<div class="interesse-actions">
+                <button type="button" class="int-btn int-sim ${temInteresse ? "ativo" : ""}" data-act="vote" data-tipo="interesse" data-id="${esc(local.id)}" data-pessoa="${esc(USUARIO)}" data-nome="${esc(local.nome)}">${temInteresse ? "✓ Tenho interesse" : "Tenho interesse"}</button>
+                <button type="button" class="int-btn int-nao ${semInt ? "ativo" : ""}" data-act="vote" data-tipo="nao" data-id="${esc(local.id)}" data-pessoa="${esc(USUARIO)}" data-nome="${esc(local.nome)}">${semInt ? "✗ Sem interesse" : "Sem interesse"}</button>
+              </div>`;
+            })()
+          : `<div class="interesse-actions"><span style="font-size:.78rem;color:var(--ink-soft)">Entre para votar</span></div>`}
+      </div>
+    `;
+  }).join("");
+
+  // Delegação de eventos (anexada uma única vez) — imune a nomes com aspas/apóstrofos
+  if(!container._delegado){
+    container._delegado = true;
+    container.addEventListener("click", function(ev){
+      const btn = ev.target.closest("button[data-act]");
+      if(!btn) return;
+      const id = btn.getAttribute("data-id");
+      if(btn.getAttribute("data-act") === "del"){
+        removerLocalSheets(id);
+      } else {
+        votarLocalSheets(id, btn.getAttribute("data-pessoa"), btn.getAttribute("data-nome"), btn.getAttribute("data-tipo"));
+      }
+    });
+  }
+}
+
+/* ================= GOOGLE SHEETS INTEGRATION ================= */
+let SHEETS_API_URL = localStorage.getItem("sheets_api_url") || "";
+let USE_SHEETS = SHEETS_API_URL.length > 0;
+
+function setUpSheetsIntegration(){
+  const modal = document.createElement("div");
+  modal.id = "sheets-modal";
+  modal.style.cssText = `
+    display: none;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,7,4,.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  `;
+  modal.innerHTML = `
+    <div style="background:var(--paper);color:var(--ink);border-radius:12px;padding:30px;max-width:500px;width:100%;box-shadow:0 30px 60px rgba(0,0,0,.5)">
+      <h2 style="font-family:'Fraunces',Georgia,serif;color:var(--teal-deep);margin:0 0 16px">Sincronizar com Google Sheets</h2>
+      <p style="color:var(--ink-soft);margin:0 0 16px;font-size:.9rem">Cole a URL do Web App do Google Apps Script para sincronizar votos em tempo real entre todos os dispositivos.</p>
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">URL do Web App</label>
+        <input id="sheets-url-input" type="text" placeholder="https://script.google.com/macros/d/.../usercontent" style="width:100%;padding:10px;border:1px solid rgba(var(--hairline),.25);background:rgba(var(--hairline),.05);color:var(--ink);border-radius:6px;font-size:.9rem;font-family:monospace">
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="saveSheetsURL()" style="flex:1;padding:10px;background:var(--gold);color:#2b241c;border:none;border-radius:6px;font-weight:700;cursor:pointer">Conectar</button>
+        <button onclick="closeSheetsModal()" style="flex:1;padding:10px;background:rgba(var(--hairline),.2);color:var(--cream-text);border:none;border-radius:6px;font-weight:700;cursor:pointer">Depois</button>
+      </div>
+      <p style="font-size:.75rem;color:var(--ink-soft);margin:12px 0 0;text-align:center">
+        <a href="https://support.google.com/docs/answer/10724868" target="_blank" style="color:var(--teal);text-decoration:none">Como gerar a URL do Apps Script</a>
+      </p>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  if(!SHEETS_API_URL){
+    setTimeout(() => { modal.style.display = "flex"; }, 500);
+  } else {
+    syncFromSheets();
+  }
+}
+
+function saveSheetsURL(){
+  const url = document.getElementById("sheets-url-input").value.trim();
+  if(!url){
+    alert("Cole a URL do Web App");
+    return;
+  }
+  SHEETS_API_URL = url;
+  USE_SHEETS = true;
+  localStorage.setItem("sheets_api_url", url);
+  closeSheetsModal();
+  syncFromSheets();
+  syncViagem();
+}
+
+function closeSheetsModal(){
+  const modal = document.getElementById("sheets-modal");
+  if(modal) modal.style.display = "none";
+}
+
+// Protege votos recém-clicados de serem sobrescritos por um sync que ainda não viu a mudança
+const votoProtegidoAte = {};
+function protegerVoto(localId){
+  votoProtegidoAte[String(localId)] = Date.now() + 8000;
+}
+
+function syncFromSheets(){
+  if(!USE_SHEETS || !SHEETS_API_URL) return;
+
+  fetch(SHEETS_API_URL + "?action=getLocais")
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.success && data.locais){
+        const antigos = carregarLocais();
+        const antigosPorId = new Map(antigos.map(l => [String(l.id), l]));
+        const agora = Date.now();
+
+        const remotos = data.locais.map(l => {
+          const protegidoAte = votoProtegidoAte[String(l.id)];
+          if(protegidoAte && agora < protegidoAte){
+            // Ainda dentro da janela de proteção: mantém o voto local (otimista) em vez do remoto (pode estar desatualizado)
+            const local = antigosPorId.get(String(l.id));
+            if(local) return local;
+          }
+          return {
+            id: l.id,
+            cidade: l.cidade,
+            nome: l.nome,
+            bairro: l.bairro,
+            categoria: l.categoria,
+            notas: l.notas,
+            votos: Array.from(new Set(l.votos || [])),
+            naoInteresse: Array.from(new Set(l.naoInteresse || [])),
+            sugeridoPor: l.sugeridoPor || "",
+            descricaoManual: l.descricaoManual || "",
+            fotoManual: l.fotoManual || "",
+            data: l.data
+          };
+        });
+        // Mantém locais criados offline que ainda não chegaram no Sheets
+        const chave = x => ((x.cidade || "") + "|" + (x.nome || "")).toLowerCase().trim();
+        const remotoKeys = new Set(remotos.map(chave));
+        const pendentes = antigos.filter(l => l.pendente && !remotoKeys.has(chave(l)));
+        salvarLocais(remotos.concat(pendentes));
+        renderVotacao();
+        renderInicio();
+        renderResultados();
+      }
+    })
+    .catch(err => console.log("Sync error:", err));
+}
+
+function votarLocalSheets(localId, pessoa, localNome, tipo){
+  if(!USUARIO){ abrirLogin(); return; }
+  tipo = (tipo === "nao") ? "nao" : "interesse";
+  // Marca localmente na hora (feedback imediato, nunca perde) e protege contra sync desatualizado
+  definirInteresse(localId, pessoa, tipo);
+  protegerVoto(localId);
+
+  if(!USE_SHEETS) return;
+
+  fetch(SHEETS_API_URL + "?action=addVoto", {
+    method: "POST",
+    redirect: "follow",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+      pessoa: pessoa,
+      localId: localId,
+      localNome: localNome,
+      cidade: cidadeSelecionada,
+      tipo: tipo
+    })
+  })
+    .then(r => r.json())
+    .then(data => { if(data && data.success) setTimeout(syncFromSheets, 1200); })
+    .catch(err => console.log("Vote error:", err));
+}
+
+function adicionarLocalSheets(){
+  const nome = document.getElementById("votacao-nome").value.trim();
+  const bairro = document.getElementById("votacao-bairro").value;
+  const categoria = document.getElementById("votacao-categoria").value;
+  const notas = document.getElementById("votacao-notas").value.trim();
+
+  if(!USUARIO){ abrirLogin(); return; }
+
+  if(!nome || !bairro || !categoria){
+    alert("Preencha nome, bairro e categoria");
+    return;
+  }
+
+  // Verificar duplicatas (diferentes escritas do mesmo lugar)
+  const duplicatas = verificarDuplicatas();
+  if(duplicatas && duplicatas.length > 0){
+    const nomesSimilares = duplicatas.map(d => `"${d.nome}"`).join(", ");
+    const confirmar = confirm(`⚠️ Locais similares encontrados: ${nomesSimilares}\n\nTem certeza que "${nome}" é diferente? Clique OK para adicionar mesmo assim, ou Cancelar para revisar.`);
+    if(!confirmar) return;
+  }
+
+  // 1) Salva localmente na hora — o input nunca se perde
+  const locais = carregarLocais();
+  locais.push({
+    id: Date.now() + Math.random(),
+    cidade: cidadeSelecionada,
+    nome: nome,
+    bairro: bairro,
+    categoria: categoria,
+    notas: notas,
+    votos: [],
+    sugeridoPor: USUARIO,
+    data: new Date().toLocaleDateString("pt-BR"),
+    pendente: USE_SHEETS
+  });
+  salvarLocais(locais);
+
+  // Limpa o formulário e mostra o local imediatamente
+  document.getElementById("votacao-nome").value = "";
+  document.getElementById("votacao-bairro").value = "";
+  document.getElementById("votacao-categoria").value = "";
+  document.getElementById("votacao-notas").value = "";
+  document.getElementById("sugestoes-list").style.display = "none";
+  renderVotacao();
+
+  // 2) Envia ao Google Sheets (melhor esforço)
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=addLocal", {
+      method: "POST",
+      redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        cidade: cidadeSelecionada,
+        nome: nome,
+        bairro: bairro,
+        categoria: categoria,
+        notas: notas,
+        sugeridoPor: USUARIO
+      })
+    })
+      .then(r => r.json())
+      .then(data => { if(data && data.success) setTimeout(syncFromSheets, 800); })
+      .catch(err => console.log("Add error:", err));
+  }
+}
+
+/* Auto-sync a cada 5 segundos se conectado ao Sheets */
+setInterval(() => {
+  if(USE_SHEETS){ syncFromSheets(); syncViagem(); syncEmojis(); syncAvatares(); syncAcessos(); syncBagagemCompartilhada(); syncPendenciasManuais(); }
+}, 5000);
+
+/* ================= LOGIN / CADASTRO ================= */
+let USUARIO = localStorage.getItem("family_trip_usuario") || "";
+let loginModo = "entrar";
+
+// Hash determinístico (cyrb53) — mesmo resultado em qualquer dispositivo.
+// Evita guardar a senha em texto puro. Não é criptografia forte.
+function hashSenha(str){
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for(let i = 0; i < str.length; i++){
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+}
+
+function authApi(action, payload){
+  return fetch(SHEETS_API_URL + "?action=" + action, {
+    method: "POST",
+    redirect: "follow",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  }).then(r => r.json());
+}
+
+// Fallback local (quando não há Google Sheets configurado)
+function senhasLocais(){ try { return JSON.parse(localStorage.getItem("family_trip_senhas") || "{}"); } catch(e){ return {}; } }
+function salvarSenhasLocais(m){ localStorage.setItem("family_trip_senhas", JSON.stringify(m)); }
+
+/* ================= EMOJI PESSOAL (escolhido no login, sincroniza como a viagem) ================= */
+const EMOJI_OPCOES = ["🧭","🌻","⚡","🌊","🎨","🦁","🐨","🐢","🦋","🌵","🍀","🔥","⭐","🌙","☀️","🍕","🎸","📷","⚽","🏔️","🚀","🎈","🍹","🐬"];
+const STORE_EMOJI_CUSTOM = "family_trip_emoji_custom";
+let emojiEmEdicao = "";
+
+function carregarEmojiCustom(){ try { return JSON.parse(localStorage.getItem(STORE_EMOJI_CUSTOM) || "{}"); } catch(e){ return {}; } }
+function salvarEmojiCustomLocal(m){ localStorage.setItem(STORE_EMOJI_CUSTOM, JSON.stringify(m)); }
+function emojiDe(nome){
+  const custom = carregarEmojiCustom();
+  return (nome && custom[nome]) || VIAJANTES_EMOJI[nome] || "🙂";
+}
+
+/* ---- Caricatura/avatar por pessoa (opcional — cai pro emoji se não tiver) ---- */
+const STORE_AVATAR_CUSTOM = "family_trip_avatar_custom";
+let avatarUrlEmEdicao = "";
+
+function carregarAvatarCustom(){ try { return JSON.parse(localStorage.getItem(STORE_AVATAR_CUSTOM) || "{}"); } catch(e){ return {}; } }
+function salvarAvatarCustomLocal(m){ localStorage.setItem(STORE_AVATAR_CUSTOM, JSON.stringify(m)); }
+function avatarUrlDe(nome){
+  const custom = carregarAvatarCustom();
+  return (nome && custom[nome]) || "";
+}
+// HTML de avatar: usa a caricatura se existir, senão cai pro emoji
+function avatarHtmlDe(nome, classe){
+  const url = avatarUrlDe(nome);
+  if(url) return `<img src="${esc(url)}" alt="${esc(nome)}" class="${classe}-img" data-avatar-fallback-classe="${classe}" data-avatar-fallback-emoji="${emojiDe(nome)}" onerror="avatarImgErro(this)">`;
+  return `<span class="${classe}-emoji">${emojiDe(nome)}</span>`;
+}
+function avatarImgErro(img){
+  const span = document.createElement("span");
+  span.className = img.getAttribute("data-avatar-fallback-classe") + "-emoji";
+  span.textContent = img.getAttribute("data-avatar-fallback-emoji");
+  img.replaceWith(span);
+}
+function salvarAvatarEscolha(nome, url){
+  const m = carregarAvatarCustom();
+  if(url) m[nome] = url; else delete m[nome];
+  salvarAvatarCustomLocal(m);
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=setConfig", {
+      method: "POST", redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ avatares: m })
+    }).catch(err => console.log("Avatar sync error:", err));
+  }
+}
+function syncAvatares(){
+  if(!USE_SHEETS || !SHEETS_API_URL) return;
+  fetch(SHEETS_API_URL + "?action=getConfig")
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.success && data.avatares){
+        if(JSON.stringify(carregarAvatarCustom()) !== JSON.stringify(data.avatares)){
+          salvarAvatarCustomLocal(data.avatares);
+          renderVotacao(); renderResultados(); renderAuthUI(); renderInicio();
+        }
+      }
+    })
+    .catch(err => console.log("Avatar sync error:", err));
+}
+
+/* ---- Contador de acessos (pra selo "Mais presente") ---- */
+const STORE_ACESSOS = "family_trip_acessos";
+function carregarAcessos(){ try { return JSON.parse(localStorage.getItem(STORE_ACESSOS) || "{}"); } catch(e){ return {}; } }
+function salvarAcessosLocal(m){ localStorage.setItem(STORE_ACESSOS, JSON.stringify(m)); }
+function registrarAcesso(nome){
+  const m = carregarAcessos();
+  m[nome] = (m[nome] || 0) + 1;
+  salvarAcessosLocal(m);
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=setConfig", {
+      method: "POST", redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ acessos: m })
+    }).catch(err => console.log("Acessos sync error:", err));
+  }
+}
+function syncAcessos(){
+  if(!USE_SHEETS || !SHEETS_API_URL) return;
+  fetch(SHEETS_API_URL + "?action=getConfig")
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.success && data.acessos){
+        if(JSON.stringify(carregarAcessos()) !== JSON.stringify(data.acessos)){
+          salvarAcessosLocal(data.acessos);
+          renderInicio();
+        }
+      }
+    })
+    .catch(err => console.log("Acessos sync error:", err));
+}
+
+// Uso administrativo (console do navegador): define o avatar de vários de uma vez e sincroniza pra todo mundo.
+// Exemplo: definirTodosAvatares({ Thomas: "https://i.imgur.com/xxxx.jpg", "Júlia": "https://i.imgur.com/yyyy.jpg" })
+window.definirTodosAvatares = function(mapa){
+  const atual = carregarAvatarCustom();
+  Object.keys(mapa).forEach(nome => { if(mapa[nome]) atual[nome] = mapa[nome]; });
+  salvarAvatarCustomLocal(atual);
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=setConfig", {
+      method: "POST", redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ avatares: atual })
+    }).then(() => console.log("✅ Avatares salvos e sincronizados!")).catch(err => console.log("Erro ao sincronizar:", err));
+  } else {
+    console.log("✅ Avatares salvos neste aparelho (conecte a planilha pra sincronizar com todos).");
+  }
+  renderVotacao(); renderResultados(); renderAuthUI(); renderInicio();
+};
+
+// Uso administrativo: define a foto de capa do hero.
+// Exemplo: definirFotoHero("https://i.imgur.com/zzzz.jpg")
+window.definirFotoHero = function(url){
+  if(url) localStorage.setItem(STORE_HERO_FOTO, url); else localStorage.removeItem(STORE_HERO_FOTO);
+  renderHeroFoto();
+  console.log("✅ Foto do hero atualizada!");
+};
+
+function renderGradeEmoji(){
+  const grade = document.getElementById("login-emoji-grade");
+  if(!grade) return;
+  grade.innerHTML = EMOJI_OPCOES.map(e => `
+    <button type="button" class="emoji-opt ${e === emojiEmEdicao ? "ativo" : ""}" data-emoji="${e}">${e}</button>
+  `).join("");
+}
+
+function escolherEmojiLogin(emoji){
+  emojiEmEdicao = emoji;
+  renderGradeEmoji();
+  renderAvatarPreview();
+}
+
+function salvarEmojiEscolha(nome, emoji){
+  if(!nome || !emoji) return;
+  const m = carregarEmojiCustom();
+  m[nome] = emoji;
+  salvarEmojiCustomLocal(m);
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=setConfig", {
+      method: "POST", redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ emojis: m })
+    }).catch(err => console.log("Emoji sync error:", err));
+  }
+}
+
+function syncEmojis(){
+  if(!USE_SHEETS || !SHEETS_API_URL) return;
+  fetch(SHEETS_API_URL + "?action=getConfig")
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.success && data.emojis){
+        if(JSON.stringify(carregarEmojiCustom()) !== JSON.stringify(data.emojis)){
+          salvarEmojiCustomLocal(data.emojis);
+          renderVotacao(); renderResultados(); renderAuthUI();
+        }
+      }
+    })
+    .catch(err => console.log("Emoji sync error:", err));
+}
+
+function setupLogin(){
+  if(document.getElementById("login-modal")) return;
+  const modal = document.createElement("div");
+  modal.id = "login-modal";
+  modal.style.cssText = "display:none;position:fixed;inset:0;background:rgba(10,7,4,.9);z-index:300;align-items:center;justify-content:center;padding:20px";
+  modal.innerHTML = `
+    <div style="background:var(--paper);color:var(--ink);border-radius:12px;padding:28px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 60px rgba(0,0,0,.5)">
+      <h2 style="font-family:'Fraunces',Georgia,serif;color:var(--teal-deep);margin:0 0 6px">Entrar na votação</h2>
+      <p id="login-msg" style="color:var(--ink-soft);margin:0 0 18px;font-size:.9rem">Escolha seu nome e digite sua senha.</p>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Quem é você?</label>
+        <select id="login-nome" onchange="onLoginNomeChange()" style="width:100%;padding:10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.95rem;background:var(--paper-2);color:var(--ink)">
+          <option value="">Selecione seu nome</option>
+          ${VIAJANTES.map(v => `<option value="${esc(v)}">${emojiDe(v)} ${esc(v)}</option>`).join("")}
+        </select>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Seu emoji</label>
+        <div id="login-emoji-grade" class="emoji-grade"></div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Ou uma caricatura sua (opcional)</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div id="login-avatar-preview" class="login-avatar-preview"></div>
+          <input id="login-avatar-url" type="text" placeholder="Cole o link da imagem" oninput="onAvatarUrlInput()" style="flex:1;padding:9px 10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.85rem;background:var(--paper-2);color:var(--ink)">
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Senha</label>
+        <input id="login-senha" type="password" placeholder="Sua senha" onkeyup="if(event.key==='Enter')submeterLogin()" style="width:100%;padding:10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.95rem;background:var(--paper-2);color:var(--ink)">
+      </div>
+      <div id="login-confirm-wrap" style="margin-bottom:14px;display:none">
+        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Confirmar senha</label>
+        <input id="login-senha2" type="password" placeholder="Repita a senha" onkeyup="if(event.key==='Enter')submeterLogin()" style="width:100%;padding:10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.95rem;background:var(--paper-2);color:var(--ink)">
+      </div>
+      <p id="login-erro" style="color:#b33a3a;font-size:.85rem;margin:0 0 12px;min-height:1em"></p>
+      <button id="login-btn" onclick="submeterLogin()" style="width:100%;padding:12px;background:var(--gold);color:#2b241c;border:none;border-radius:6px;font-weight:700;font-size:.9rem;cursor:pointer">Entrar</button>
+      <p style="text-align:center;margin:14px 0 0">
+        <a href="#" id="login-toggle" onclick="toggleLoginModo();return false;" style="color:var(--teal-deep);font-size:.82rem;text-decoration:none;font-weight:700">Primeiro acesso? Criar minha senha</a>
+      </p>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  renderGradeEmoji();
+  renderAvatarPreview();
+  modal.querySelector("#login-emoji-grade").addEventListener("click", ev => {
+    const btn = ev.target.closest(".emoji-opt");
+    if(btn) escolherEmojiLogin(btn.getAttribute("data-emoji"));
+  });
+}
+
+function abrirLogin(){
+  setupLogin();
+  loginModo = "entrar";
+  document.getElementById("login-confirm-wrap").style.display = "none";
+  document.getElementById("login-btn").textContent = "Entrar";
+  document.getElementById("login-msg").textContent = "Escolha seu nome e digite sua senha.";
+  document.getElementById("login-erro").textContent = "";
+  document.getElementById("login-senha").value = "";
+  const s2 = document.getElementById("login-senha2"); if(s2) s2.value = "";
+  setLoginToggleLabel();
+  document.getElementById("login-modal").style.display = "flex";
+}
+
+function fecharLogin(){ const m = document.getElementById("login-modal"); if(m) m.style.display = "none"; }
+
+function setLoginToggleLabel(){
+  const t = document.getElementById("login-toggle");
+  if(t) t.textContent = (loginModo === "cadastro") ? "Já tenho senha — entrar" : "Primeiro acesso? Criar minha senha";
+}
+
+function modoEntrar(){
+  loginModo = "entrar";
+  document.getElementById("login-confirm-wrap").style.display = "none";
+  document.getElementById("login-btn").textContent = "Entrar";
+  document.getElementById("login-msg").textContent = "Escolha seu nome e digite sua senha.";
+  document.getElementById("login-erro").textContent = "";
+  setLoginToggleLabel();
+}
+
+function onLoginNomeChange(){
+  modoEntrar();
+  const nome = document.getElementById("login-nome").value;
+  emojiEmEdicao = nome ? emojiDe(nome) : "";
+  avatarUrlEmEdicao = nome ? avatarUrlDe(nome) : "";
+  renderGradeEmoji();
+  document.getElementById("login-avatar-url").value = avatarUrlEmEdicao;
+  renderAvatarPreview();
+}
+
+function onAvatarUrlInput(){
+  avatarUrlEmEdicao = document.getElementById("login-avatar-url").value.trim();
+  renderAvatarPreview();
+}
+
+function renderAvatarPreview(){
+  const box = document.getElementById("login-avatar-preview");
+  if(!box) return;
+  box.innerHTML = avatarUrlEmEdicao
+    ? `<img src="${esc(avatarUrlEmEdicao)}" alt="prévia" onerror="this.style.display='none'">`
+    : `<span>${emojiEmEdicao || "🙂"}</span>`;
+}
+
+function entrarModoCadastro(msg){
+  loginModo = "cadastro";
+  document.getElementById("login-confirm-wrap").style.display = "";
+  document.getElementById("login-btn").textContent = "Criar senha";
+  document.getElementById("login-msg").textContent = msg;
+  document.getElementById("login-erro").textContent = "";
+  setLoginToggleLabel();
+}
+
+function toggleLoginModo(){
+  if(loginModo === "cadastro"){ modoEntrar(); }
+  else { entrarModoCadastro("Primeiro acesso: crie sua senha e confirme abaixo."); }
+}
+
+function logar(nome){
+  USUARIO = nome;
+  localStorage.setItem("family_trip_usuario", nome);
+  if(emojiEmEdicao) salvarEmojiEscolha(nome, emojiEmEdicao);
+  salvarAvatarEscolha(nome, avatarUrlEmEdicao);
+  registrarAcesso(nome);
+  fecharLogin();
+  renderAuthUI();
+  renderVotacao();
+  renderInicio();
+}
+
+function abrirTrocaEmoji(){
+  if(!USUARIO) return;
+  setupLogin();
+  document.getElementById("login-nome").value = USUARIO;
+  document.getElementById("login-nome").disabled = true;
+  emojiEmEdicao = emojiDe(USUARIO);
+  avatarUrlEmEdicao = avatarUrlDe(USUARIO);
+  renderGradeEmoji();
+  document.getElementById("login-avatar-url").value = avatarUrlEmEdicao;
+  renderAvatarPreview();
+  document.getElementById("login-msg").textContent = "Escolha seu novo emoji ou caricatura.";
+  document.querySelector("#login-modal input#login-senha").closest("div").style.display = "none";
+  document.getElementById("login-confirm-wrap").style.display = "none";
+  document.getElementById("login-erro").textContent = "";
+  document.getElementById("login-btn").textContent = "Salvar";
+  document.getElementById("login-btn").onclick = () => {
+    salvarEmojiEscolha(USUARIO, emojiEmEdicao);
+    salvarAvatarEscolha(USUARIO, avatarUrlEmEdicao);
+    document.getElementById("login-nome").disabled = false;
+    document.querySelector("#login-modal input#login-senha").closest("div").style.display = "";
+    document.getElementById("login-btn").textContent = "Entrar";
+    document.getElementById("login-btn").onclick = submeterLogin;
+    fecharLogin();
+    renderAuthUI();
+    renderVotacao();
+    renderInicio();
+  };
+  document.getElementById("login-modal").style.display = "flex";
+}
+
+function submeterLogin(){
+  const nome = document.getElementById("login-nome").value;
+  const senha = document.getElementById("login-senha").value;
+  const erro = document.getElementById("login-erro");
+  erro.textContent = "";
+  if(!nome){ erro.textContent = "Escolha seu nome."; return; }
+  if(!senha || senha.length < 4){ erro.textContent = "A senha precisa ter ao menos 4 caracteres."; return; }
+  const hash = hashSenha(senha);
+
+  if(loginModo === "cadastro"){
+    const senha2 = document.getElementById("login-senha2").value;
+    if(senha !== senha2){ erro.textContent = "As senhas não conferem."; return; }
+    if(USE_SHEETS){
+      authApi("register", { nome: nome, hash: hash })
+        .then(d => {
+          if(d && d.success){ logar(nome); }
+          else if(d && d.error === "já cadastrado"){ erro.textContent = "Esse nome já tem senha. Tente entrar."; onLoginNomeChange(); }
+          else if(d && d.error === "Ação desconhecida"){ erro.textContent = "A planilha ainda não foi atualizada com o cadastro. Refaça o Deploy do Apps Script (nova versão)."; }
+          else { erro.textContent = "Não foi possível cadastrar. Tente de novo."; }
+        })
+        .catch(() => { erro.textContent = "Sem conexão com a planilha. Tente de novo."; });
+    } else {
+      const m = senhasLocais();
+      if(m[nome]){ erro.textContent = "Esse nome já tem senha neste aparelho."; return; }
+      m[nome] = hash; salvarSenhasLocais(m); logar(nome);
+    }
+    return;
+  }
+
+  // modo entrar
+  if(USE_SHEETS){
+    authApi("login", { nome: nome, hash: hash })
+      .then(d => {
+        if(d && d.success){ logar(nome); }
+        else if(d && d.error === "não cadastrado"){ entrarModoCadastro("Primeira vez aqui? Crie sua senha e confirme abaixo."); }
+        else if(d && d.error === "Ação desconhecida"){ erro.textContent = "A planilha ainda não foi atualizada com o login. Refaça o Deploy do Apps Script (nova versão)."; }
+        else { erro.textContent = "Senha incorreta."; }
+      })
+      .catch(() => { erro.textContent = "Sem conexão com a planilha. Tente de novo."; });
+  } else {
+    const m = senhasLocais();
+    if(!m[nome]){ entrarModoCadastro("Primeira vez aqui? Crie sua senha e confirme abaixo."); return; }
+    if(m[nome] === hash){ logar(nome); } else { erro.textContent = "Senha incorreta."; }
+  }
+}
+
+function sair(){
+  localStorage.removeItem("family_trip_usuario");
+  USUARIO = "";
+  renderAuthUI();
+  renderVotacao();
+  abrirLogin();
+}
+
+function renderAuthUI(){
+  let bar = document.getElementById("auth-bar");
+  if(!bar){
+    const tabs = document.getElementById("cities-tabs");
+    if(!tabs) return;
+    bar = document.createElement("div");
+    bar.id = "auth-bar";
+    bar.style.margin = "0 0 16px";
+    tabs.parentNode.insertBefore(bar, tabs);
+  }
+  const grid = document.querySelector("#panel-votacao .votacao-grid");
+  if(USUARIO){
+    bar.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:rgba(217,138,61,.12);border:1px solid rgba(217,138,61,.3);border-radius:8px;padding:10px 14px">
+      <span style="color:var(--cream-text);font-size:.9rem;display:flex;align-items:center;gap:8px">${avatarHtmlDe(USUARIO, "authbar-avatar")} Olá, <strong style="color:var(--gold)">${esc(USUARIO)}</strong> — seus votos entram no seu nome.</span>
+      <span style="display:flex;gap:8px">
+        <button onclick="abrirTrocaEmoji()" style="background:transparent;border:1px solid rgba(var(--hairline),.4);color:var(--cream-text);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.8rem">Trocar foto/emoji</button>
+        <button onclick="sair()" style="background:transparent;border:1px solid rgba(var(--hairline),.4);color:var(--cream-text);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.8rem">Sair</button>
+      </span>
+    </div>`;
+    if(grid) grid.style.display = "";
+  } else {
+    bar.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:rgba(var(--hairline),.06);border:1px solid rgba(var(--hairline),.2);border-radius:8px;padding:12px 14px">
+      <span style="color:var(--cream-text);font-size:.9rem;opacity:.85">Entre com seu nome para sugerir lugares e votar.</span>
+      <button onclick="abrirLogin()" style="background:var(--gold);border:none;color:#2b241c;border-radius:6px;padding:8px 16px;cursor:pointer;font-weight:700;font-size:.85rem">Entrar</button>
+    </div>`;
+    if(grid) grid.style.display = "none";
+  }
+}
+
+/* ================= VIAGEM (cidades, datas e noites) ================= */
+const STORE_VIAGEM = "family_trip_viagem";
+const VIAGEM_PADRAO = {
+  inicio: "2026-08-29",
+  hora: "08:00",
+  confirmado: false,
+  cidades: [
+    { nome: "Buenos Aires", noites: 6 },
+    { nome: "Santiago", noites: 3 },
+    { nome: "Viña del Mar", noites: 2 }
+  ]
+};
+
+function carregarViagem(){
+  try {
+    const v = JSON.parse(localStorage.getItem(STORE_VIAGEM));
+    if(v && v.inicio && Array.isArray(v.cidades)){
+      if(!v.hora) v.hora = "08:00";
+      return v;
+    }
+  } catch(e){}
+  return JSON.parse(JSON.stringify(VIAGEM_PADRAO));
+}
+let viagemEditadaEm = 0;
+let pushViagemTimer = null;
+
+function salvarViagem(v){
+  localStorage.setItem(STORE_VIAGEM, JSON.stringify(v));
+  viagemEditadaEm = Date.now();
+  if(USE_SHEETS){
+    clearTimeout(pushViagemTimer);
+    pushViagemTimer = setTimeout(() => {
+      fetch(SHEETS_API_URL + "?action=setConfig", {
+        method: "POST",
+        redirect: "follow",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ viagem: v })
+      }).catch(err => console.log("Config push error:", err));
+    }, 600);
+  }
+}
+
+// Puxa a configuração da viagem do Sheets (datas/noites compartilhadas)
+function syncViagem(){
+  if(!USE_SHEETS) return;
+  if(Date.now() - viagemEditadaEm < 4000) return; // não sobrescreve edição recente sua
+  fetch(SHEETS_API_URL + "?action=getConfig")
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.success && data.viagem){
+        const novo = JSON.stringify(data.viagem);
+        if(localStorage.getItem(STORE_VIAGEM) !== novo){
+          localStorage.setItem(STORE_VIAGEM, novo);
+          renderViagem();
+          renderInicio();
+          renderMapaRota();
+        }
+      }
+    })
+    .catch(err => console.log("Config sync error:", err));
+}
+
+const MESES_PT = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const DIAS_SEMANA = ["dom","seg","ter","qua","qui","sex","sáb"];
+
+function parseData(iso){
+  const [a,m,d] = (iso || "").split("-").map(Number);
+  if(!a || !m || !d) return null;
+  return new Date(a, m-1, d);
+}
+function addDias(date, n){ const d = new Date(date); d.setDate(d.getDate()+n); return d; }
+// Data + hora exata do embarque (usa v.hora, ou 08:00 se não definida)
+function partidaDataHora(v){
+  const d = parseData(v.inicio);
+  if(!d) return null;
+  const [h, min] = (v.hora || "08:00").split(":").map(Number);
+  d.setHours(h||0, min||0, 0, 0);
+  return d;
+}
+// Diferença em dias/horas completos entre agora e um instante futuro
+function diasHorasAte(alvo, agora){
+  const ms = alvo - agora;
+  if(ms <= 0) return null;
+  const totalMin = Math.ceil(ms / 60000);
+  return { dias: Math.floor(totalMin / 1440), horas: Math.floor((totalMin % 1440) / 60) };
+}
+function fmtData(date){
+  if(!date) return "—";
+  return `${DIAS_SEMANA[date.getDay()]} ${String(date.getDate()).padStart(2,"0")} ${MESES_PT[date.getMonth()]}`;
+}
+
+function viagemTrechos(){
+  const v = carregarViagem();
+  let cursor = parseData(v.inicio);
+  return v.cidades.map((c, i) => {
+    const noites = Math.max(0, parseInt(c.noites,10) || 0);
+    const checkin = cursor;
+    const checkout = cursor ? addDias(cursor, noites) : null;
+    cursor = checkout;
+    return { nome: c.nome, noites, checkin, checkout, idx: i };
+  });
+}
+
+/* Médias históricas de temperatura por mês (°C min–max) — não é previsão, é clima típico da época */
+const CLIMA_MEDIO = {
+  "Buenos Aires": [23,30, 22,29, 19,26, 14,21, 10,17, 7,14, 7,14, 8,16, 10,18, 13,20, 17,24, 20,27],
+  "Santiago":     [12,29, 12,28, 9,25, 7,20, 5,16, 3,14, 3,14, 4,16, 6,19, 8,23, 10,26, 12,28],
+  "Viña del Mar": [14,23, 15,23, 13,22, 11,20, 9,18, 8,16, 7,15, 8,15, 9,16, 10,18, 12,20, 13,22]
+};
+// Clima interpolado num dia específico (dia 15 representa o meio de cada mês)
+function climaEmData(cidade, data){
+  const c = CLIMA_MEDIO[cidade];
+  if(!c || !data) return null;
+  const dia = data.getDate();
+  const mes = data.getMonth();
+  const mesAnterior = (mes + 11) % 12;
+  const mesSeguinte = (mes + 1) % 12;
+  let mesA, mesB, t;
+  if(dia < 15){ mesA = mesAnterior; mesB = mes; t = (dia + 15) / 30; }
+  else { mesA = mes; mesB = mesSeguinte; t = (dia - 15) / 30; }
+  const minA = c[mesA*2], maxA = c[mesA*2+1], minB = c[mesB*2], maxB = c[mesB*2+1];
+  return { min: minA + (minB-minA)*t, max: maxA + (maxB-maxA)*t };
+}
+
+// Clima médio para o período exato da estadia (mesmos dias em que estaremos na cidade)
+function climaDoPeriodo(cidade, dataInicio, dataFim){
+  if(!CLIMA_MEDIO[cidade] || !dataInicio) return null;
+  const fim = dataFim || dataInicio;
+  const a = climaEmData(cidade, dataInicio);
+  const b = climaEmData(cidade, fim);
+  if(!a || !b) return null;
+  return { min: Math.round((a.min + b.min) / 2), max: Math.round((a.max + b.max) / 2) };
+}
+
+function renderViagem(){
+  const cont = document.getElementById("viagem-conteudo");
+  if(!cont) return;
+  const v = carregarViagem();
+  const trechos = viagemTrechos();
+  const totalNoites = trechos.reduce((s,t)=>s+t.noites,0);
+  const fim = trechos.length ? trechos[trechos.length-1].checkout : null;
+
+  cont.innerHTML = `
+    <div class="viagem-card">
+      <div class="viagem-inicio-linha">
+        <div class="viagem-inicio">
+          <label for="viagem-inicio-input">Dia de embarque / chegada</label>
+          <input type="date" id="viagem-inicio-input" value="${esc(v.inicio)}">
+        </div>
+        <div class="viagem-inicio">
+          <label for="viagem-hora-input">Horário do voo</label>
+          <input type="time" id="viagem-hora-input" value="${esc(v.hora)}">
+        </div>
+      </div>
+      <div class="viagem-cidades">
+        ${trechos.map((t,pos) => `
+          <div class="viagem-trecho">
+            <div class="viagem-trecho-ordem">
+              <button type="button" class="ordem-btn" data-viagem-subir="${t.idx}" title="Mover para cima" ${pos === 0 ? "disabled" : ""}>▲</button>
+              <button type="button" class="ordem-btn" data-viagem-descer="${t.idx}" title="Mover para baixo" ${pos === trechos.length - 1 ? "disabled" : ""}>▼</button>
+            </div>
+            <div class="viagem-trecho-nome">${esc(t.nome)}</div>
+            <div class="viagem-trecho-datas">${fmtData(t.checkin)} → ${fmtData(t.checkout)}</div>
+            ${(() => { const cl = climaDoPeriodo(t.nome, t.checkin, t.checkout); return cl ? `<div class="viagem-trecho-clima">🌡️ ${cl.min}°–${cl.max}°C <span>média histórica no período</span></div>` : ""; })()}
+            <div class="viagem-trecho-noites">
+              <button type="button" class="noite-btn" data-viagem-menos="${t.idx}" title="Menos uma noite">−</button>
+              <span><strong>${t.noites}</strong> ${t.noites === 1 ? "noite" : "noites"}</span>
+              <button type="button" class="noite-btn" data-viagem-mais="${t.idx}" title="Mais uma noite">+</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <p class="viagem-hint">Use as setas ▲▼ para mudar a ordem das cidades na viagem.</p>
+      <div class="viagem-resumo">
+        <span><strong>${totalNoites}</strong> noites no total</span>
+        <span>Volta prevista: <strong>${fmtData(fim)}</strong></span>
+      </div>
+      <label class="viagem-status">
+        <input type="checkbox" id="viagem-confirmado" ${v.confirmado ? "checked" : ""}>
+        <span>Passagens compradas — datas confirmadas</span>
+      </label>
+    </div>
+  `;
+
+  if(!cont._delegado){
+    cont._delegado = true;
+    cont.addEventListener("click", ev => {
+      const btn = ev.target.closest("button[data-viagem-mais],button[data-viagem-menos],button[data-viagem-subir],button[data-viagem-descer]");
+      if(!btn || btn.disabled) return;
+      const v2 = carregarViagem();
+      if(btn.hasAttribute("data-viagem-mais")){
+        const i = +btn.getAttribute("data-viagem-mais");
+        v2.cidades[i].noites = (parseInt(v2.cidades[i].noites,10)||0) + 1;
+      } else if(btn.hasAttribute("data-viagem-menos")){
+        const i = +btn.getAttribute("data-viagem-menos");
+        v2.cidades[i].noites = Math.max(0, (parseInt(v2.cidades[i].noites,10)||0) - 1);
+      } else if(btn.hasAttribute("data-viagem-subir")){
+        const i = +btn.getAttribute("data-viagem-subir");
+        if(i > 0) [v2.cidades[i-1], v2.cidades[i]] = [v2.cidades[i], v2.cidades[i-1]];
+      } else if(btn.hasAttribute("data-viagem-descer")){
+        const i = +btn.getAttribute("data-viagem-descer");
+        if(i < v2.cidades.length - 1) [v2.cidades[i+1], v2.cidades[i]] = [v2.cidades[i], v2.cidades[i+1]];
+      }
+      salvarViagem(v2);
+      renderViagem();
+      renderMapaRota();
+      renderInicio();
+    });
+    cont.addEventListener("change", ev => {
+      const v2 = carregarViagem();
+      if(ev.target.id === "viagem-inicio-input"){ v2.inicio = ev.target.value; }
+      else if(ev.target.id === "viagem-hora-input"){ v2.hora = ev.target.value || "08:00"; }
+      else if(ev.target.id === "viagem-confirmado"){ v2.confirmado = ev.target.checked; }
+      else return;
+      salvarViagem(v2);
+      renderViagem();
+      renderMapaRota();
+      renderInicio();
+    });
+  }
+}
+
+/* ================= MAPA DA VIAGEM (trajeto) ================= */
+/* ================= MAPA (Leaflet + OpenStreetMap — mapa real, sem chave de API) ================= */
+let mapaLeaflet = null;
+let mapaMarkersLayer = null;
+let mapaModo = "rota"; // "rota" | "lugares"
+
+function renderMapaRota(){
+  const cont = document.getElementById("mapa-conteudo");
+  if(!cont) return;
+
+  if(!document.getElementById("mapa-leaflet")){
+    cont.innerHTML = `
+      <div class="mapa-modo-toggle">
+        <button type="button" class="mapa-modo-btn ativo" data-mapa-modo="rota">🗺️ Rota da viagem</button>
+        <button type="button" class="mapa-modo-btn" data-mapa-modo="lugares">📍 Todos os lugares sugeridos</button>
+      </div>
+      <div id="mapa-leaflet" class="mapa-leaflet"></div>
+      <div class="mapa-info" id="mapa-info"></div>
+      <div class="mapa-stats" id="mapa-stats"></div>
+      <div class="mapa-legenda" id="mapa-legenda"></div>
+    `;
+    cont.addEventListener("click", ev => {
+      const btn = ev.target.closest("[data-mapa-modo]");
+      if(btn) trocarModoMapa(btn.getAttribute("data-mapa-modo"));
+    });
+
+    const box = document.getElementById("mapa-info");
+    box.addEventListener("click", ev => {
+      if(ev.target.closest("[data-mapa-fechar]")){ box.innerHTML = ""; mapaInfoLocalId = null; return; }
+      const irBtn = ev.target.closest("[data-mapa-ir]");
+      if(irBtn){
+        const cid = irBtn.getAttribute("data-mapa-ir");
+        document.querySelector('[data-panel="votacao"]').click();
+        mudarCidade(cid);
+      }
+    });
+  }
+
+  const el = document.getElementById("mapa-leaflet");
+  if(el && !mapaLeaflet){
+    mapaLeaflet = L.map(el, { scrollWheelZoom: false });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(mapaLeaflet);
+    mapaMarkersLayer = L.layerGroup().addTo(mapaLeaflet);
+  }
+
+  // Espera o container ficar com o tamanho real (a aba pode ter estado escondida) antes de calcular o enquadramento —
+  // senão o zoom inicial sai errado, calculado em cima de um mapa com 0px de largura/altura.
+  // Usa setTimeout (não requestAnimationFrame) porque rAF pode não disparar se a aba/janela não estiver em foco.
+  setTimeout(() => {
+    if(!mapaLeaflet) return;
+    mapaLeaflet.invalidateSize();
+    renderMapaConteudo();
+  }, 30);
+}
+
+function trocarModoMapa(modo){
+  mapaModo = modo;
+  document.querySelectorAll(".mapa-modo-btn").forEach(b => b.classList.toggle("ativo", b.getAttribute("data-mapa-modo") === modo));
+  document.getElementById("mapa-info").innerHTML = "";
+  renderMapaConteudo();
+}
+
+function renderMapaConteudo(){
+  if(!mapaLeaflet) return;
+  if(mapaModo === "rota") renderMapaModoRota();
+  else renderMapaModoLugares();
+}
+
+function renderMapaModoRota(){
+  mapaMarkersLayer.clearLayers();
+  const v = carregarViagem();
+  const trechos = viagemTrechos();
+  const coresCidade = ["#e2643b", "#4e6e8e", "#d98a3d", "#3c7a73", "#c24545"];
+  const bounds = [];
+  let distanciaTotal = 0;
+
+  // Rota completa: saída de Porto Alegre -> cidades do roteiro -> volta pra Porto Alegre
+  const fim = trechos.length ? trechos[trechos.length-1].checkout : null;
+  const pontos = [
+    { nome: "Porto Alegre", coord: PORTO_ALEGRE_COORD, tipo: "partida", data: partidaDataHora(v) },
+    ...trechos.map(t => ({ nome: t.nome, coord: CIDADES_COORDS[t.nome], tipo: "cidade" })),
+    { nome: "Porto Alegre", coord: PORTO_ALEGRE_COORD, tipo: "volta", data: fim }
+  ];
+
+  let numero = 0;
+  pontos.forEach((p,i) => {
+    if(!p.coord) return;
+    bounds.push(p.coord);
+
+    let icone;
+    if(p.tipo === "cidade"){
+      numero++;
+      const cor = coresCidade[(numero-1) % coresCidade.length];
+      icone = L.divIcon({ className: "mapa-icone-wrap", html: `<div class="mapa-pin-marcador" style="background:${cor}">${numero}</div>`, iconSize: [32,32], iconAnchor: [16,16] });
+    } else {
+      icone = L.divIcon({ className: "mapa-icone-wrap", html: `<div class="mapa-pin-casa">🏠</div>`, iconSize: [32,32], iconAnchor: [16,16] });
+    }
+
+    const marker = L.marker(p.coord, { icon: icone }).addTo(mapaMarkersLayer);
+    const rotulo = p.tipo === "partida" ? "Saída · Porto Alegre" : p.tipo === "volta" ? "Volta · Porto Alegre" : `${numero}. ${p.nome}`;
+    marker.bindTooltip(esc(rotulo), { direction: "top", offset: [0,-16] });
+    if(p.tipo === "cidade") marker.on("click", () => mostrarInfoCidade(p.nome));
+    else marker.on("click", () => mostrarInfoPortoAlegre(p.tipo, p.data, v.hora));
+
+    if(i < pontos.length - 1 && pontos[i+1].coord){
+      const prox = pontos[i+1].coord;
+      L.polyline([p.coord, prox], { color: "#e2643b", weight: 3, dashArray: "1 9", lineCap: "round", opacity: .85 }).addTo(mapaMarkersLayer);
+      const km = haversineKm(p.coord, prox);
+      distanciaTotal += km;
+      const meio = [(p.coord[0]+prox[0])/2, (p.coord[1]+prox[1])/2];
+      L.marker(meio, {
+        icon: L.divIcon({ className: "mapa-km-label", html: `${km.toLocaleString("pt-BR")} km`, iconSize: [90,20] }),
+        interactive: false
+      }).addTo(mapaMarkersLayer);
+    }
+  });
+
+  if(bounds.length) mapaLeaflet.fitBounds(bounds, { padding: [50,50] });
+
+  document.getElementById("mapa-stats").innerHTML = `
+    <div class="mapa-stat"><b>${distanciaTotal.toLocaleString("pt-BR")}</b><span>km percorridos no total</span></div>
+    <div class="mapa-stat"><b>${trechos.length}</b><span>${trechos.length === 1 ? "destino" : "destinos"}</span></div>
+    <div class="mapa-stat"><b>${trechos.reduce((s,t)=>s+t.noites,0)}</b><span>noites de viagem</span></div>
+  `;
+  document.getElementById("mapa-legenda").innerHTML =
+    `<span><i style="background:#8a6539"></i>🏠 Porto Alegre · saída e volta</span>` +
+    trechos.map((t,i)=>`<span><i style="background:${coresCidade[i%coresCidade.length]}"></i>${i+1}. ${esc(t.nome)} · ${t.noites} ${t.noites===1?"noite":"noites"}</span>`).join("");
+}
+
+async function renderMapaModoLugares(){
+  mapaMarkersLayer.clearLayers();
+  const locais = carregarLocais();
+
+  document.getElementById("mapa-stats").innerHTML = "";
+  document.getElementById("mapa-legenda").innerHTML = locais.length
+    ? `<span class="mapa-carregando">📍 Localizando os lugares sugeridos…</span>`
+    : `<span class="mapa-carregando">Nenhum lugar sugerido ainda — vá em Votação!</span>`;
+
+  const bounds = [];
+  for(const local of locais){
+    const cache = carregarGeocodeCache();
+    const chave = `${local.bairro}|${local.cidade}`.toLowerCase();
+    const jaEmCache = !!cache[chave];
+    const coord = await geocodificarBairro(local.bairro, local.cidade);
+    if(!jaEmCache) await new Promise(r => setTimeout(r, 350));
+    if(!coord || mapaModo !== "lugares") continue;
+    bounds.push(coord);
+    const cor = corCategoria(local.categoria);
+    const votos = (local.votos||[]).length;
+    const marker = L.circleMarker(coord, { radius: 9, fillColor: cor, color: "#fff", weight: 2, fillOpacity: .9 }).addTo(mapaMarkersLayer);
+    marker.bindTooltip(esc(local.nome), { direction: "top", offset: [0,-10] });
+    marker.on("click", () => mostrarInfoLocalMapa(local));
+  }
+
+  if(mapaModo !== "lugares") return;
+  if(bounds.length) mapaLeaflet.fitBounds(bounds, { padding: [50,50] });
+
+  const categoriasUsadas = [...new Set(locais.map(l=>l.categoria).filter(Boolean))];
+  document.getElementById("mapa-legenda").innerHTML = categoriasUsadas.map(c=>`<span><i style="background:${corCategoria(c)}"></i>${esc(c)}</span>`).join("");
+  document.getElementById("mapa-stats").innerHTML = `
+    <div class="mapa-stat"><b>${locais.length}</b><span>${locais.length===1?"lugar sugerido":"lugares sugeridos"}</span></div>
+    <div class="mapa-stat"><b>${categoriasUsadas.length}</b><span>categorias</span></div>
+  `;
+}
+
+function mostrarInfoCidade(cidade){
+  const box = document.getElementById("mapa-info");
+  if(!box) return;
+  const locais = carregarLocais().filter(l => l.cidade === cidade);
+  const votantes = new Set();
+  locais.forEach(l => { (l.votos||[]).forEach(p=>votantes.add(p)); (l.naoInteresse||[]).forEach(p=>votantes.add(p)); });
+  const consenso = locais.filter(l => (l.votos||[]).length === VIAJANTES.length && VIAJANTES.length > 0).length;
+  const trecho = viagemTrechos().find(t => t.nome === cidade);
+
+  box.innerHTML = `
+    <div class="mapa-info-card">
+      <div class="mapa-info-head">
+        <h4>${esc(cidade)}</h4>
+        <button type="button" class="mapa-info-close" data-mapa-fechar>×</button>
+      </div>
+      ${trecho ? `<p>${fmtData(trecho.checkin)} → ${fmtData(trecho.checkout)} · ${trecho.noites} ${trecho.noites===1?"noite":"noites"}</p>` : ""}
+      <p>${locais.length} ${locais.length===1?"lugar sugerido":"lugares sugeridos"} · ${consenso} com consenso · ${votantes.size}/${VIAJANTES.length} já votaram</p>
+      <button type="button" class="mapa-info-btn" data-mapa-ir="${esc(cidade)}">Ver votação de ${esc(cidade)} →</button>
+    </div>
+  `;
+}
+
+function mostrarInfoPortoAlegre(tipo, data, hora){
+  const box = document.getElementById("mapa-info");
+  if(!box) return;
+  const titulo = tipo === "partida" ? "Saída de Porto Alegre" : "Volta para Porto Alegre";
+  box.innerHTML = `
+    <div class="mapa-info-card">
+      <div class="mapa-info-head">
+        <h4>🏠 ${titulo}</h4>
+        <button type="button" class="mapa-info-close" data-mapa-fechar>×</button>
+      </div>
+      <p>${data ? `${fmtData(data)}${tipo === "partida" && hora ? ` às ${esc(hora)}` : ""}` : "Defina a data na aba Viagem"}</p>
+    </div>
+  `;
+}
+
+// Local atualmente aberto no card do mapa — usado pra atualizar o card quando a busca de foto/descrição termina
+let mapaInfoLocalId = null;
+
+function mostrarInfoLocalMapa(local){
+  const box = document.getElementById("mapa-info");
+  if(!box) return;
+  mapaInfoLocalId = local.id;
+  const cor = corCategoria(local.categoria);
+  const votos = (local.votos||[]).length;
+  const naoInteresse = (local.naoInteresse||[]).length;
+  const pct = VIAJANTES.length ? Math.round(votos / VIAJANTES.length * 100) : 0;
+
+  box.innerHTML = `
+    <div class="mapa-info-card">
+      <div class="mapa-info-head">
+        <h4>${esc(local.nome)}</h4>
+        <button type="button" class="mapa-info-close" data-mapa-fechar>×</button>
+      </div>
+      <p><span style="color:${cor};font-weight:700">${esc(local.categoria || "—")}</span> · ${esc(local.bairro === BAIRRO_A_CONFIRMAR ? "bairro a confirmar" : local.bairro)} · ${esc(local.cidade)}</p>
+      ${mediaHtml(local)}
+      <div class="mapa-info-votos">
+        <div class="mapa-info-bar"><i style="width:${pct}%;background:${cor}"></i></div>
+        <span>${votos}/${VIAJANTES.length} interesse${naoInteresse ? ` · ${naoInteresse} sem interesse` : ""}</span>
+      </div>
+      <button type="button" class="mapa-info-btn" data-mapa-ir="${esc(local.cidade)}">Ver na votação de ${esc(local.cidade)} →</button>
+    </div>
+  `;
+}
+
+/* ================= FOTO DA FAMÍLIA (hero) ================= */
+const STORE_HERO_FOTO = "family_trip_hero_foto";
+
+function renderHeroFoto(){
+  const cont = document.getElementById("hero-foto-wrap");
+  if(!cont) return;
+  const url = localStorage.getItem(STORE_HERO_FOTO);
+  if(url){
+    cont.innerHTML = `
+      <img src="${esc(url)}" alt="Família Brueckheimer" class="hero-foto-img" onerror="this.parentElement.innerHTML=''; localStorage.removeItem('${STORE_HERO_FOTO}'); renderHeroFoto();">
+      <button type="button" class="hero-foto-editar" id="hero-foto-editar" title="Trocar foto">✎</button>
+    `;
+  } else {
+    cont.innerHTML = `
+      <button type="button" class="hero-foto-placeholder" id="hero-foto-add">
+        <span class="icone">🖼️</span>
+        <span>Adicionar foto<br>da família</span>
+      </button>
+    `;
+  }
+  if(!cont._delegado){
+    cont._delegado = true;
+    cont.addEventListener("click", ev => {
+      if(ev.target.closest("#hero-foto-add") || ev.target.closest("#hero-foto-editar")){
+        const url = prompt("Cole o link de uma foto da família (Google Fotos, Imgur etc):", localStorage.getItem(STORE_HERO_FOTO) || "");
+        if(url === null) return;
+        const limpo = url.trim();
+        if(limpo) localStorage.setItem(STORE_HERO_FOTO, limpo);
+        else localStorage.removeItem(STORE_HERO_FOTO);
+        renderHeroFoto();
+      }
+    });
+  }
+}
+
+/* ================= HOME (painel inicial) ================= */
+function renderInicio(){
+  const cont = document.getElementById("inicio-conteudo");
+  if(!cont) return;
+
+  const trechos = viagemTrechos();
+  const v = carregarViagem();
+  const confirmado = v.confirmado;
+  const inicio = trechos.length ? trechos[0].checkin : null;
+  const fim = trechos.length ? trechos[trechos.length-1].checkout : null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const partida = partidaDataHora(v);
+  const agora = new Date();
+
+  let countNum, countLabel, contagemViva = false;
+  if(partida && agora < partida){
+    contagemViva = true;
+  } else if(partida && fim && hoje <= fim){
+    countNum = "Boa viagem!"; countLabel = "aproveitem cada minuto";
+  } else if(partida){
+    countNum = "✓"; countLabel = "viagem realizada";
+  } else {
+    countNum = "—"; countLabel = "defina a data na aba Viagem";
+  }
+
+  const locais = carregarLocais();
+  const porCidade = CIDADES.map(cid => {
+    const ls = locais.filter(l => l.cidade === cid);
+    const votantes = new Set();
+    ls.forEach(l => { (l.votos||[]).forEach(p=>votantes.add(p)); (l.naoInteresse||[]).forEach(p=>votantes.add(p)); });
+    return { cidade: cid, total: ls.length, votantes: votantes.size };
+  });
+  const ultimos = locais.slice().sort((a,b)=> (a.id < b.id ? 1 : -1)).slice(0,5);
+  const pendencias = calcularPendencias();
+  const pendenciasManuais = carregarPendenciasManuais();
+  const selos = calcularSelos();
+
+  cont.innerHTML = `
+    <div class="album-cover">
+      <div class="album-frame">
+        <span class="album-eyebrow">Álbum da viagem</span>
+        <h3 class="album-title">Família Brueckheimer em Buenos Aires, Santiago &amp; Viña del Mar</h3>
+        <div class="album-familia">
+          ${VIAJANTES.map(v => `
+            <div class="album-pessoa">
+              <div class="album-avatar" title="${esc(v)}">${avatarHtmlDe(v, "album-avatar")}</div>
+              <span class="album-nome">${esc(v)}</span>
+            </div>
+          `).join("")}
+        </div>
+        <p class="album-caption">Um sonho antigo, planejado por todos, guardado aqui até o dia de embarcar.</p>
+      </div>
+    </div>
+
+    <div class="home-grid">
+      <div class="home-count">
+        ${contagemViva ? `
+          <div class="contagem-viva" id="contagem-viva">
+            <div class="contagem-item"><span class="contagem-num" id="cv-dias">00</span><span class="contagem-label">dias</span></div>
+            <div class="contagem-item"><span class="contagem-num" id="cv-horas">00</span><span class="contagem-label">horas</span></div>
+            <div class="contagem-item"><span class="contagem-num" id="cv-min">00</span><span class="contagem-label">min</span></div>
+            <div class="contagem-item"><span class="contagem-num" id="cv-seg">00</span><span class="contagem-label">seg</span></div>
+          </div>
+          <div class="count-label">para o embarque ✈️</div>
+        ` : `
+          <div class="count-num">${esc(String(countNum))}</div>
+          <div class="count-label">${countLabel}</div>
+        `}
+        ${inicio ? `<div class="count-sub">${fmtData(inicio)} ${esc(v.hora)} → ${fmtData(fim)} · ${trechos.reduce((s,t)=>s+t.noites,0)} noites</div>` : ""}
+        <div class="count-status ${confirmado ? "ok" : "prov"}">${confirmado ? "✓ Datas confirmadas" : "📅 Provisório · passagens ainda não compradas"}</div>
+      </div>
+
+      <div class="home-cidades">
+        ${trechos.map(t=>{
+          const c = porCidade.find(x=>x.cidade===t.nome) || {total:0};
+          return `<div class="home-cidade">
+            <div class="home-cidade-nome">${esc(t.nome)}</div>
+            <div class="home-cidade-info">${t.noites} ${t.noites===1?"noite":"noites"} · ${fmtData(t.checkin)}</div>
+            <div class="home-cidade-votos">${c.total} ${c.total===1?"lugar sugerido":"lugares sugeridos"}</div>
+          </div>`;
+        }).join("")}
+      </div>
+
+      <div class="home-progresso">
+        <h3>Progresso da votação</h3>
+        ${porCidade.map(c=>`
+          <div class="prog-row">
+            <span class="prog-cidade">${esc(c.cidade)}</span>
+            <div class="prog-bar"><i style="width:${VIAJANTES.length ? Math.round(c.votantes/VIAJANTES.length*100) : 0}%"></i></div>
+            <span class="prog-num">${c.votantes}/${VIAJANTES.length} votaram</span>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="home-recentes">
+        <h3>Últimos lugares sugeridos</h3>
+        ${ultimos.length
+          ? ultimos.map(l=>`<div class="rec-item"><strong>${esc(l.nome)}</strong> <span>· ${esc(l.cidade)}</span></div>`).join("")
+          : `<p class="home-vazio">Nenhum lugar ainda. Vá em <strong>Votação</strong> e sugira o primeiro!</p>`}
+      </div>
+    </div>
+
+    <div class="mural-avisos">
+      <div class="mural-cabecalho">
+        <div class="mural-titulo">📌 Mural de avisos</div>
+        <button type="button" class="mural-add-btn" data-mural-add>+ Novo aviso</button>
+      </div>
+      <div class="mural-quadro" id="mural-quadro">
+        ${pendenciasManuais.map((p,i) => `
+          <div class="post-it post-it-${(i % 4) + 1} ${p.feito ? "post-it-feito" : ""}" data-pendencia-manual="${i}" title="Clique para marcar como feito">
+            <span class="post-it-pin"></span>
+            <span class="post-it-flag">${p.feito ? "✅" : flagDaUrgencia(p.urgencia)}</span>
+            <button type="button" class="post-it-del" data-pendencia-remover="${i}" title="Remover">×</button>
+            <p>${esc(p.texto)}</p>
+          </div>
+        `).join("")}
+        ${pendencias.map((p,i) => `
+          <div class="post-it post-it-${((i + pendenciasManuais.length) % 4) + 1}">
+            <span class="post-it-pin"></span>
+            <span class="post-it-flag">${flagDaUrgencia(p.urgencia)}</span>
+            <p>${esc(p.texto)}</p>
+          </div>
+        `).join("")}
+        ${(!pendencias.length && pendenciasManuais.every(p=>p.feito)) ? `
+          <div class="post-it post-it-4">
+            <span class="post-it-pin"></span>
+            <span class="post-it-flag">🎉</span>
+            <p>Tudo em dia! Nenhuma pendência agora.</p>
+          </div>
+        ` : ""}
+      </div>
+    </div>
+
+    <div class="selos-secao">
+      <h3>Selos desbloqueados</h3>
+      ${selos.length ? `<div class="selos-grid">${selos.map(s => `
+        <div class="selo-card">
+          <div class="selo-emoji">${s.emoji}</div>
+          <div class="selo-titulo">${esc(s.titulo)}</div>
+          <div class="selo-desc">${esc(s.desc)}</div>
+        </div>
+      `).join("")}</div>` : `<p class="home-vazio">Vote em alguns lugares para começar a desbloquear selos!</p>`}
+    </div>
+  `;
+
+  if(!cont._delegado){
+    cont._delegado = true;
+    cont.addEventListener("click", ev => {
+      if(ev.target.closest("[data-mural-add]")){ adicionarPendenciaManual(); return; }
+      const del = ev.target.closest("[data-pendencia-remover]");
+      if(del){ removerPendenciaManual(+del.getAttribute("data-pendencia-remover")); return; }
+      const post = ev.target.closest("[data-pendencia-manual]");
+      if(post) alternarPendenciaManual(+post.getAttribute("data-pendencia-manual"));
+    });
+  }
+
+  renderHeroStats();
+  atualizarContagemViva();
+}
+
+/* ---- Contagem regressiva ao vivo (dias/horas/min/seg), atualiza a cada segundo ---- */
+let contagemVivaInterval = null;
+function iniciarContagemViva(){
+  if(contagemVivaInterval) return;
+  contagemVivaInterval = setInterval(atualizarContagemViva, 1000);
+}
+function atualizarContagemViva(){
+  const el = document.getElementById("contagem-viva");
+  if(!el) return;
+  const partida = partidaDataHora(carregarViagem());
+  const agora = new Date();
+  if(!partida || agora >= partida){ renderInicio(); return; }
+
+  const totalSeg = Math.floor((partida - agora) / 1000);
+  const dias = Math.floor(totalSeg / 86400);
+  const horas = Math.floor((totalSeg % 86400) / 3600);
+  const min = Math.floor((totalSeg % 3600) / 60);
+  const seg = totalSeg % 60;
+  const p2 = n => String(n).padStart(2, "0");
+  document.getElementById("cv-dias").textContent = p2(dias);
+  document.getElementById("cv-horas").textContent = p2(horas);
+  document.getElementById("cv-min").textContent = p2(min);
+  document.getElementById("cv-seg").textContent = p2(seg);
+}
+
+function renderHeroStats(){
+  const cont = document.getElementById("hero-stats");
+  if(!cont) return;
+  const v = carregarViagem();
+  const partida = partidaDataHora(v);
+  const diff = partida ? diasHorasAte(partida, new Date()) : null;
+
+  let valor, rotulo;
+  if(!partida){ valor = "—"; rotulo = "dias"; }
+  else if(diff && diff.dias > 0){ valor = diff.dias; rotulo = `dias e ${diff.horas}h de espera`; }
+  else if(diff && diff.horas > 0){ valor = diff.horas; rotulo = diff.horas === 1 ? "hora de espera" : "horas de espera"; }
+  else if(diff){ valor = "Já!"; rotulo = "é a hora"; }
+  else { valor = "✓"; rotulo = "embarque"; }
+
+  cont.innerHTML = `
+    <div class="hero-stat"><b>${esc(String(valor))}</b><span>${esc(rotulo)}</span></div>
+    <div class="hero-stat"><b>${CIDADES.length}</b><span>cidades no roteiro</span></div>
+  `;
+}
+
+/* ================= RESULTADOS (ranking) ================= */
+function renderResultados(){
+  const cont = document.getElementById("resultados-conteudo");
+  if(!cont) return;
+  const locais = carregarLocais();
+
+  cont.innerHTML = CIDADES.map(cid => {
+    const ls = locais.filter(l => l.cidade === cid)
+      .map(l => ({ ...l, votos: l.votos||[], naoInteresse: l.naoInteresse||[] }))
+      .sort((a,b)=> (b.votos.length - a.votos.length) || (a.naoInteresse.length - b.naoInteresse.length));
+
+    return `
+      <div class="res-cidade">
+        <h3>${esc(cid)} <span>${ls.length} ${ls.length===1?"lugar":"lugares"}</span></h3>
+        ${ls.length
+          ? ls.map((l,i)=>{
+              const consenso = l.votos.length === VIAJANTES.length && VIAJANTES.length > 0;
+              const pct = VIAJANTES.length ? Math.round(l.votos.length/VIAJANTES.length*100) : 0;
+              return `
+                <div class="res-row ${consenso?"res-consenso":""}">
+                  <div class="res-rank">${i+1}</div>
+                  <div class="res-info">
+                    <div class="res-nome">${esc(l.nome)}${consenso?' <span class="res-selo">✓ consenso</span>':''}</div>
+                    <div class="res-meta">${esc(l.bairro)} · ${esc(l.categoria)}</div>
+                    ${l.naoInteresse.length ? `<div class="res-nao">✗ ${l.naoInteresse.length} sem interesse: ${l.naoInteresse.map(esc).join(", ")}</div>` : ""}
+                  </div>
+                  <div class="res-votos">
+                    <div class="res-bar"><i style="width:${pct}%"></i></div>
+                    <div class="res-num">${l.votos.length}/${VIAJANTES.length}</div>
+                  </div>
+                </div>
+              `;
+            }).join("")
+          : `<p class="home-vazio">Nenhum lugar votado ainda em ${esc(cid)}.</p>`}
+      </div>
+    `;
+  }).join("");
+}
+
+/* ================= BAGAGEM — híbrido: compartilhada (sincroniza) + pessoal (só neste aparelho) ================= */
+const STORE_BAGAGEM = "family_trip_bagagem";
+const BAGAGEM_PADRAO = {
+  "Documentos": ["Passaporte", "RG", "Cartão de vacina", "Seguro viagem"],
+  "Roupas": ["Casaco", "Blusas de frio", "Calças", "Tênis confortável", "Pijama"],
+  "Eletrônicos": ["Carregador de celular", "Fone de ouvido"],
+  "Saúde": ["Remédios de uso contínuo", "Protetor solar", "Álcool em gel", "Remédio pra enjoo"],
+  "Outros": ["Câmera", "Mochila de passeio", "Snacks"]
+};
+const STORE_BAGAGEM_COMPARTILHADA = "family_trip_bagagem_compartilhada";
+const BAGAGEM_COMPARTILHADA_PADRAO = {
+  "Itens da família": ["Adaptador de tomada", "Powerbank", "Reserva do Airbnb impressa/salva", "Cartão internacional", "Pesos em espécie"]
+};
+
+function carregarBagagem(){
+  try {
+    const salvo = JSON.parse(localStorage.getItem(STORE_BAGAGEM));
+    if(salvo) return salvo;
+  } catch(e){}
+  const inicial = {};
+  Object.keys(BAGAGEM_PADRAO).forEach(cat => {
+    inicial[cat] = BAGAGEM_PADRAO[cat].map(item => ({ item, feito: false }));
+  });
+  return inicial;
+}
+function salvarBagagem(b){ localStorage.setItem(STORE_BAGAGEM, JSON.stringify(b)); }
+
+function carregarBagagemCompartilhada(){
+  try {
+    const salvo = JSON.parse(localStorage.getItem(STORE_BAGAGEM_COMPARTILHADA));
+    if(salvo) return salvo;
+  } catch(e){}
+  const inicial = {};
+  Object.keys(BAGAGEM_COMPARTILHADA_PADRAO).forEach(cat => {
+    inicial[cat] = BAGAGEM_COMPARTILHADA_PADRAO[cat].map(item => ({ item, feito: false, marcadoPor: "" }));
+  });
+  return inicial;
+}
+function salvarBagagemCompartilhadaLocal(b){ localStorage.setItem(STORE_BAGAGEM_COMPARTILHADA, JSON.stringify(b)); }
+function salvarBagagemCompartilhada(b){
+  salvarBagagemCompartilhadaLocal(b);
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=setConfig", {
+      method: "POST", redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ bagagem: b })
+    }).catch(err => console.log("Bagagem sync error:", err));
+  }
+}
+function syncBagagemCompartilhada(){
+  if(!USE_SHEETS || !SHEETS_API_URL) return;
+  fetch(SHEETS_API_URL + "?action=getConfig")
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.success && data.bagagem){
+        if(JSON.stringify(carregarBagagemCompartilhada()) !== JSON.stringify(data.bagagem)){
+          salvarBagagemCompartilhadaLocal(data.bagagem);
+          renderBagagem();
+        }
+      }
+    })
+    .catch(err => console.log("Bagagem sync error:", err));
+}
+
+// tipo: "c" (compartilhada) ou "p" (pessoal) — mesma UI, fontes de dados diferentes
+function bagagemCarregar(tipo){ return tipo === "c" ? carregarBagagemCompartilhada() : carregarBagagem(); }
+function bagagemSalvar(tipo, b){ return tipo === "c" ? salvarBagagemCompartilhada(b) : salvarBagagem(b); }
+
+function renderListaBagagem(tipo, titulo, dica){
+  const b = bagagemCarregar(tipo);
+  const categorias = Object.keys(b);
+  const total = categorias.reduce((s,c)=>s+b[c].length,0);
+  const feitos = categorias.reduce((s,c)=>s+b[c].filter(i=>i.feito).length,0);
+
+  return `
+    <div class="bagagem-secao">
+      <h3>${titulo}</h3>
+      <p class="bagagem-dica">${dica}</p>
+      <div class="bagagem-progresso">
+        <div class="prog-bar"><i style="width:${total?Math.round(feitos/total*100):0}%"></i></div>
+        <span>${feitos}/${total} itens prontos</span>
+      </div>
+      <div class="bagagem-grid">
+        ${categorias.map(cat => `
+          <div class="bagagem-cat">
+            <h4>${esc(cat)}</h4>
+            <ul class="bagagem-lista">
+              ${b[cat].map((it,idx) => `
+                <li class="${it.feito ? "feito" : ""}">
+                  <label>
+                    <input type="checkbox" data-bag-tipo="${tipo}" data-bag-cat="${esc(cat)}" data-bag-idx="${idx}" ${it.feito ? "checked" : ""}>
+                    <span>${esc(it.item)}</span>
+                  </label>
+                  ${it.marcadoPor ? `<span class="bagagem-marcador" title="Marcado por ${esc(it.marcadoPor)}">${emojiDe(it.marcadoPor)}</span>` : ""}
+                  <button type="button" class="bagagem-del" data-bag-tipo="${tipo}" data-bag-del-cat="${esc(cat)}" data-bag-del-idx="${idx}" title="Remover">×</button>
+                </li>
+              `).join("")}
+            </ul>
+            <div class="bagagem-add">
+              <input type="text" placeholder="Adicionar item…" data-bag-tipo="${tipo}" data-bag-input-cat="${esc(cat)}">
+              <button type="button" data-bag-tipo="${tipo}" data-bag-add-cat="${esc(cat)}">+</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderBagagem(){
+  const cont = document.getElementById("bagagem-conteudo");
+  if(!cont) return;
+
+  cont.innerHTML =
+    renderListaBagagem("c", "🌐 Compartilhada com a família", "Todo mundo vê e marca a mesma lista — dá pra saber quem já cuidou de cada item.") +
+    renderListaBagagem("p", "🙋 Minha lista pessoal", "Só neste aparelho — cada um tem a sua, não sincroniza com os outros.");
+
+  if(!cont._delegado){
+    cont._delegado = true;
+    cont.addEventListener("change", ev => {
+      const chk = ev.target.closest("input[type=checkbox][data-bag-cat]");
+      if(!chk) return;
+      const tipo = chk.getAttribute("data-bag-tipo");
+      const b2 = bagagemCarregar(tipo);
+      const cat = chk.getAttribute("data-bag-cat");
+      const idx = +chk.getAttribute("data-bag-idx");
+      if(b2[cat] && b2[cat][idx]){
+        b2[cat][idx].feito = chk.checked;
+        if(tipo === "c") b2[cat][idx].marcadoPor = chk.checked ? (USUARIO || "") : "";
+      }
+      bagagemSalvar(tipo, b2);
+      renderBagagem();
+    });
+    function adicionar(tipo, cat){
+      const input = cont.querySelector(`[data-bag-tipo="${tipo}"][data-bag-input-cat="${CSS.escape(cat)}"]`);
+      const val = (input.value || "").trim();
+      if(!val) return;
+      const b2 = bagagemCarregar(tipo);
+      if(!b2[cat]) b2[cat] = [];
+      b2[cat].push({ item: val, feito: false, marcadoPor: "" });
+      bagagemSalvar(tipo, b2);
+      renderBagagem();
+    }
+    cont.addEventListener("click", ev => {
+      const del = ev.target.closest("[data-bag-del-cat]");
+      if(del){
+        const tipo = del.getAttribute("data-bag-tipo");
+        const b2 = bagagemCarregar(tipo);
+        const cat = del.getAttribute("data-bag-del-cat");
+        const idx = +del.getAttribute("data-bag-del-idx");
+        if(b2[cat]) b2[cat].splice(idx, 1);
+        bagagemSalvar(tipo, b2);
+        renderBagagem();
+        return;
+      }
+      const add = ev.target.closest("[data-bag-add-cat]");
+      if(add) adicionar(add.getAttribute("data-bag-tipo"), add.getAttribute("data-bag-add-cat"));
+    });
+    cont.addEventListener("keydown", ev => {
+      if(ev.key !== "Enter") return;
+      const input = ev.target.closest("input[data-bag-input-cat]");
+      if(!input) return;
+      ev.preventDefault();
+      adicionar(input.getAttribute("data-bag-tipo"), input.getAttribute("data-bag-input-cat"));
+    });
+  }
+}
+
+/* ================= MEMÓRIAS (mural de fotos + selos/conquistas) ================= */
+const STORE_FOTOS = "family_trip_fotos";
+function carregarFotos(){ try { return JSON.parse(localStorage.getItem(STORE_FOTOS) || "[]"); } catch(e){ return []; } }
+function salvarFotos(f){ localStorage.setItem(STORE_FOTOS, JSON.stringify(f)); }
+
+function calcularSelos(){
+  const locais = carregarLocais();
+  const selos = [];
+
+  VIAJANTES.forEach(pessoa => {
+    const avaliados = locais.filter(l => (l.votos||[]).includes(pessoa) || (l.naoInteresse||[]).includes(pessoa));
+    if(locais.length > 0 && avaliados.length === locais.length){
+      selos.push({ emoji: "🗳️", titulo: "Voto completo", desc: `${emojiDe(pessoa)} ${pessoa} avaliou todos os lugares sugeridos` });
+    }
+    const cidadesVotadas = new Set(avaliados.map(l => l.cidade));
+    if(CIDADES.length > 0 && cidadesVotadas.size === CIDADES.length){
+      selos.push({ emoji: "🧭", titulo: "Explorador(a)", desc: `${emojiDe(pessoa)} ${pessoa} votou em lugares das ${CIDADES.length} cidades` });
+    }
+  });
+
+  // Ranking por contagem — função auxiliar reaproveitada nos selos abaixo
+  function top1(contagem){
+    const entradas = Object.entries(contagem).filter(([,n]) => n > 0).sort((a,b) => b[1]-a[1]);
+    return entradas.length ? entradas[0] : null;
+  }
+  function contagemZerada(){ const c = {}; VIAJANTES.forEach(p => c[p] = 0); return c; }
+
+  if(locais.length){
+    const interesse = contagemZerada();
+    locais.forEach(l => (l.votos||[]).forEach(p => { if(interesse[p] !== undefined) interesse[p]++; }));
+    const topInteresse = top1(interesse);
+    if(topInteresse){
+      selos.push({ emoji: "❤️", titulo: "Mais entusiasmado(a)", desc: `${emojiDe(topInteresse[0])} ${topInteresse[0]} tem interesse em mais lugares (${topInteresse[1]})` });
+    }
+
+    const seletivo = contagemZerada();
+    locais.forEach(l => (l.naoInteresse||[]).forEach(p => { if(seletivo[p] !== undefined) seletivo[p]++; }));
+    const topSeletivo = top1(seletivo);
+    if(topSeletivo){
+      selos.push({ emoji: "🙅", titulo: "Mais seletivo(a)", desc: `${emojiDe(topSeletivo[0])} ${topSeletivo[0]} marcou mais "sem interesse" (${topSeletivo[1]})` });
+    }
+
+    const votouTotal = contagemZerada();
+    locais.forEach(l => {
+      (l.votos||[]).forEach(p => { if(votouTotal[p] !== undefined) votouTotal[p]++; });
+      (l.naoInteresse||[]).forEach(p => { if(votouTotal[p] !== undefined) votouTotal[p]++; });
+    });
+    const topVotou = top1(votouTotal);
+    if(topVotou){
+      selos.push({ emoji: "📊", titulo: "Quem mais votou", desc: `${emojiDe(topVotou[0])} ${topVotou[0]} avaliou ${topVotou[1]} ${topVotou[1]===1?"lugar":"lugares"} no total` });
+    }
+
+    // Sugestor(a) oficial / Faro apurado — precisam do campo sugeridoPor (locais criados antes disso não contam)
+    const comAutor = locais.filter(l => l.sugeridoPor);
+    if(comAutor.length){
+      const sugestoes = contagemZerada();
+      comAutor.forEach(l => { if(sugestoes[l.sugeridoPor] !== undefined) sugestoes[l.sugeridoPor]++; });
+      const topSugestor = top1(sugestoes);
+      if(topSugestor){
+        selos.push({ emoji: "💡", titulo: "Sugestor(a) oficial", desc: `${emojiDe(topSugestor[0])} ${topSugestor[0]} sugeriu mais lugares (${topSugestor[1]})` });
+      }
+
+      const votosPorAutor = contagemZerada();
+      comAutor.forEach(l => { if(votosPorAutor[l.sugeridoPor] !== undefined) votosPorAutor[l.sugeridoPor] += (l.votos||[]).length; });
+      const topFaro = top1(votosPorAutor);
+      if(topFaro){
+        selos.push({ emoji: "🎯", titulo: "Faro apurado", desc: `Os lugares sugeridos por ${emojiDe(topFaro[0])} ${topFaro[0]} somam mais votos de interesse (${topFaro[1]})` });
+      }
+    }
+
+    // Cidade favorita — mais interesse total somado
+    const interessePorCidade = {};
+    CIDADES.forEach(c => interessePorCidade[c] = 0);
+    locais.forEach(l => { if(interessePorCidade[l.cidade] !== undefined) interessePorCidade[l.cidade] += (l.votos||[]).length; });
+    const topCidade = top1(interessePorCidade);
+    if(topCidade){
+      selos.push({ emoji: "🌆", titulo: "Favorita da galera", desc: `${topCidade[0]} é a cidade com mais interesse somado (${topCidade[1]} votos)` });
+    }
+  }
+
+  // Mais presente — precisa do contador de acessos (sincronizado como emojis/avatares)
+  const acessos = carregarAcessos();
+  const topAcessos = top1(acessos);
+  if(topAcessos){
+    selos.push({ emoji: "🔑", titulo: "Mais presente", desc: `${emojiDe(topAcessos[0])} ${topAcessos[0]} é quem mais entrou no app (${topAcessos[1]}x)` });
+  }
+
+  const consenso = locais.filter(l => (l.votos||[]).length === VIAJANTES.length && VIAJANTES.length > 0).length;
+  if(consenso > 0){
+    selos.push({ emoji: "🏆", titulo: "Consenso da família", desc: `${consenso} ${consenso===1 ? "lugar já teve" : "lugares já tiveram"} aprovação unânime` });
+  }
+
+  return selos;
+}
+
+/* ================= MURAL DE AVISOS (pendências urgentes, calculadas a partir dos dados reais) ================= */
+/* Itens importantes fixos, marcáveis como feitos (ficam salvos neste aparelho) */
+const STORE_PENDENCIAS_MANUAIS = "family_trip_pendencias_manuais";
+const PENDENCIAS_MANUAIS_PADRAO = [
+  { texto: "Roaming internacional (celular)", urgencia: "media" },
+  { texto: "Cartão internacional (pagamentos)", urgencia: "media" },
+  { texto: "Levar pesos em espécie (desconto em estabelecimentos e segurança)", urgencia: "media" },
+  { texto: "Levar identidade e passaporte (segurança e agilidade)", urgencia: "alta" },
+  { texto: "Powerbank (segurança)", urgencia: "baixa" },
+  { texto: "Escolha do Airbnb", urgencia: "alta" }
+];
+function carregarPendenciasManuais(){
+  try {
+    const salvo = JSON.parse(localStorage.getItem(STORE_PENDENCIAS_MANUAIS));
+    if(Array.isArray(salvo) && salvo.length) return salvo;
+  } catch(e){}
+  return PENDENCIAS_MANUAIS_PADRAO.map(p => ({ ...p, feito: false }));
+}
+function salvarPendenciasManuaisLocal(lista){ localStorage.setItem(STORE_PENDENCIAS_MANUAIS, JSON.stringify(lista)); }
+function salvarPendenciasManuais(lista){
+  salvarPendenciasManuaisLocal(lista);
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=setConfig", {
+      method: "POST", redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ pendencias: lista })
+    }).catch(err => console.log("Pendências sync error:", err));
+  }
+}
+function syncPendenciasManuais(){
+  if(!USE_SHEETS || !SHEETS_API_URL) return;
+  fetch(SHEETS_API_URL + "?action=getConfig")
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.success && data.pendencias){
+        if(JSON.stringify(carregarPendenciasManuais()) !== JSON.stringify(data.pendencias)){
+          salvarPendenciasManuaisLocal(data.pendencias);
+          renderInicio();
+        }
+      }
+    })
+    .catch(err => console.log("Pendências sync error:", err));
+}
+function alternarPendenciaManual(idx){
+  const lista = carregarPendenciasManuais();
+  if(lista[idx]){ lista[idx].feito = !lista[idx].feito; salvarPendenciasManuais(lista); }
+  renderInicio();
+}
+function adicionarPendenciaManual(){
+  const texto = prompt("O que você quer lembrar a família? (ex: Levar protetor solar)");
+  const limpo = (texto || "").trim();
+  if(!limpo) return;
+  const lista = carregarPendenciasManuais();
+  lista.push({ texto: limpo, urgencia: "media", feito: false });
+  salvarPendenciasManuais(lista);
+  renderInicio();
+}
+function removerPendenciaManual(idx){
+  const lista = carregarPendenciasManuais();
+  lista.splice(idx, 1);
+  salvarPendenciasManuais(lista);
+  renderInicio();
+}
+
+function calcularPendencias(){
+  const v = carregarViagem();
+  const locais = carregarLocais();
+  const pendencias = [];
+
+  if(!v.confirmado){
+    pendencias.push({ texto: "Comprar as passagens! As datas ainda estão provisórias.", urgencia: "alta" });
+  }
+
+  if(locais.length === 0){
+    pendencias.push({ texto: "Nenhum lugar sugerido ainda — bora começar a votação!", urgencia: "alta" });
+  } else {
+    CIDADES.forEach(cid => {
+      const ls = locais.filter(l => l.cidade === cid);
+      if(!ls.length) return;
+      const votantes = new Set();
+      ls.forEach(l => { (l.votos||[]).forEach(p=>votantes.add(p)); (l.naoInteresse||[]).forEach(p=>votantes.add(p)); });
+      const faltam = VIAJANTES.length - votantes.size;
+      if(faltam > 0){
+        pendencias.push({ texto: `${cid}: faltam ${faltam} ${faltam===1?"pessoa":"pessoas"} votar${faltam===1?"":"em"}`, urgencia: faltam >= 3 ? "alta" : "media" });
+      }
+    });
+  }
+
+  const aConfirmar = locais.filter(l => l.bairro === BAIRRO_A_CONFIRMAR).length;
+  if(aConfirmar > 0){
+    pendencias.push({ texto: `${aConfirmar} ${aConfirmar===1?"lugar está":"lugares estão"} com bairro "a confirmar"`, urgencia: "baixa" });
+  }
+
+  const peso = { alta: 0, media: 1, baixa: 2 };
+  pendencias.sort((a,b) => peso[a.urgencia] - peso[b.urgencia]);
+  return pendencias.slice(0, 6);
+}
+function flagDaUrgencia(u){ return u === "alta" ? "🚩" : u === "media" ? "🏳️" : "📍"; }
+
+function renderMemorias(){
+  const cont = document.getElementById("memorias-conteudo");
+  if(!cont) return;
+  const fotos = carregarFotos();
+  const selos = calcularSelos();
+
+  cont.innerHTML = `
+    <div class="memorias-selos">
+      <h3>Selos desbloqueados</h3>
+      ${selos.length ? `<div class="selos-grid">${selos.map(s => `
+        <div class="selo-card">
+          <div class="selo-emoji">${s.emoji}</div>
+          <div class="selo-titulo">${esc(s.titulo)}</div>
+          <div class="selo-desc">${esc(s.desc)}</div>
+        </div>
+      `).join("")}</div>` : `<p class="home-vazio">Vote em alguns lugares para começar a desbloquear selos!</p>`}
+    </div>
+
+    <div class="memorias-fotos">
+      <h3>Mural de fotos</h3>
+      <p class="memorias-hint">Cole o link de uma foto (Google Fotos, Imgur etc). Fica salvo neste aparelho.</p>
+      <div class="fotos-add">
+        <input type="text" id="foto-url-input" placeholder="https://...">
+        <button type="button" id="foto-add-btn">Adicionar</button>
+      </div>
+      <div class="fotos-grid">
+        ${fotos.map((f,idx) => `
+          <div class="foto-card">
+            <img src="${esc(f)}" alt="Foto da viagem" loading="lazy" onerror="this.parentElement.classList.add('foto-erro')">
+            <button type="button" class="foto-del" data-foto-del="${idx}" title="Remover">×</button>
+          </div>
+        `).join("")}
+      </div>
+      ${fotos.length === 0 ? `<p class="home-vazio">Nenhuma foto ainda.</p>` : ""}
+    </div>
+  `;
+
+  if(!cont._delegado){
+    cont._delegado = true;
+    cont.addEventListener("click", ev => {
+      if(ev.target.closest("#foto-add-btn")){
+        const input = document.getElementById("foto-url-input");
+        const url = (input.value || "").trim();
+        if(!url) return;
+        const f = carregarFotos();
+        f.unshift(url);
+        salvarFotos(f);
+        renderMemorias();
+        return;
+      }
+      const del = ev.target.closest("[data-foto-del]");
+      if(del){
+        const idx = +del.getAttribute("data-foto-del");
+        const f = carregarFotos();
+        f.splice(idx, 1);
+        salvarFotos(f);
+        renderMemorias();
+      }
+    });
+    cont.addEventListener("keydown", ev => {
+      if(ev.key === "Enter" && ev.target.id === "foto-url-input"){
+        document.getElementById("foto-add-btn").click();
+      }
+    });
+  }
+}
+
+/* ================= INIT ================= */
+atualizarBairros(cidadeSelecionada);
+atualizarCategorias();
+setUpSheetsIntegration();
+setupLogin();
+renderAuthUI();
+renderHeroFoto();
+renderInicio();
+iniciarContagemViva();
+renderViagem();
+renderVotacao();
+renderResultados();
+renderMapaRota();
+renderBagagem();
+syncViagem();
+syncEmojis();
+syncAvatares();
+syncAcessos();
+syncBagagemCompartilhada();
+syncPendenciasManuais();
+if(!USUARIO) setTimeout(abrirLogin, 300);
+
+/* PWA: só registra quando hospedado (https ou localhost) — não funciona abrindo o arquivo direto do computador */
+if("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")){
+  navigator.serviceWorker.register("sw.js").catch(err => console.log("SW registration failed:", err));
+}
+</script>
+
+</body>
+</html>
