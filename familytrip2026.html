@@ -1761,11 +1761,7 @@ function setupLogin(){
         </select>
       </div>
       <div style="margin-bottom:14px">
-        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Seu emoji</label>
-        <div id="login-emoji-grade" class="emoji-grade"></div>
-      </div>
-      <div style="margin-bottom:14px">
-        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Ou uma caricatura sua (opcional)</label>
+        <label style="display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Sua caricatura (opcional)</label>
         <div style="display:flex;align-items:center;gap:10px">
           <div id="login-avatar-preview" class="login-avatar-preview"></div>
           <input id="login-avatar-url" type="text" placeholder="Cole o link da imagem" oninput="onAvatarUrlInput()" style="flex:1;padding:9px 10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.85rem;background:var(--paper-2);color:var(--ink)">
@@ -1787,12 +1783,7 @@ function setupLogin(){
     </div>
   `;
   document.body.appendChild(modal);
-  renderGradeEmoji();
   renderAvatarPreview();
-  modal.querySelector("#login-emoji-grade").addEventListener("click", ev => {
-    const btn = ev.target.closest(".emoji-opt");
-    if(btn) escolherEmojiLogin(btn.getAttribute("data-emoji"));
-  });
 }
 
 function abrirLogin(){
@@ -1827,9 +1818,7 @@ function modoEntrar(){
 function onLoginNomeChange(){
   modoEntrar();
   const nome = document.getElementById("login-nome").value;
-  emojiEmEdicao = nome ? emojiDe(nome) : "";
   avatarUrlEmEdicao = nome ? avatarUrlDe(nome) : "";
-  renderGradeEmoji();
   document.getElementById("login-avatar-url").value = avatarUrlEmEdicao;
   renderAvatarPreview();
 }
@@ -1867,6 +1856,7 @@ function logar(nome){
   if(emojiEmEdicao) salvarEmojiEscolha(nome, emojiEmEdicao);
   salvarAvatarEscolha(nome, avatarUrlEmEdicao);
   registrarAcesso(nome);
+  syncAvatares(); // puxa avatares de todos da Sheets (se conectado)
   fecharLogin();
   renderAuthUI();
   renderVotacao();
@@ -1878,9 +1868,7 @@ function abrirTrocaEmoji(){
   setupLogin();
   document.getElementById("login-nome").value = USUARIO;
   document.getElementById("login-nome").disabled = true;
-  emojiEmEdicao = emojiDe(USUARIO);
   avatarUrlEmEdicao = avatarUrlDe(USUARIO);
-  renderGradeEmoji();
   document.getElementById("login-avatar-url").value = avatarUrlEmEdicao;
   renderAvatarPreview();
   document.getElementById("login-msg").textContent = "Escolha seu novo emoji ou caricatura.";
