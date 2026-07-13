@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,420;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,500&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Work+Sans:wght@400;500;600;700;800&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#e2643b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -229,6 +228,40 @@
   .navbtn.active { opacity: 1; background: rgba(217,138,61,.15); color: var(--gold); border-color: rgba(217,138,61,.4); }
   .navbtn:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
+  /* ---------- Menu lateral (mobile) ---------- */
+  .hamburger-btn {
+    display: none; flex-shrink: 0; width: 40px; height: 40px; align-items: center; justify-content: center;
+    border-radius: 10px; border: 1px solid rgba(var(--hairline),.2); background: var(--paper-2);
+    color: var(--cream-text); font-size: 1.15rem; cursor: pointer;
+  }
+  .mobile-drawer-backdrop {
+    position: fixed; inset: 0; background: rgba(10,7,4,.5); z-index: 150;
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  .mobile-drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .mobile-drawer {
+    position: fixed; top: 0; left: 0; bottom: 0; width: 76vw; max-width: 300px;
+    background: var(--paper); z-index: 151; transform: translateX(-100%);
+    transition: transform .25s ease; box-shadow: 12px 0 40px rgba(0,0,0,.3);
+    display: flex; flex-direction: column; gap: 4px; padding: 18px 12px; overflow-y: auto;
+  }
+  .mobile-drawer.open { transform: translateX(0); }
+  .mobile-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px 14px; }
+  .mobile-drawer-head span { font-family: 'Fraunces', Georgia, serif; font-weight: 700; color: var(--ink); font-size: 1.15rem; }
+  #drawer-close { background: transparent; border: none; font-size: 1.5rem; line-height: 1; color: var(--ink-soft); cursor: pointer; padding: 4px; }
+  .drawer-navbtn {
+    display: flex; align-items: center; gap: 10px; text-align: left; width: 100%;
+    padding: 13px 12px; border-radius: 10px; border: none; background: transparent;
+    color: var(--ink); font-weight: 700; font-size: .95rem; cursor: pointer; font-family: inherit;
+    transition: background .15s ease;
+  }
+  .drawer-navbtn.active { background: rgba(217,138,61,.15); color: var(--terracotta-deep); }
+  @media (max-width: 760px) {
+    .navbar-inner { display: none; }
+    .hamburger-btn { display: flex; }
+    .navbar-row { justify-content: space-between; }
+  }
+
   section.panel { display: none; padding-top: 44px; }
   section.panel.active { display: block; animation: fadeIn .3s ease; }
   @media (prefers-reduced-motion: reduce) { section.panel.active { animation: none; } }
@@ -254,7 +287,12 @@
   .city-tab.active { opacity: 1; background: rgba(217,138,61,.16); border-color: var(--gold); color: var(--gold); }
 
   .votacao-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 40px; align-items: start; }
-  @media (max-width: 820px) { .votacao-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 820px) {
+    .votacao-grid { grid-template-columns: 1fr; }
+    /* No celular a lista de lugares vem primeiro — o formulário de sugestão fica depois, sem sticky */
+    .votacao-places { order: 1; }
+    .votacao-form { order: 2; position: static !important; }
+  }
 
   .votacao-form {
     background: var(--paper); border: 1px solid rgba(var(--hairline),.08);
@@ -351,6 +389,12 @@
   @media (max-width: 620px) {
     .hero { padding: 40px 16px 30px; }
     .navbtn { padding: 10px 14px; min-height: 40px; }
+    /* Centraliza cabeçalhos e texto de apoio dos painéis no celular */
+    .panel-head { text-align: center; padding-left: 0; border-left: none; }
+    .panel-head p { margin-left: auto; margin-right: auto; }
+    .cities-tabs { justify-content: center; }
+    .mural-cabecalho { flex-direction: column; text-align: center; }
+    .home-recentes h3, .home-progresso h3, .selos-secao h3 { text-align: center; }
   }
   /* ===== HOME: capa de álbum ===== */
   .album-cover { margin-bottom: 26px; }
@@ -389,11 +433,23 @@
   .album-avatar-emoji { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
   .album-caption { font-family: 'Fraunces', Georgia, serif; font-style: italic; color: var(--ink-soft); font-size: .96rem; margin: 0; }
 
-  /* ---- Avatares (caricatura ou emoji) em outros contextos ---- */
+  /* ---- Avatares (caricatura ou inicial) em outros contextos ---- */
   .voter-badge-img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; vertical-align: middle; }
   .voter-badge-emoji { vertical-align: middle; }
   .authbar-avatar-img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(217,138,61,.5); }
   .authbar-avatar-emoji { font-size: 1.1rem; }
+  /* Inicial do nome como fallback (nunca fica em branco quando não há foto ou ela falha) */
+  .avatar-inicial { font-family: 'Fraunces', Georgia, serif; font-weight: 700; color: var(--terracotta-deep); }
+  .voter-badge-emoji.avatar-inicial {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,.3); color: #fff; font-size: .62rem;
+  }
+  .authbar-avatar-emoji.avatar-inicial {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(217,138,61,.25); color: var(--gold-deep); font-size: .85rem;
+  }
   .login-avatar-preview {
     width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
     background: var(--paper-2); border: 1px solid rgba(var(--hairline),.15);
@@ -483,6 +539,10 @@
   }
   @media (max-width: 620px) { .mapa-leaflet { height: 380px; } }
 
+  /* Popup do Leaflet ao tocar num pin — feedback imediato no mesmo lugar do pin */
+  .leaflet-popup-content-wrapper { border-radius: 10px; }
+  .leaflet-popup-content { font-family: 'Work Sans', sans-serif; font-size: .82rem; color: #2b241c; margin: 10px 14px; line-height: 1.4; }
+
   .mapa-pin-marcador {
     width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     color: #fff; font-family: 'Work Sans', sans-serif; font-weight: 800; font-size: .9rem;
@@ -548,16 +608,6 @@
   .bagagem-add input { flex:1; padding:7px 10px; border:1px solid rgba(var(--hairline),.18); border-radius:6px; font-size:.82rem; background:transparent; color:var(--ink); font-family:inherit; }
   .bagagem-add button { width:32px; border:none; border-radius:6px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; font-size:1rem; }
 
-  /* ===== EMOJI PICKER (login) ===== */
-  .emoji-grade { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
-  .emoji-opt {
-    aspect-ratio:1; border-radius:8px; border:1px solid rgba(var(--hairline),.15); background:var(--paper-2);
-    font-size:1.25rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition: all .12s ease;
-  }
-  .emoji-opt:hover { transform:scale(1.08); border-color:var(--gold); }
-  .emoji-opt.ativo { background:rgba(217,138,61,.18); border-color:var(--gold); box-shadow:0 0 0 2px rgba(217,138,61,.35); }
-
   /* ===== SELOS (conquistas, agora na Home) ===== */
   .selos-secao { margin-top:34px; }
   .selos-secao h3 { font-family:'Fraunces',Georgia,serif; color:var(--ink); font-size:1.2rem; margin:0 0 14px; }
@@ -620,6 +670,13 @@
   }
   .post-it:hover .post-it-del { opacity:1; }
   .post-it-del:hover { color:#b8362a; }
+
+  @media (max-width: 620px) {
+    .mural-quadro { gap:14px; padding:20px 14px 26px; justify-content:center; }
+    .post-it { width:130px; min-height:96px; padding:18px 10px 10px; font-size:.82rem; }
+    .post-it-flag { font-size:.9rem; top:6px; right:8px; }
+    .post-it-pin { width:11px; height:11px; }
+  }
 </style>
 </head>
 <body>
@@ -641,6 +698,7 @@
 
 <div class="navbar">
   <div class="navbar-row">
+    <button class="hamburger-btn" id="hamburger-btn" type="button" aria-label="Abrir menu">☰</button>
     <div class="navbar-inner" id="navbar">
       <button class="navbtn active" data-panel="inicio">Início</button>
       <button class="navbtn" data-panel="viagem">Viagem</button>
@@ -655,6 +713,20 @@
     </div>
   </div>
 </div>
+
+<div class="mobile-drawer-backdrop" id="drawer-backdrop"></div>
+<nav class="mobile-drawer" id="mobile-drawer" aria-label="Menu de navegação">
+  <div class="mobile-drawer-head">
+    <span>✈ Menu</span>
+    <button type="button" id="drawer-close" aria-label="Fechar menu">×</button>
+  </div>
+  <button type="button" class="drawer-navbtn active" data-panel="inicio">🏠 Início</button>
+  <button type="button" class="drawer-navbtn" data-panel="viagem">🗓️ Viagem</button>
+  <button type="button" class="drawer-navbtn" data-panel="votacao">🗳️ Votação</button>
+  <button type="button" class="drawer-navbtn" data-panel="resultados">🏆 Resultados</button>
+  <button type="button" class="drawer-navbtn" data-panel="mapa">🗺️ Mapa</button>
+  <button type="button" class="drawer-navbtn" data-panel="bagagem">🧳 Bagagem</button>
+</nav>
 
 <div class="wrap">
 
@@ -750,6 +822,9 @@
 
 <footer>Fotos e informações: Wikipédia / Wikidata · Planejamento colaborativo da família — datas e locais sujeitos à votação.</footer>
 
+<!-- Leaflet carregado aqui (fim do body) em vez do <head> para não bloquear a pintura inicial da página no celular -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <script>
 /* ================= MODO DE VISUALIZAÇÃO (claro/escuro) ================= */
 function aplicarTema(tema){
@@ -772,19 +847,40 @@ document.getElementById("view-toggle").addEventListener("click", e => {
 });
 
 /* ================= NAV & FILTER WIRING ================= */
+function irParaPainel(nomePainel){
+  document.querySelectorAll(".navbtn").forEach(b => b.classList.toggle("active", b.dataset.panel === nomePainel));
+  document.querySelectorAll(".drawer-navbtn").forEach(b => b.classList.toggle("active", b.dataset.panel === nomePainel));
+  document.querySelectorAll("section.panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("panel-" + nomePainel).classList.add("active");
+  if(nomePainel === "mapa") renderMapaRota();
+  if(nomePainel === "viagem") renderViagem();
+  if(nomePainel === "inicio") renderInicio();
+  if(nomePainel === "resultados") renderResultados();
+  if(nomePainel === "bagagem") renderBagagem();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 document.getElementById("navbar").addEventListener("click", e => {
   const btn = e.target.closest(".navbtn");
   if (!btn) return;
-  document.querySelectorAll(".navbtn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
   btn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  document.querySelectorAll("section.panel").forEach(p => p.classList.remove("active"));
-  document.getElementById("panel-" + btn.dataset.panel).classList.add("active");
-  if(btn.dataset.panel === "mapa") renderMapaRota();
-  if(btn.dataset.panel === "viagem") renderViagem();
-  if(btn.dataset.panel === "inicio") renderInicio();
-  if(btn.dataset.panel === "resultados") renderResultados();
-  if(btn.dataset.panel === "bagagem") renderBagagem();
+  irParaPainel(btn.dataset.panel);
+});
+
+/* ---- Menu lateral (mobile) ---- */
+const hamburgerBtn = document.getElementById("hamburger-btn");
+const mobileDrawer = document.getElementById("mobile-drawer");
+const drawerBackdrop = document.getElementById("drawer-backdrop");
+const drawerClose = document.getElementById("drawer-close");
+function abrirDrawer(){ mobileDrawer.classList.add("open"); drawerBackdrop.classList.add("open"); }
+function fecharDrawer(){ mobileDrawer.classList.remove("open"); drawerBackdrop.classList.remove("open"); }
+hamburgerBtn.addEventListener("click", abrirDrawer);
+drawerClose.addEventListener("click", fecharDrawer);
+drawerBackdrop.addEventListener("click", fecharDrawer);
+mobileDrawer.addEventListener("click", e => {
+  const btn = e.target.closest(".drawer-navbtn");
+  if (!btn) return;
+  irParaPainel(btn.dataset.panel);
+  fecharDrawer();
 });
 
 /* keyboard support for role="button" elements (crew chips, postcards, map pins) */
@@ -797,7 +893,6 @@ document.addEventListener("keydown", e => {
 
 /* ================= VOTAÇÃO ================= */
 const VIAJANTES = ["Thomas", "Júlia", "Mateus", "Paula", "Juliane"];
-const VIAJANTES_EMOJI = { Thomas: "🧭", "Júlia": "🌻", Mateus: "⚡", Paula: "🌊", Juliane: "🎨" };
 const CIDADES = ["Buenos Aires", "Santiago", "Viña del Mar"];
 
 /* Coordenadas reais (lat, lon) das cidades da viagem */
@@ -1584,7 +1679,7 @@ function senhasLocais(){ try { return JSON.parse(localStorage.getItem("family_tr
 function salvarSenhasLocais(m){ localStorage.setItem("family_trip_senhas", JSON.stringify(m)); }
 
 
-/* ---- Caricatura/avatar por pessoa (opcional — cai pro emoji se não tiver) ---- */
+/* ---- Caricatura/avatar por pessoa (opcional — cai pra inicial do nome se não tiver ou a imagem falhar) ---- */
 const STORE_AVATAR_CUSTOM = "family_trip_avatar_custom";
 let avatarUrlEmEdicao = "";
 
@@ -1594,16 +1689,20 @@ function avatarUrlDe(nome){
   const custom = carregarAvatarCustom();
   return (nome && custom[nome]) || "";
 }
-// HTML de avatar: usa a caricatura se existir, senão cai pro emoji
+function iniciaisDe(nome){
+  return nome ? nome.trim().charAt(0).toUpperCase() : "?";
+}
+// HTML de avatar: usa a caricatura se existir; se não tiver (ou a imagem falhar ao carregar), mostra a inicial do nome
 function avatarHtmlDe(nome, classe){
   const url = avatarUrlDe(nome);
-  if(url) return `<img src="${esc(url)}" alt="${esc(nome)}" class="${classe}-img" onerror="this.parentElement.innerHTML=''">`;
-  return "";
+  const inicial = esc(iniciaisDe(nome));
+  if(url) return `<img src="${esc(url)}" alt="${esc(nome)}" class="${classe}-img" data-avatar-fallback-classe="${classe}" data-avatar-fallback-inicial="${inicial}" onerror="avatarImgErro(this)">`;
+  return `<span class="${classe}-emoji avatar-inicial">${inicial}</span>`;
 }
 function avatarImgErro(img){
   const span = document.createElement("span");
-  span.className = img.getAttribute("data-avatar-fallback-classe") + "-emoji";
-  span.textContent = img.getAttribute("data-avatar-fallback-emoji");
+  span.className = img.getAttribute("data-avatar-fallback-classe") + "-emoji avatar-inicial";
+  span.textContent = img.getAttribute("data-avatar-fallback-inicial");
   img.replaceWith(span);
 }
 function salvarAvatarEscolha(nome, url){
@@ -1771,11 +1870,19 @@ function renderAvatarPreview(){
     return;
   }
   const avatarUrl = avatarUrlDe(nome);
+  const inicial = esc(iniciaisDe(nome));
   if(avatarUrl){
-    box.innerHTML = `<img src="${esc(avatarUrl)}" alt="${esc(nome)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.innerHTML=''">`;
+    box.innerHTML = `<img src="${esc(avatarUrl)}" alt="${esc(nome)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" data-fallback-inicial="${inicial}" onerror="loginAvatarErro(this)">`;
   } else {
-    box.innerHTML = "";
+    box.innerHTML = `<span class="avatar-inicial" style="font-size:1.3rem">${inicial}</span>`;
   }
+}
+function loginAvatarErro(img){
+  const span = document.createElement("span");
+  span.className = "avatar-inicial";
+  span.style.fontSize = "1.3rem";
+  span.textContent = img.getAttribute("data-fallback-inicial");
+  img.replaceWith(span);
 }
 
 function entrarModoCadastro(msg){
@@ -2140,7 +2247,7 @@ function renderMapaRota(){
       const irBtn = ev.target.closest("[data-mapa-ir]");
       if(irBtn){
         const cid = irBtn.getAttribute("data-mapa-ir");
-        document.querySelector('[data-panel="votacao"]').click();
+        irParaPainel("votacao");
         mudarCidade(cid);
       }
     });
@@ -2212,8 +2319,10 @@ function renderMapaModoRota(){
     const marker = L.marker(p.coord, { icon: icone }).addTo(mapaMarkersLayer);
     const rotulo = p.tipo === "partida" ? "Saída · Porto Alegre" : p.tipo === "volta" ? "Volta · Porto Alegre" : `${numero}. ${p.nome}`;
     marker.bindTooltip(esc(rotulo), { direction: "top", offset: [0,-16] });
-    if(p.tipo === "cidade") marker.on("click", () => mostrarInfoCidade(p.nome));
-    else marker.on("click", () => mostrarInfoPortoAlegre(p.tipo, p.data, v.hora));
+    // Popup curto direto no pin (feedback imediato ao tocar) + card completo logo abaixo do mapa
+    marker.bindPopup(`<strong>${esc(rotulo)}</strong>`, { closeButton: true, maxWidth: 220, autoPan: true });
+    if(p.tipo === "cidade") marker.on("click", () => mostrarInfoCidadeEscroll(p.nome));
+    else marker.on("click", () => mostrarInfoPortoAlegreEscroll(p.tipo, p.data, v.hora));
 
     if(i < pontos.length - 1 && pontos[i+1].coord){
       const prox = pontos[i+1].coord;
@@ -2262,7 +2371,9 @@ async function renderMapaModoLugares(){
     const votos = (local.votos||[]).length;
     const marker = L.circleMarker(coord, { radius: 9, fillColor: cor, color: "#fff", weight: 2, fillOpacity: .9 }).addTo(mapaMarkersLayer);
     marker.bindTooltip(esc(local.nome), { direction: "top", offset: [0,-10] });
-    marker.on("click", () => mostrarInfoLocalMapa(local));
+    // Popup curto direto no pin (feedback imediato ao tocar) + card completo logo abaixo do mapa
+    marker.bindPopup(`<strong>${esc(local.nome)}</strong><br><span style="color:${cor}">${esc(local.categoria || "—")}</span> · ${votos}/${VIAJANTES.length} interesse`, { closeButton: true, maxWidth: 220, autoPan: true });
+    marker.on("click", () => mostrarInfoLocalMapaEscroll(local));
   }
 
   if(mapaModo !== "lugares") return;
@@ -2341,6 +2452,16 @@ function mostrarInfoLocalMapa(local){
     </div>
   `;
 }
+
+// Wrappers que, além de preencher o card de detalhes, rolam a tela até ele —
+// assim quem toca no pin vê a informação completa aparecer na tela sem precisar procurar
+function escrolarAteInfoMapa(){
+  const box = document.getElementById("mapa-info");
+  if(box) box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function mostrarInfoCidadeEscroll(cidade){ mostrarInfoCidade(cidade); escrolarAteInfoMapa(); }
+function mostrarInfoPortoAlegreEscroll(tipo, data, hora){ mostrarInfoPortoAlegre(tipo, data, hora); escrolarAteInfoMapa(); }
+function mostrarInfoLocalMapaEscroll(local){ mostrarInfoLocalMapa(local); escrolarAteInfoMapa(); }
 
 /* ================= FOTO DA FAMÍLIA (hero) ================= */
 const STORE_HERO_FOTO = "family_trip_hero_foto";
