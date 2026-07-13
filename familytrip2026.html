@@ -2465,14 +2465,16 @@ function mostrarInfoLocalMapaEscroll(local){ mostrarInfoLocalMapa(local); escrol
 
 /* ================= FOTO DA FAMÍLIA (hero) ================= */
 const STORE_HERO_FOTO = "family_trip_hero_foto";
+// Foto padrão da família inteira — aparece pra todo mundo até alguém trocar por outra (✎)
+const HERO_FOTO_PADRAO = "https://i.postimg.cc/3W47FdjX/avatar-familia.png";
 
 function renderHeroFoto(){
   const cont = document.getElementById("hero-foto-wrap");
   if(!cont) return;
-  const url = localStorage.getItem(STORE_HERO_FOTO);
+  const url = localStorage.getItem(STORE_HERO_FOTO) || HERO_FOTO_PADRAO;
   if(url){
     cont.innerHTML = `
-      <img src="${esc(url)}" alt="Família Brueckheimer" class="hero-foto-img" onerror="this.parentElement.innerHTML=''; localStorage.removeItem('${STORE_HERO_FOTO}'); renderHeroFoto();">
+      <img src="${esc(url)}" alt="Família Brueckheimer" class="hero-foto-img" onerror="localStorage.removeItem('${STORE_HERO_FOTO}'); this.onerror=null; this.parentElement.innerHTML='<button type=\'button\' class=\'hero-foto-placeholder\' id=\'hero-foto-add\'><span class=\'icone\'>🖼️</span><span>Adicionar foto<br>da família</span></button>';">
       <button type="button" class="hero-foto-editar" id="hero-foto-editar" title="Trocar foto">✎</button>
     `;
   } else {
