@@ -5,7 +5,7 @@
 // todo mundo vê a versão nova automaticamente na próxima vez que abrir o app —
 // ninguém precisa reinstalar nada.
 
-const CACHE_NAME = "brueckheimer-2026-v9";
+const CACHE_NAME = "brueckheimer-2026-v10";
 const CORE_ASSETS = [
   "./familytrip2026.html",
   "./manifest.json"

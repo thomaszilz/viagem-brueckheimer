@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brueckheimer 2026 — Argentina &amp; Chile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -190,6 +190,8 @@
     background: rgba(253,248,240,.86);
     backdrop-filter: blur(6px);
     border-bottom: 1px solid rgba(var(--hairline),.15);
+    /* Reserva a área do notch/barra de status (iPhone em modo instalado) pra não cortar o menu */
+    padding-top: env(safe-area-inset-top, 0px);
   }
   .navbar-row {
     max-width: 1180px; margin: 0 auto;
@@ -254,7 +256,8 @@
     position: fixed; top: 0; left: 0; bottom: 0; width: 76vw; max-width: 300px;
     background: var(--paper); z-index: 151; transform: translateX(-100%);
     transition: transform .25s ease; box-shadow: 12px 0 40px rgba(0,0,0,.3);
-    display: flex; flex-direction: column; gap: 4px; padding: 18px 12px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 4px; overflow-y: auto;
+    padding: calc(18px + env(safe-area-inset-top, 0px)) 12px 18px;
   }
   .mobile-drawer.open { transform: translateX(0); }
   .mobile-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px 14px; }
@@ -282,6 +285,17 @@
 
   .panel-head { margin-bottom: 30px; position: relative; padding-left: 18px; border-left: 3px solid var(--gold); }
   .panel-head .eyebrow { color: var(--gold); }
+  /* Botão "?" de ajuda — explica a funcionalidade em uma janelinha */
+  .ajuda-btn {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(217,138,61,.15); border: 1px solid rgba(217,138,61,.4); color: var(--gold-deep);
+    font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: .85rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .15s ease;
+  }
+  .ajuda-btn:hover { background: rgba(217,138,61,.3); }
+  .panel-head .ajuda-btn { position: absolute; top: 0; right: 0; }
+  .ajuda-btn-inline { display: inline-flex; vertical-align: middle; margin-left: 6px; width: 22px; height: 22px; font-size: .75rem; }
   .panel-head h2 {
     font-size: clamp(1.7rem, 4vw, 2.5rem);
     color: var(--cream-text);
@@ -770,6 +784,7 @@
 
   <section class="panel active" id="panel-inicio">
     <div class="panel-head">
+      <button type="button" class="ajuda-btn" data-ajuda="inicio" title="Como usar esta aba">?</button>
       <span class="eyebrow">Painel</span>
       <h2>Nossa viagem</h2>
       <p>Tudo o que importa num lugar só: a contagem regressiva, as cidades e como anda a votação.</p>
@@ -779,6 +794,7 @@
 
   <section class="panel" id="panel-viagem">
     <div class="panel-head">
+      <button type="button" class="ajuda-btn" data-ajuda="viagem" title="Como usar esta aba">?</button>
       <span class="eyebrow">A viagem</span>
       <h2>Cidades, datas e noites</h2>
       <p>Defina o dia de embarque e quantas noites a família fica em cada cidade. As datas de cada trecho são calculadas sozinhas.</p>
@@ -788,6 +804,7 @@
 
   <section class="panel" id="panel-votacao">
     <div class="panel-head">
+      <button type="button" class="ajuda-btn" data-ajuda="votacao" title="Como usar esta aba">?</button>
       <span class="eyebrow">Locais para visitar</span>
       <h2>Votação por cidade</h2>
       <p>Escolha a cidade, sugira locais e diga se tem interesse (ou não) em cada um. Quando todos marcarem interesse, o lugar ganha o selo consenso e entra como prioridade para o roteiro.</p>
@@ -831,6 +848,7 @@
 
   <section class="panel" id="panel-resultados">
     <div class="panel-head">
+      <button type="button" class="ajuda-btn" data-ajuda="resultados" title="Como usar esta aba">?</button>
       <span class="eyebrow">Placar</span>
       <h2>Resultados da votação</h2>
       <p>Os lugares mais queridos de cada cidade. Quem bate o consenso da família vira prioridade no roteiro.</p>
@@ -840,6 +858,7 @@
 
   <section class="panel" id="panel-mapa">
     <div class="panel-head">
+      <button type="button" class="ajuda-btn" data-ajuda="mapa" title="Como usar esta aba">?</button>
       <span class="eyebrow">Geografia real</span>
       <h2>Mapa</h2>
       <p>Mapa de verdade (OpenStreetMap). Alterne entre a <strong>rota</strong> entre as cidades e <strong>todos os lugares sugeridos</strong> na votação, plotados pelo bairro indicado.</p>
@@ -849,6 +868,7 @@
 
   <section class="panel" id="panel-bagagem">
     <div class="panel-head">
+      <button type="button" class="ajuda-btn" data-ajuda="bagagem" title="Como usar esta aba">?</button>
       <span class="eyebrow">Não esquecer</span>
       <h2>Lista de bagagem</h2>
       <p>Uma lista compartilhada com a família (sincroniza entre todos) e uma lista pessoal, só sua.</p>
@@ -2644,7 +2664,7 @@ function renderInicio(){
 
     <div class="mural-avisos">
       <div class="mural-cabecalho">
-        <div class="mural-titulo">📌 Mural de avisos</div>
+        <div class="mural-titulo">📌 Mural de avisos <button type="button" class="ajuda-btn ajuda-btn-inline" data-ajuda="mural" title="Como usar o mural">?</button></div>
         <button type="button" class="mural-add-btn" data-mural-add>+ Novo aviso</button>
       </div>
       <div class="mural-quadro" id="mural-quadro">
@@ -2679,7 +2699,7 @@ function renderInicio(){
     </div>
 
     <div class="selos-secao">
-      <h3>Selos desbloqueados</h3>
+      <h3>Selos desbloqueados <button type="button" class="ajuda-btn ajuda-btn-inline" data-ajuda="selos" title="Como funcionam os selos">?</button></h3>
       ${selos.length ? `<div class="selos-grid">${selos.map(s => `
         <div class="selo-card">
           <div class="selo-emoji">${s.emoji}</div>
@@ -3310,6 +3330,76 @@ function renderMemorias(){
     });
   }
 }
+
+/* ================= AJUDA (botões "?" espalhados pelo app) ================= */
+const AJUDA_TEXTOS = {
+  inicio: {
+    titulo: "Como usar o Início",
+    texto: "Esta é a tela-resumo da viagem: contagem regressiva pro embarque, as cidades do roteiro, o progresso da votação de cada uma, os últimos lugares sugeridos, o mural de avisos e os selos que a família já desbloqueou. É o primeiro lugar pra checar rapidamente como anda o planejamento."
+  },
+  viagem: {
+    titulo: "Como usar a Viagem",
+    texto: "Defina a data de embarque (e o horário do voo) e quantas noites a família vai passar em cada cidade. A partir disso o app calcula sozinho as datas de check-in/check-out de cada trecho, atualiza a contagem regressiva e desenha a rota no Mapa. Marque como \"confirmado\" quando as passagens forem compradas."
+  },
+  votacao: {
+    titulo: "Como usar a Votação",
+    texto: "Escolha uma cidade nas abas do topo, depois sugira um lugar preenchendo nome, bairro e categoria. Todo mundo pode marcar \"Tenho interesse\" ou \"Sem interesse\" em cada lugar sugerido — quando todos da família marcam interesse, o lugar ganha um selo de consenso e vira prioridade no roteiro."
+  },
+  resultados: {
+    titulo: "Como usar os Resultados",
+    texto: "Aqui aparece o placar de votos de cada cidade, com os lugares mais votados no topo. É só pra consulta — pra votar ou sugerir um lugar novo, use a aba Votação."
+  },
+  mapa: {
+    titulo: "Como usar o Mapa",
+    texto: "Alterne entre \"Rota da viagem\" (o trajeto entre as cidades, com distâncias) e \"Todos os lugares sugeridos\" (cada lugar votado, plotado pelo bairro). Toque em qualquer pin pra ver um resumo na hora — o cartão com todos os detalhes aparece logo abaixo do mapa."
+  },
+  bagagem: {
+    titulo: "Como usar a Bagagem",
+    texto: "Duas listas: a compartilhada sincroniza com todo mundo (mostra quem já marcou cada item) e a pessoal fica só no seu aparelho, pra coisas individuais. Marque o item quando arrumar a mala, ou adicione novos itens em qualquer categoria."
+  },
+  mural: {
+    titulo: "Como usar o Mural de avisos",
+    texto: "Tem dois tipos de post-it aqui. Os com a etiqueta \"automático\" são gerados pelo sistema (ex: \"faltam pessoas votar\") — toque neles pra ir direto resolver, e eles somem sozinhos quando o problema for corrigido. Os outros são lembretes que a família cadastra na mão: toque pra marcar como feito (risca), use \"+ responsável\" pra atribuir a alguém, ou o × pra remover."
+  },
+  selos: {
+    titulo: "Como funcionam os Selos",
+    texto: "São conquistas desbloqueadas automaticamente conforme a família usa o app: votar em tudo, sugerir mais lugares, ser quem mais acessa, arrancar consenso da galera, entre outras. Não dá pra ganhar selo \"na mão\" — eles só aparecem quando a condição é batida de verdade."
+  }
+};
+function setupAjudaModal(){
+  if(document.getElementById("ajuda-modal")) return;
+  const modal = document.createElement("div");
+  modal.id = "ajuda-modal";
+  modal.style.cssText = "display:none;position:fixed;inset:0;background:rgba(10,7,4,.55);z-index:260;align-items:center;justify-content:center;padding:20px";
+  modal.innerHTML = `
+    <div style="background:var(--paper);color:var(--ink);border-radius:12px;padding:26px;max-width:420px;width:100%;box-shadow:0 30px 60px rgba(0,0,0,.5)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">
+        <h3 id="ajuda-modal-titulo" style="font-family:'Fraunces',Georgia,serif;color:var(--terracotta-deep);margin:0;font-size:1.15rem"></h3>
+        <button type="button" id="ajuda-modal-fechar" aria-label="Fechar" style="background:transparent;border:none;font-size:1.4rem;line-height:1;color:var(--ink-soft);cursor:pointer;flex-shrink:0">×</button>
+      </div>
+      <p id="ajuda-modal-texto" style="font-size:.92rem;line-height:1.6;color:var(--ink);margin:0"></p>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById("ajuda-modal-fechar").addEventListener("click", fecharAjudaModal);
+  modal.addEventListener("click", ev => { if(ev.target === modal) fecharAjudaModal(); });
+}
+function fecharAjudaModal(){
+  const modal = document.getElementById("ajuda-modal");
+  if(modal) modal.style.display = "none";
+}
+function abrirAjuda(chave){
+  const info = AJUDA_TEXTOS[chave];
+  if(!info) return;
+  setupAjudaModal();
+  document.getElementById("ajuda-modal-titulo").textContent = info.titulo;
+  document.getElementById("ajuda-modal-texto").textContent = info.texto;
+  document.getElementById("ajuda-modal").style.display = "flex";
+}
+document.addEventListener("click", ev => {
+  const btn = ev.target.closest("[data-ajuda]");
+  if(btn) abrirAjuda(btn.getAttribute("data-ajuda"));
+});
 
 /* ================= INIT ================= */
 atualizarBairros(cidadeSelecionada);
