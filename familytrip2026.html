@@ -1687,10 +1687,16 @@ function syncFromSheets(){
         const chave = x => ((x.cidade || "") + "|" + (x.nome || "")).toLowerCase().trim();
         const remotoKeys = new Set(remotos.map(chave));
         const pendentes = antigos.filter(l => l.pendente && !remotoKeys.has(chave(l)));
-        salvarLocais(remotos.concat(pendentes));
-        renderVotacao();
-        renderInicio();
-        renderResultados();
+        const novos = remotos.concat(pendentes);
+        // Só salva e re-renderiza se algo realmente mudou — antes isso rodava a cada 5s incondicionalmente,
+        // reconstruindo a lista inteira de cards (com fotos e tudo) mesmo sem mudança nenhuma, o que
+        // aparecia como a tela de Votação "piscando"/recarregando sozinha o tempo todo.
+        if(JSON.stringify(antigos) !== JSON.stringify(novos)){
+          salvarLocais(novos);
+          renderVotacao();
+          renderInicio();
+          renderResultados();
+        }
       }
     })
     .catch(err => console.log("Sync error:", err));
