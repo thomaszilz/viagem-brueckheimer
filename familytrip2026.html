@@ -17,7 +17,10 @@
     const ONESIGNAL_APP_ID = "704314a9-8b1c-4452-bc9b-15bc3cf176de";
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
-      serviceWorkerPath: "sw.js",
+      // Nosso GitHub Pages serve o site de dentro de /viagem-brueckheimer/, não da raiz do domínio —
+      // o serviceWorkerPath é relativo à RAIZ do site (thomaszilz.github.io/), por isso precisa do
+      // prefixo da pasta aqui, senão o OneSignal tenta buscar o arquivo no lugar errado (404).
+      serviceWorkerPath: "viagem-brueckheimer/sw.js",
       serviceWorkerParam: { scope: "/viagem-brueckheimer/" }
     });
     window.oneSignalPronto = true;
