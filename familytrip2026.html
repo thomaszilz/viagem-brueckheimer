@@ -14,9 +14,7 @@
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal){
-    // Troque pelo App ID gerado no painel do OneSignal (veja instruções no chat)
-    const ONESIGNAL_APP_ID = "COLE_AQUI_O_APP_ID_DO_ONESIGNAL";
-    if(ONESIGNAL_APP_ID.startsWith("COLE_AQUI")) return; // ainda não configurado — não quebra o resto do app
+    const ONESIGNAL_APP_ID = "704314a9-8b1c-4452-bc9b-15bc3cf176de";
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
       serviceWorkerPath: "sw.js",
