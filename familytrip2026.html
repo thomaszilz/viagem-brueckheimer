@@ -1457,7 +1457,7 @@ function definirInteresse(localId, pessoa, tipo){
   }
 
   salvarLocais(locais);
-  renderVotacao();
+  atualizarCardVoto(localId);
 }
 
 function removerLocal(localId){
@@ -1561,29 +1561,38 @@ function renderVotacao(){
     });
   }
 
-  const cores = {Thomas:"#2f6b63", "Júlia":"#c1543a", Mateus:"#24406e", Paula:"#b33a3a", Juliane:"#e8b23d"};
+  container.innerHTML = locais.map(local => placeCardHtml(local)).join("");
 
-  container.innerHTML = locais.map(local => {
-    const isConsenso = local.votos.length === VIAJANTES.length;
-    const pct = (local.votos.length / VIAJANTES.length) * 100;
-    const corBarra = isConsenso ? "#2f6b63" : "#e8b23d";
-    const semInteresse = local.naoInteresse.length;
+  // Delegação de eventos (anexada uma única vez) — imune a nomes com aspas/apóstrofos
+  if(!container._delegado){
+    container._delegado = true;
+    container.addEventListener("click", function(ev){
+      const btn = ev.target.closest("button[data-act]");
+      if(!btn) return;
+      const id = btn.getAttribute("data-id");
+      if(btn.getAttribute("data-act") === "del"){
+        removerLocalSheets(id);
+      } else {
+        votarLocalSheets(id, btn.getAttribute("data-pessoa"), btn.getAttribute("data-nome"), btn.getAttribute("data-tipo"));
+      }
+    });
+  }
+}
 
-    return `
-      <div class="place-card ${isConsenso ? "consenso" : ""}" data-local-id="${esc(local.id)}">
-        <div class="place-card-head">
-          <h4>${esc(local.nome)}</h4>
-          <button type="button" class="place-del" data-act="del" data-id="${esc(local.id)}" title="Remover">×</button>
-        </div>
-        <div class="place-info">
-          <span><strong>${local.bairro === BAIRRO_A_CONFIRMAR ? "🤷 A confirmar" : esc(local.bairro)}</strong></span>
-          <span>${esc(local.categoria)}</span>
-          ${local.sugeridoPor ? `<span>sugerido por ${esc(local.sugeridoPor)}</span>` : ""}
-        </div>
-        ${local.notas ? `<div class="place-notes">${esc(local.notas)}</div>` : ""}
-        ${mediaHtml(local)}
+const CORES_VIAJANTES = {Thomas:"#2f6b63", "Júlia":"#c1543a", Mateus:"#24406e", Paula:"#b33a3a", Juliane:"#e8b23d"};
+
+// Parte do card que muda quando alguém vota: crachás, barra, contagem, avisos e botões.
+// Fica separada do resto (foto, descrição, cabeçalho) pra poder atualizar só isso ao votar,
+// sem recriar a foto do local (evita o "flash" da imagem) nem os cards vizinhos.
+function votingSecaoHtml(local){
+  const isConsenso = local.votos.length === VIAJANTES.length;
+  const pct = (local.votos.length / VIAJANTES.length) * 100;
+  const corBarra = isConsenso ? "#2f6b63" : "#e8b23d";
+  const semInteresse = local.naoInteresse.length;
+
+  return `
         <div class="place-voters">
-          ${local.votos.map(v => `<div class="voter-badge" style="background:${cores[v] || "#6b5a42"}" title="${esc(v)}">${avatarHtmlDe(v, "voter-badge")} ${esc(v)}</div>`).join("")}
+          ${local.votos.map(v => `<div class="voter-badge" style="background:${CORES_VIAJANTES[v] || "#6b5a42"}" title="${esc(v)}">${avatarHtmlDe(v, "voter-badge")} ${esc(v)}</div>`).join("")}
         </div>
         <div class="voters-row">
           <div class="vote-meter"><i style="width:${pct}%;background:${corBarra}"></i></div>
@@ -1601,24 +1610,43 @@ function renderVotacao(){
               </div>`;
             })()
           : `<div class="interesse-actions"><span style="font-size:.78rem;color:var(--ink-soft)">Entre para votar</span></div>`}
+  `;
+}
+
+// Gera o HTML de UM card — usada pelo render completo da lista
+function placeCardHtml(local){
+  const isConsenso = local.votos.length === VIAJANTES.length;
+  return `
+      <div class="place-card ${isConsenso ? "consenso" : ""}" data-local-id="${esc(local.id)}">
+        <div class="place-card-head">
+          <h4>${esc(local.nome)}</h4>
+          <button type="button" class="place-del" data-act="del" data-id="${esc(local.id)}" title="Remover">×</button>
+        </div>
+        <div class="place-info">
+          <span><strong>${local.bairro === BAIRRO_A_CONFIRMAR ? "🤷 A confirmar" : esc(local.bairro)}</strong></span>
+          <span>${esc(local.categoria)}</span>
+          ${local.sugeridoPor ? `<span>sugerido por ${esc(local.sugeridoPor)}</span>` : ""}
+        </div>
+        ${local.notas ? `<div class="place-notes">${esc(local.notas)}</div>` : ""}
+        ${mediaHtml(local)}
+        <div class="place-voting-secao">${votingSecaoHtml(local)}</div>
       </div>
     `;
-  }).join("");
+}
 
-  // Delegação de eventos (anexada uma única vez) — imune a nomes com aspas/apóstrofos
-  if(!container._delegado){
-    container._delegado = true;
-    container.addEventListener("click", function(ev){
-      const btn = ev.target.closest("button[data-act]");
-      if(!btn) return;
-      const id = btn.getAttribute("data-id");
-      if(btn.getAttribute("data-act") === "del"){
-        removerLocalSheets(id);
-      } else {
-        votarLocalSheets(id, btn.getAttribute("data-pessoa"), btn.getAttribute("data-nome"), btn.getAttribute("data-tipo"));
-      }
-    });
-  }
+// Atualiza SÓ a seção de votação (crachás/barra/botões) de um card — não mexe na foto, na
+// descrição, no cabeçalho, nem em nenhum outro card. Usada depois de votar — antes disso, votar
+// chamava renderVotacao() completo, que reconstruía TODOS os cards; mesmo depois de deixar a ordem
+// fixa, isso ainda recriava a foto de cada card (piscando) e mudava a altura deles, empurrando os
+// vizinhos pra cima/baixo — o "movimento estranho" ao votar.
+function atualizarCardVoto(localId){
+  const card = document.querySelector(`.place-card[data-local-id="${CSS.escape(String(localId))}"]`);
+  if(!card) return; // não está na tela (outra cidade selecionada) — nada a fazer
+  const local = carregarLocais().find(l => String(l.id) === String(localId));
+  if(!local) return;
+  card.classList.toggle("consenso", local.votos.length === VIAJANTES.length);
+  const secao = card.querySelector(".place-voting-secao");
+  if(secao) secao.innerHTML = votingSecaoHtml(local);
 }
 
 /* ================= GOOGLE SHEETS INTEGRATION ================= */
