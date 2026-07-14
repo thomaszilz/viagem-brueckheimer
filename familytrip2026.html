@@ -1114,17 +1114,35 @@ let infoRenderAgendado = false;
 function infoKey(nome){ return String(nome || "").toLowerCase().trim(); }
 function salvarInfoCache(){ try { localStorage.setItem(INFO_CACHE_KEY, JSON.stringify(infoCache)); } catch(e){} }
 
-function agendarRenderVotacao(){
+// Quando a foto/descrição de um local termina de carregar, atualiza só o card daquele local —
+// nunca a lista inteira. Antes isso chamava renderVotacao() completo a cada foto que chegava, e
+// como várias fotos chegam em momentos diferentes (rede de celular, não é instantâneo), a tela
+// inteira ficava sendo desmontada e remontada repetidas vezes seguidas: o "piscando entre telas".
+const cardsParaAtualizar = new Set();
+function agendarAtualizacaoMedia(localId){
+  cardsParaAtualizar.add(String(localId));
   if(infoRenderAgendado) return;
   infoRenderAgendado = true;
   setTimeout(() => {
     infoRenderAgendado = false;
-    renderVotacao();
+    const ids = Array.from(cardsParaAtualizar);
+    cardsParaAtualizar.clear();
+    const locais = carregarLocais();
+    ids.forEach(id => {
+      const l = locais.find(x => String(x.id) === id);
+      if(l) atualizarMediaCard(l);
+    });
     if(mapaInfoLocalId){
-      const l = carregarLocais().find(x => String(x.id) === String(mapaInfoLocalId));
+      const l = locais.find(x => String(x.id) === String(mapaInfoLocalId));
       if(l) mostrarInfoLocalMapa(l);
     }
   }, 300);
+}
+function atualizarMediaCard(local){
+  const card = document.querySelector(`.place-card[data-local-id="${CSS.escape(String(local.id))}"]`);
+  if(!card) return; // o card pode não estar na tela (outra cidade selecionada) — tudo bem, ignora
+  const mediaEl = card.querySelector(".place-media");
+  if(mediaEl) mediaEl.outerHTML = mediaHtml(local);
 }
 
 // Busca uma Wikipédia (pt/es) por texto — resolve o melhor artigo pro nome+cidade e traz
@@ -1187,7 +1205,7 @@ function buscarInfoLocal(local){
     infoCache[key] = resultado || { found: false };
     infoPendentes.delete(key);
     salvarInfoCache();
-    agendarRenderVotacao();
+    agendarAtualizacaoMedia(local.id);
   })();
 }
 
@@ -1532,7 +1550,7 @@ function renderVotacao(){
     const semInteresse = local.naoInteresse.length;
 
     return `
-      <div class="place-card ${isConsenso ? "consenso" : ""}">
+      <div class="place-card ${isConsenso ? "consenso" : ""}" data-local-id="${esc(local.id)}">
         <div class="place-card-head">
           <h4>${esc(local.nome)}</h4>
           <button type="button" class="place-del" data-act="del" data-id="${esc(local.id)}" title="Remover">×</button>
