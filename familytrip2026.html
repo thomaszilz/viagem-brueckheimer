@@ -248,13 +248,15 @@
   .navbtn .badge-pendencias, .drawer-navbtn .badge-pendencias { margin-left: 6px; }
   .drawer-navbtn .badge-pendencias { margin-left: auto; }
   .mobile-drawer-backdrop {
-    position: fixed; inset: 0; background: rgba(10,7,4,.5); z-index: 150;
+    /* z-index bem acima de 1000: os controles do Leaflet (zoom, atribuição) usam z-index:1000 internamente,
+       então com um valor baixo aqui eles apareciam por cima do menu lateral quando abria na aba Mapa */
+    position: fixed; inset: 0; background: rgba(10,7,4,.5); z-index: 1400;
     opacity: 0; pointer-events: none; transition: opacity .2s ease;
   }
   .mobile-drawer-backdrop.open { opacity: 1; pointer-events: auto; }
   .mobile-drawer {
     position: fixed; top: 0; left: 0; bottom: 0; width: 76vw; max-width: 300px;
-    background: var(--paper); z-index: 151; transform: translateX(-100%);
+    background: var(--paper); z-index: 1401; transform: translateX(-100%);
     transition: transform .25s ease; box-shadow: 12px 0 40px rgba(0,0,0,.3);
     display: flex; flex-direction: column; gap: 4px; overflow-y: auto;
     padding: calc(18px + env(safe-area-inset-top, 0px)) 12px 18px;
@@ -2791,7 +2793,15 @@ function renderMapaModoRota(){
     trechos.map((t,i)=>`<span><i style="background:${coresCidade[i%coresCidade.length]}"></i>${i+1}. ${esc(t.nome)} · ${t.noites} ${t.noites===1?"noite":"noites"}</span>`).join("");
 }
 
+// Toda vez que a aba Mapa é aberta, essa função roda de novo — e como ela é assíncrona (geocodifica
+// bairro por bairro, com pausas), abrir/fechar a aba rápido (ou o menu lateral disparando um resize)
+// podia iniciar uma segunda chamada enquanto a primeira ainda estava no meio do loop. As duas mexiam
+// na mesma camada de marcadores ao mesmo tempo — um clearLayers() de uma apagava pins que a outra
+// tinha acabado de desenhar, resultando em pins duplicados ou sumindo. Esse contador garante que só
+// a chamada mais recente termine de desenhar; qualquer chamada mais antiga se aborta sozinha.
+let mapaLugaresToken = 0;
 async function renderMapaModoLugares(){
+  const meuToken = ++mapaLugaresToken;
   mapaMarkersLayer.clearLayers();
   const locais = carregarLocais();
 
@@ -2802,11 +2812,14 @@ async function renderMapaModoLugares(){
 
   const bounds = [];
   for(const local of locais){
+    if(meuToken !== mapaLugaresToken) return; // uma chamada mais nova assumiu — para aqui
     const cache = carregarGeocodeCache();
     const chave = `${local.bairro}|${local.cidade}`.toLowerCase();
     const jaEmCache = !!cache[chave];
     const coord = await geocodificarBairro(local.bairro, local.cidade);
+    if(meuToken !== mapaLugaresToken) return;
     if(!jaEmCache) await new Promise(r => setTimeout(r, 350));
+    if(meuToken !== mapaLugaresToken) return;
     if(!coord || mapaModo !== "lugares") continue;
     bounds.push(coord);
     const cor = corCategoria(local.categoria);
@@ -2818,6 +2831,7 @@ async function renderMapaModoLugares(){
     marker.on("click", () => mostrarInfoLocalMapaEscroll(local));
   }
 
+  if(meuToken !== mapaLugaresToken) return;
   if(mapaModo !== "lugares") return;
   if(bounds.length) mapaLeaflet.fitBounds(bounds, { padding: [50,50] });
 
