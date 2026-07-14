@@ -517,12 +517,21 @@
   .home-cidade-status.status-feito { background:rgba(217,138,61,.15); color:var(--gold); opacity:1; }
   .home-progresso, .home-recentes { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:16px; padding:20px 22px; box-shadow:0 14px 30px -14px var(--shadow); }
   .home-progresso h3, .home-recentes h3 { font-family:'Fraunces',Georgia,serif; color:var(--cream-text); font-size:1rem; margin:0 0 12px; }
-  .prog-row { display:grid; grid-template-columns:96px 1fr auto; align-items:center; gap:10px; margin-bottom:10px; font-size:.82rem; color:var(--cream-text); }
+  .prog-row { display:grid; grid-template-columns:96px 1fr auto; align-items:center; gap:10px; margin-bottom:6px; font-size:.82rem; color:var(--cream-text); }
   .prog-bar { height:7px; background:rgba(var(--hairline),.15); border-radius:4px; overflow:hidden; }
   .prog-bar i { display:block; height:100%; background:var(--gold); border-radius:4px; transition:width .3s ease; }
-  .rec-item { font-size:.86rem; color:var(--cream-text); padding:7px 0; border-bottom:1px solid rgba(var(--hairline),.1); }
+  .prog-avatares { display:flex; gap:6px; margin:0 0 16px; }
+  .prog-avatar { width:22px; height:22px; border-radius:50%; overflow:hidden; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:.6rem; transition:opacity .2s ease; }
+  .prog-avatar.falta-votar { opacity:.3; filter:grayscale(1); }
+  .prog-avatar.ja-votou { box-shadow:0 0 0 2px var(--gold); }
+  .prog-avatar-img { width:100%; height:100%; object-fit:cover; }
+  .prog-avatar-emoji { display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
+  .rec-item { font-size:.86rem; color:var(--cream-text); padding:7px 0; border-bottom:1px solid rgba(var(--hairline),.1); display:flex; align-items:center; gap:8px; }
   .rec-item:last-child { border-bottom:none; }
   .rec-item span { opacity:.6; }
+  .rec-avatar { width:20px; height:20px; border-radius:50%; overflow:hidden; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:.55rem; flex-shrink:0; }
+  .rec-avatar-img { width:100%; height:100%; object-fit:cover; }
+  .rec-avatar-emoji { display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
   .home-vazio { font-size:.85rem; color:var(--cream-text); opacity:.6; margin:0; }
   /* ===== RESULTADOS ===== */
   .res-cidade { margin-bottom:26px; }
@@ -686,8 +695,11 @@
   .selos-secao { margin-top:34px; }
   .selos-secao h3 { font-family:'Fraunces',Georgia,serif; color:var(--ink); font-size:1.2rem; margin:0 0 14px; }
   .selos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; }
-  .selo-card { background:var(--paper); border:1px solid rgba(217,138,61,.25); border-radius:14px; padding:18px; text-align:center; box-shadow:0 12px 26px -16px var(--shadow); }
+  .selo-card { position:relative; background:var(--paper); border:1px solid rgba(217,138,61,.25); border-radius:14px; padding:18px; text-align:center; box-shadow:0 12px 26px -16px var(--shadow); }
   .selo-emoji { font-size:2.2rem; margin-bottom:8px; }
+  .selo-avatar { position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:50%; overflow:hidden; background:var(--paper-2); border:2px solid var(--paper); box-shadow:0 2px 6px rgba(0,0,0,.2); display:flex; align-items:center; justify-content:center; font-size:.8rem; }
+  .selo-avatar-img { width:100%; height:100%; object-fit:cover; }
+  .selo-avatar-emoji { display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
   .selo-titulo { font-family:'Fraunces',Georgia,serif; font-weight:700; color:var(--terracotta-deep); font-size:1rem; margin-bottom:4px; }
   .selo-desc { font-size:.8rem; color:var(--ink-soft); line-height:1.4; }
 
@@ -1407,46 +1419,6 @@ function verificarDuplicatas(){
   return similares.filter(s => s.similaridade > 0.75);
 }
 
-function adicionarLocal(){
-  const nome = document.getElementById("votacao-nome").value.trim();
-  const bairro = document.getElementById("votacao-bairro").value;
-  const categoria = document.getElementById("votacao-categoria").value;
-  const notas = document.getElementById("votacao-notas").value.trim();
-
-  if(!nome || !bairro || !categoria){
-    alert("Preencha nome, bairro e categoria");
-    return;
-  }
-
-  // Verificar duplicatas
-  const duplicatas = verificarDuplicatas();
-  if(duplicatas && duplicatas.length > 0){
-    const nomesSimulares = duplicatas.map(d => `"${d.nome}"`).join(", ");
-    const confirmar = confirm(`⚠️ Locais similares encontrados: ${nomesSimulares}\n\nTem certeza que "${nome}" é diferente? Clique OK para adicionar mesmo assim, ou Cancelar para revisar.`);
-    if(!confirmar) return;
-  }
-
-  const locais = carregarLocais();
-  locais.push({
-    id: Date.now() + Math.random(),
-    cidade: cidadeSelecionada,
-    nome: nome,
-    bairro: bairro,
-    categoria: categoria,
-    notas: notas,
-    votos: [],
-    data: new Date().toLocaleDateString("pt-BR")
-  });
-
-  salvarLocais(locais);
-  document.getElementById("votacao-nome").value = "";
-  document.getElementById("votacao-bairro").value = "";
-  document.getElementById("votacao-categoria").value = "";
-  document.getElementById("votacao-notas").value = "";
-  document.getElementById("sugestoes-list").style.display = "none";
-  renderVotacao();
-}
-
 function definirInteresse(localId, pessoa, tipo){
   const locais = carregarLocais();
   const local = locais.find(l => String(l.id) === String(localId));
@@ -1476,8 +1448,48 @@ function removerLocal(localId){
   renderVotacao();
 }
 
-function removerLocalSheets(localId){
-  if(!confirm("Remover este local?")) return;
+/* ---- Modal de confirmação próprio do app — substitui window.confirm() nativo, que em alguns
+   celulares (app instalado na tela inicial) renderiza estranho ou com atraso e parece "tela travada" ---- */
+function setupConfirmModal(){
+  if(document.getElementById("confirm-modal")) return;
+  const modal = document.createElement("div");
+  modal.id = "confirm-modal";
+  modal.style.cssText = "display:none;position:fixed;inset:0;background:rgba(10,7,4,.55);z-index:270;align-items:center;justify-content:center;padding:20px";
+  modal.innerHTML = `
+    <div style="background:var(--paper);color:var(--ink);border-radius:12px;padding:26px;max-width:380px;width:100%;box-shadow:0 30px 60px rgba(0,0,0,.5)">
+      <p id="confirm-modal-texto" style="font-size:.92rem;line-height:1.55;color:var(--ink);margin:0 0 20px;white-space:pre-line"></p>
+      <div style="display:flex;gap:10px">
+        <button type="button" id="confirm-modal-ok" style="flex:1;padding:10px;background:var(--gold);color:#2b241c;border:none;border-radius:6px;font-weight:700;cursor:pointer">Confirmar</button>
+        <button type="button" id="confirm-modal-cancelar" style="flex:1;padding:10px;background:rgba(var(--hairline),.15);color:var(--cream-text);border:none;border-radius:6px;font-weight:700;cursor:pointer">Cancelar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+function confirmarAcao(mensagem){
+  return new Promise(resolve => {
+    setupConfirmModal();
+    const modal = document.getElementById("confirm-modal");
+    document.getElementById("confirm-modal-texto").textContent = mensagem;
+    modal.style.display = "flex";
+    const okBtn = document.getElementById("confirm-modal-ok");
+    const cancelBtn = document.getElementById("confirm-modal-cancelar");
+    function limpar(){
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      modal.removeEventListener("click", onBackdrop);
+    }
+    function onOk(){ modal.style.display = "none"; limpar(); resolve(true); }
+    function onCancel(){ modal.style.display = "none"; limpar(); resolve(false); }
+    function onBackdrop(ev){ if(ev.target === modal) onCancel(); }
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    modal.addEventListener("click", onBackdrop);
+  });
+}
+
+async function removerLocalSheets(localId){
+  if(!(await confirmarAcao("Remover este local?"))) return;
 
   // Remove localmente na hora
   removerLocal(localId);
@@ -1710,7 +1722,7 @@ function votarLocalSheets(localId, pessoa, localNome, tipo){
     .catch(err => console.log("Vote error:", err));
 }
 
-function adicionarLocalSheets(){
+async function adicionarLocalSheets(){
   const nome = document.getElementById("votacao-nome").value.trim();
   const bairro = document.getElementById("votacao-bairro").value;
   const categoria = document.getElementById("votacao-categoria").value;
@@ -1727,7 +1739,7 @@ function adicionarLocalSheets(){
   const duplicatas = verificarDuplicatas();
   if(duplicatas && duplicatas.length > 0){
     const nomesSimilares = duplicatas.map(d => `"${d.nome}"`).join(", ");
-    const confirmar = confirm(`⚠️ Locais similares encontrados: ${nomesSimilares}\n\nTem certeza que "${nome}" é diferente? Clique OK para adicionar mesmo assim, ou Cancelar para revisar.`);
+    const confirmar = await confirmarAcao(`⚠️ Locais similares encontrados: ${nomesSimilares}\n\nTem certeza que "${nome}" é diferente?`);
     if(!confirmar) return;
   }
 
@@ -2888,7 +2900,7 @@ function renderInicio(){
     const ls = locais.filter(l => l.cidade === cid);
     const votantes = new Set();
     ls.forEach(l => { (l.votos||[]).forEach(p=>votantes.add(p)); (l.naoInteresse||[]).forEach(p=>votantes.add(p)); });
-    return { cidade: cid, total: ls.length, votantes: votantes.size };
+    return { cidade: cid, total: ls.length, votantes: votantes.size, quemVotou: Array.from(votantes) };
   });
   const ultimos = locais.slice().sort((a,b)=> (a.id < b.id ? 1 : -1)).slice(0,5);
   const pendencias = calcularPendencias();
@@ -2962,13 +2974,16 @@ function renderInicio(){
             <div class="prog-bar"><i style="width:${VIAJANTES.length ? Math.round(c.votantes/VIAJANTES.length*100) : 0}%"></i></div>
             <span class="prog-num">${c.votantes}/${VIAJANTES.length} votaram</span>
           </div>
+          <div class="prog-avatares">
+            ${VIAJANTES.map(p => `<div class="prog-avatar ${c.quemVotou.includes(p) ? "ja-votou" : "falta-votar"}" title="${esc(p)}${c.quemVotou.includes(p) ? " já votou" : " ainda não votou"}">${avatarHtmlDe(p, "prog-avatar")}</div>`).join("")}
+          </div>
         `).join("")}
       </div>
 
       <div class="home-recentes">
         <h3>Últimos lugares sugeridos</h3>
         ${ultimos.length
-          ? ultimos.map(l=>`<div class="rec-item"><strong>${esc(l.nome)}</strong> <span>· ${esc(l.cidade)}</span></div>`).join("")
+          ? ultimos.map(l=>`<div class="rec-item">${l.sugeridoPor ? `<span class="rec-avatar" title="${esc(l.sugeridoPor)}">${avatarHtmlDe(l.sugeridoPor, "rec-avatar")}</span>` : ""}<strong>${esc(l.nome)}</strong> <span>· ${esc(l.cidade)}</span></div>`).join("")
           : `<p class="home-vazio">Nenhum lugar ainda. Vá em <strong>Votação</strong> e sugira o primeiro!</p>`}
       </div>
     </div>
@@ -3013,6 +3028,7 @@ function renderInicio(){
       <h3>Selos desbloqueados <button type="button" class="ajuda-btn ajuda-btn-inline" data-ajuda="selos" title="Como funcionam os selos">?</button></h3>
       ${selos.length ? `<div class="selos-grid">${selos.map(s => `
         <div class="selo-card">
+          ${s.pessoa ? `<div class="selo-avatar" title="${esc(s.pessoa)}">${avatarHtmlDe(s.pessoa, "selo-avatar")}</div>` : ""}
           <div class="selo-emoji">${s.emoji}</div>
           <div class="selo-titulo">${esc(s.titulo)}</div>
           <div class="selo-desc">${esc(s.desc)}</div>
@@ -3311,11 +3327,11 @@ function calcularSelos(){
   VIAJANTES.forEach(pessoa => {
     const avaliados = locais.filter(l => (l.votos||[]).includes(pessoa) || (l.naoInteresse||[]).includes(pessoa));
     if(locais.length > 0 && avaliados.length === locais.length){
-      selos.push({ emoji: "🗳️", titulo: "Voto completo", desc: `${pessoa} avaliou todos os lugares sugeridos` });
+      selos.push({ emoji: "🗳️", titulo: "Voto completo", desc: `${pessoa} avaliou todos os lugares sugeridos`, pessoa });
     }
     const cidadesVotadas = new Set(avaliados.map(l => l.cidade));
     if(CIDADES.length > 0 && cidadesVotadas.size === CIDADES.length){
-      selos.push({ emoji: "🧭", titulo: "Explorador(a)", desc: `${pessoa} votou em lugares das ${CIDADES.length} cidades` });
+      selos.push({ emoji: "🧭", titulo: "Explorador(a)", desc: `${pessoa} votou em lugares das ${CIDADES.length} cidades`, pessoa });
     }
   });
 
@@ -3331,14 +3347,14 @@ function calcularSelos(){
     locais.forEach(l => (l.votos||[]).forEach(p => { if(interesse[p] !== undefined) interesse[p]++; }));
     const topInteresse = top1(interesse);
     if(topInteresse){
-      selos.push({ emoji: "❤️", titulo: "Mais entusiasmado(a)", desc: `${topInteresse[0]} tem interesse em mais lugares (${topInteresse[1]})` });
+      selos.push({ emoji: "❤️", titulo: "Mais entusiasmado(a)", desc: `${topInteresse[0]} tem interesse em mais lugares (${topInteresse[1]})`, pessoa: topInteresse[0] });
     }
 
     const seletivo = contagemZerada();
     locais.forEach(l => (l.naoInteresse||[]).forEach(p => { if(seletivo[p] !== undefined) seletivo[p]++; }));
     const topSeletivo = top1(seletivo);
     if(topSeletivo){
-      selos.push({ emoji: "🙅", titulo: "Mais seletivo(a)", desc: `${topSeletivo[0]} marcou mais "sem interesse" (${topSeletivo[1]})` });
+      selos.push({ emoji: "🙅", titulo: "Mais seletivo(a)", desc: `${topSeletivo[0]} marcou mais "sem interesse" (${topSeletivo[1]})`, pessoa: topSeletivo[0] });
     }
 
     const votouTotal = contagemZerada();
@@ -3348,7 +3364,7 @@ function calcularSelos(){
     });
     const topVotou = top1(votouTotal);
     if(topVotou){
-      selos.push({ emoji: "📊", titulo: "Quem mais votou", desc: `${topVotou[0]} avaliou ${topVotou[1]} ${topVotou[1]===1?"lugar":"lugares"} no total` });
+      selos.push({ emoji: "📊", titulo: "Quem mais votou", desc: `${topVotou[0]} avaliou ${topVotou[1]} ${topVotou[1]===1?"lugar":"lugares"} no total`, pessoa: topVotou[0] });
     }
 
     // Sugestor(a) oficial / Faro apurado — precisam do campo sugeridoPor (locais criados antes disso não contam)
@@ -3358,14 +3374,14 @@ function calcularSelos(){
       comAutor.forEach(l => { if(sugestoes[l.sugeridoPor] !== undefined) sugestoes[l.sugeridoPor]++; });
       const topSugestor = top1(sugestoes);
       if(topSugestor){
-        selos.push({ emoji: "💡", titulo: "Sugestor(a) oficial", desc: `${topSugestor[0]} sugeriu mais lugares (${topSugestor[1]})` });
+        selos.push({ emoji: "💡", titulo: "Sugestor(a) oficial", desc: `${topSugestor[0]} sugeriu mais lugares (${topSugestor[1]})`, pessoa: topSugestor[0] });
       }
 
       const votosPorAutor = contagemZerada();
       comAutor.forEach(l => { if(votosPorAutor[l.sugeridoPor] !== undefined) votosPorAutor[l.sugeridoPor] += (l.votos||[]).length; });
       const topFaro = top1(votosPorAutor);
       if(topFaro){
-        selos.push({ emoji: "🎯", titulo: "Faro apurado", desc: `Os lugares sugeridos por ${topFaro[0]} somam mais votos de interesse (${topFaro[1]})` });
+        selos.push({ emoji: "🎯", titulo: "Faro apurado", desc: `Os lugares sugeridos por ${topFaro[0]} somam mais votos de interesse (${topFaro[1]})`, pessoa: topFaro[0] });
       }
     }
 
@@ -3383,7 +3399,7 @@ function calcularSelos(){
   const acessos = carregarAcessos();
   const topAcessos = top1(acessos);
   if(topAcessos){
-    selos.push({ emoji: "🔑", titulo: "Mais presente", desc: `${topAcessos[0]} é quem mais entrou no app (${topAcessos[1]}x)` });
+    selos.push({ emoji: "🔑", titulo: "Mais presente", desc: `${topAcessos[0]} é quem mais entrou no app (${topAcessos[1]}x)`, pessoa: topAcessos[0] });
   }
 
   const consenso = locais.filter(l => (l.votos||[]).length === VIAJANTES.length && VIAJANTES.length > 0).length;
@@ -3586,6 +3602,7 @@ function renderMemorias(){
       <h3>Selos desbloqueados</h3>
       ${selos.length ? `<div class="selos-grid">${selos.map(s => `
         <div class="selo-card">
+          ${s.pessoa ? `<div class="selo-avatar" title="${esc(s.pessoa)}">${avatarHtmlDe(s.pessoa, "selo-avatar")}</div>` : ""}
           <div class="selo-emoji">${s.emoji}</div>
           <div class="selo-titulo">${esc(s.titulo)}</div>
           <div class="selo-desc">${esc(s.desc)}</div>
