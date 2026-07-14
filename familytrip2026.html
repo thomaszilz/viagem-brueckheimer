@@ -3671,8 +3671,14 @@ function carregarPendenciasManuais(){
   return lista;
 }
 function salvarPendenciasManuaisLocal(lista){ localStorage.setItem(STORE_PENDENCIAS_MANUAIS, JSON.stringify(lista)); }
+// Protege uma alteração recém-salva (ex: definir responsável) de ser desfeita por um sync automático
+// que ainda está lendo a versão antiga da planilha — sem isso, o sync a cada 5s podia chegar ANTES
+// da planilha terminar de gravar e sobrescrever a mudança local, fazendo o responsável "voltar" pra
+// Todo mundo sozinho logo depois de salvar. Mesma ideia já usada para proteger votos recém-clicados.
+let pendenciasProtegidoAte = 0;
 function salvarPendenciasManuais(lista){
   salvarPendenciasManuaisLocal(lista);
+  pendenciasProtegidoAte = Date.now() + 8000;
   if(USE_SHEETS){
     fetch(SHEETS_API_URL + "?action=setConfig", {
       method: "POST", redirect: "follow",
@@ -3683,6 +3689,7 @@ function salvarPendenciasManuais(lista){
 }
 function syncPendenciasManuais(){
   if(!USE_SHEETS || !SHEETS_API_URL) return;
+  if(Date.now() < pendenciasProtegidoAte) return;
   fetch(SHEETS_API_URL + "?action=getConfig")
     .then(r => r.json())
     .then(data => {
