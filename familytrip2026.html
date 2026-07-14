@@ -560,6 +560,13 @@
   .cambio-linha { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
   .cambio-linha label { flex-shrink:0; width:150px; font-size:.82rem; font-weight:700; color:var(--cream-text); }
   .cambio-linha input { flex:1; padding:10px 12px; border:1px solid rgba(var(--hairline),.25); background:rgba(var(--hairline),.06); color:var(--cream-text); border-radius:6px; font-family:inherit; font-size:1rem; text-align:right; }
+  .cambio-linha-principal input { font-size:1.15rem; font-weight:700; border-color:rgba(217,138,61,.5); }
+  .cambio-resultados { display:flex; flex-direction:column; gap:10px; margin-top:18px; padding-top:18px; border-top:1px solid rgba(var(--hairline),.15); }
+  .cambio-resultado { background:rgba(var(--hairline),.05); border-radius:8px; padding:12px 14px; }
+  .cambio-resultado-topo { display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .cambio-resultado-moeda { font-size:.82rem; font-weight:700; color:var(--cream-text); }
+  .cambio-resultado-valor { font-size:1.15rem; font-weight:700; color:var(--gold); font-variant-numeric:tabular-nums; }
+  .cambio-resultado-unitario { font-size:.72rem; color:var(--ink-soft); margin-top:4px; }
   .cambio-atualizado { font-size:.75rem; color:var(--ink-soft); margin:14px 0 0; text-align:center; }
   @media (max-width: 480px) {
     .cambio-linha { flex-wrap:wrap; }
@@ -2255,33 +2262,25 @@ async function obterCambio(){
   return cache; // sem internet ou API fora do ar — usa o último valor salvo, se tiver
 }
 
+// O Real é sempre o campo mestre — as outras moedas são só exibição, calculadas a partir dele.
+// Isso evita a confusão/bug de antes (campos se referenciando uns aos outros e se apagando sozinhos).
 function wireCambioInputs(rates){
   const brlInput = document.getElementById("cambio-brl");
-  const arsInput = document.getElementById("cambio-ars");
-  const clpInput = document.getElementById("cambio-clp");
-  if(!brlInput || !arsInput || !clpInput || !rates) return;
-  let travado = false;
-  function converter(origem){
-    if(travado) return;
-    travado = true;
+  const arsValor = document.getElementById("cambio-ars-valor");
+  const clpValor = document.getElementById("cambio-clp-valor");
+  if(!brlInput || !arsValor || !clpValor || !rates) return;
+  function atualizarResultados(){
     const brl = parseFloat(brlInput.value.replace(",", "."));
-    const ars = parseFloat(arsInput.value.replace(",", "."));
-    const clp = parseFloat(clpInput.value.replace(",", "."));
-    if(origem === "brl" && !isNaN(brl)){
-      arsInput.value = (brl * rates.ARS).toFixed(2);
-      clpInput.value = (brl * rates.CLP).toFixed(0);
-    } else if(origem === "ars" && !isNaN(ars)){
-      brlInput.value = (ars / rates.ARS).toFixed(2);
-      clpInput.value = (ars / rates.ARS * rates.CLP).toFixed(0);
-    } else if(origem === "clp" && !isNaN(clp)){
-      brlInput.value = (clp / rates.CLP).toFixed(2);
-      arsInput.value = (clp / rates.CLP * rates.ARS).toFixed(2);
+    if(isNaN(brl) || brl <= 0){
+      arsValor.textContent = "—";
+      clpValor.textContent = "—";
+      return;
     }
-    travado = false;
+    arsValor.textContent = (brl * rates.ARS).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+    clpValor.textContent = (brl * rates.CLP).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
   }
-  brlInput.addEventListener("input", () => converter("brl"));
-  arsInput.addEventListener("input", () => converter("ars"));
-  clpInput.addEventListener("input", () => converter("clp"));
+  brlInput.addEventListener("input", atualizarResultados);
+  atualizarResultados();
 }
 
 async function carregarCambioNaTela(){
@@ -2290,7 +2289,12 @@ async function carregarCambioNaTela(){
   if(!atualizadoEl) return; // usuário já saiu da aba Viagem antes da resposta chegar
   if(rates){
     const dataFmt = new Date(rates.atualizado).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
-    atualizadoEl.textContent = `1 R$ ≈ ${rates.ARS.toFixed(2)} pesos arg. · ${rates.CLP.toFixed(1)} pesos chi. — atualizado ${dataFmt}`;
+    atualizadoEl.textContent = `Cotação atualizada ${dataFmt}`;
+    // R$ de cada moeda (quanto vale 1 unidade dela em reais) — referência rápida pra quando o preço tá em ARS/CLP
+    const arsUnitEl = document.getElementById("cambio-ars-unitario");
+    const clpUnitEl = document.getElementById("cambio-clp-unitario");
+    if(arsUnitEl) arsUnitEl.textContent = `1 ARS ≈ R$ ${(1 / rates.ARS).toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+    if(clpUnitEl) clpUnitEl.textContent = `1 CLP ≈ R$ ${(1 / rates.CLP).toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
     wireCambioInputs(rates);
   } else {
     atualizadoEl.textContent = "Não foi possível buscar a cotação agora. Verifique a internet e tente de novo.";
@@ -2483,18 +2487,26 @@ function renderViagem(){
 
     <div class="cambio-card">
       <h3>💱 Câmbio rápido</h3>
-      <p class="cambio-hint">Digite em qualquer campo pra converter na hora. Cotação do dia, só de referência — confira antes de trocar dinheiro de verdade.</p>
-      <div class="cambio-linha">
+      <p class="cambio-hint">Digite o valor em reais — as outras moedas atualizam sozinhas, sempre a partir dele. Cotação do dia, só de referência — confira antes de trocar dinheiro de verdade.</p>
+      <div class="cambio-linha cambio-linha-principal">
         <label for="cambio-brl">Reais (R$)</label>
         <input type="number" id="cambio-brl" placeholder="0" inputmode="decimal" step="any">
       </div>
-      <div class="cambio-linha">
-        <label for="cambio-ars">Pesos argentinos</label>
-        <input type="number" id="cambio-ars" placeholder="0" inputmode="decimal" step="any">
-      </div>
-      <div class="cambio-linha">
-        <label for="cambio-clp">Pesos chilenos</label>
-        <input type="number" id="cambio-clp" placeholder="0" inputmode="decimal" step="any">
+      <div class="cambio-resultados">
+        <div class="cambio-resultado">
+          <div class="cambio-resultado-topo">
+            <span class="cambio-resultado-moeda">Pesos argentinos</span>
+            <span class="cambio-resultado-valor" id="cambio-ars-valor">—</span>
+          </div>
+          <div class="cambio-resultado-unitario" id="cambio-ars-unitario"></div>
+        </div>
+        <div class="cambio-resultado">
+          <div class="cambio-resultado-topo">
+            <span class="cambio-resultado-moeda">Pesos chilenos</span>
+            <span class="cambio-resultado-valor" id="cambio-clp-valor">—</span>
+          </div>
+          <div class="cambio-resultado-unitario" id="cambio-clp-unitario"></div>
+        </div>
       </div>
       <p class="cambio-atualizado" id="cambio-atualizado">Buscando cotação…</p>
     </div>
