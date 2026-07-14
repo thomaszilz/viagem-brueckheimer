@@ -9,6 +9,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,420;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,500&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Work+Sans:wght@400;500;600;700;800&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="manifest" href="manifest.json">
+<!-- Notificações push (OneSignal) — avisa a família quando alguém sugere um lugar novo, mesmo com o app fechado -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal){
+    // Troque pelo App ID gerado no painel do OneSignal (veja instruções no chat)
+    const ONESIGNAL_APP_ID = "COLE_AQUI_O_APP_ID_DO_ONESIGNAL";
+    if(ONESIGNAL_APP_ID.startsWith("COLE_AQUI")) return; // ainda não configurado — não quebra o resto do app
+    await OneSignal.init({
+      appId: ONESIGNAL_APP_ID,
+      serviceWorkerPath: "sw.js",
+      serviceWorkerParam: { scope: "/viagem-brueckheimer/" }
+    });
+    window.oneSignalPronto = true;
+    atualizarCardNotificacao();
+    OneSignal.User.PushSubscription.addEventListener("change", atualizarCardNotificacao);
+  });
+</script>
 <meta name="theme-color" content="#e2643b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -432,6 +450,17 @@
     .mural-cabecalho { flex-direction: column; text-align: center; }
     .home-recentes h3, .home-progresso h3, .selos-secao h3 { text-align: center; }
   }
+  /* ===== Notificações push (OneSignal) ===== */
+  .notif-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    background: rgba(217,138,61,.12); border: 1px solid rgba(217,138,61,.3); border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 22px; font-size: .88rem; color: var(--cream-text);
+  }
+  .notif-card.ativo { background: rgba(47,107,99,.15); border-color: rgba(47,107,99,.35); }
+  .notif-card-btn {
+    background: var(--gold); border: none; color: #2b241c; border-radius: 6px;
+    padding: 8px 16px; font-weight: 700; font-size: .85rem; cursor: pointer; flex-shrink: 0;
+  }
   /* ===== HOME: capa de álbum ===== */
   .album-cover { margin-bottom: 26px; }
   .album-frame {
@@ -852,6 +881,7 @@
       <h2>Nossa viagem</h2>
       <p>Tudo o que importa num lugar só: a contagem regressiva, as cidades e como anda a votação.</p>
     </div>
+    <div id="notif-card" class="notif-card" style="display:none"></div>
     <div id="inicio-conteudo"></div>
   </section>
 
@@ -2166,6 +2196,7 @@ function logar(nome){
   localStorage.setItem("family_trip_usuario", nome);
   registrarAcesso(nome);
   syncAvatares(); // puxa avatares de todos da Sheets (se conectado)
+  if(window.oneSignalPronto) OneSignal.login(nome); // associa a inscrição de notificação a esta pessoa
   fecharLogin();
   renderAuthUI();
   renderVotacao();
@@ -2989,6 +3020,33 @@ function renderHeroFoto(){
       }
     });
   }
+}
+
+/* ================= NOTIFICAÇÕES PUSH (OneSignal) ================= */
+// Card fica escondido até o SDK do OneSignal terminar de carregar (ou se o navegador não suportar push).
+function atualizarCardNotificacao(){
+  const card = document.getElementById("notif-card");
+  if(!card) return;
+  if(!window.oneSignalPronto || typeof OneSignal === "undefined" || !OneSignal.Notifications.isPushSupported()){
+    card.style.display = "none";
+    return;
+  }
+  const inscrito = !!OneSignal.User.PushSubscription.optedIn;
+  card.style.display = "flex";
+  card.classList.toggle("ativo", inscrito);
+  if(inscrito){
+    card.innerHTML = `<span>🔔 Notificações ativadas — você será avisado quando alguém sugerir um lugar novo.</span>`;
+  } else {
+    card.innerHTML = `<span>🔕 Ative as notificações pra saber na hora quando um lugar novo for sugerido.</span><button type="button" class="notif-card-btn" id="notif-ativar-btn">Ativar</button>`;
+    const btn = document.getElementById("notif-ativar-btn");
+    if(btn) btn.addEventListener("click", ativarNotificacoes);
+  }
+}
+async function ativarNotificacoes(){
+  if(!window.oneSignalPronto) return;
+  await OneSignal.Notifications.requestPermission();
+  if(USUARIO) OneSignal.login(USUARIO);
+  atualizarCardNotificacao();
 }
 
 /* ================= HOME (painel inicial) ================= */

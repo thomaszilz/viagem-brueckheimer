@@ -5,7 +5,11 @@
 // todo mundo vê a versão nova automaticamente na próxima vez que abrir o app —
 // ninguém precisa reinstalar nada.
 
-const CACHE_NAME = "brueckheimer-2026-v21";
+// Mescla o Service Worker do OneSignal (notificações push) neste mesmo arquivo, em vez de usar um
+// arquivo separado — assim continuamos com um só Service Worker cuidando de tudo (cache + push).
+importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
+
+const CACHE_NAME = "brueckheimer-2026-v22";
 const CORE_ASSETS = [
   "./familytrip2026.html",
   "./manifest.json"
