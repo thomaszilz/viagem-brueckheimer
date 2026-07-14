@@ -306,11 +306,12 @@
   /* ---------- Votação panel ---------- */
   .cities-tabs { display: flex; gap: 8px; margin-bottom: 26px; flex-wrap: wrap; }
   .city-tab {
-    padding: 9px 18px; border: 1px solid rgba(var(--hairline),.22); border-radius: 999px;
+    padding: 11px 18px; min-height: 44px; border: 1px solid rgba(var(--hairline),.22); border-radius: 999px;
     background: transparent; color: var(--cream-text); opacity: .6; font-weight: 700; font-size: .87rem;
     cursor: pointer; transition: all .15s ease; font-family: inherit;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   }
-  .city-tab:hover { opacity: .85; }
+  @media (hover: hover) { .city-tab:hover { opacity: .85; } }
   .city-tab.active { opacity: 1; background: rgba(217,138,61,.16); border-color: var(--gold); color: var(--gold); }
 
   .votacao-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 40px; align-items: start; }
@@ -329,9 +330,12 @@
   .votacao-form h3 { font-family: 'Fraunces', Georgia, serif; color: var(--gold); font-size: 1.1rem; margin: 0 0 16px; }
   .sugestoes-list {
     display: none; background: rgba(var(--hairline),.08); border: 1px solid rgba(var(--hairline),.15); border-top: none;
-    border-radius: 0 0 6px 6px; max-height: 120px; overflow-y: auto; margin-top: -4px; padding: 8px 0;
+    border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto; margin-top: -4px; padding: 6px 0;
     position: relative; z-index: 10;
   }
+  .sugestao-item { padding: 11px 12px; cursor: pointer; color: var(--cream-text); font-size: .85rem; border-bottom: 1px solid rgba(var(--hairline),.1); }
+  .sugestao-item:last-child { border-bottom: none; }
+  @media (hover: hover) { .sugestao-item:hover { background: rgba(var(--hairline),.12); } }
   .votacao-form .field { margin-bottom: 14px; }
   .votacao-form label { display: block; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: var(--cream-text); opacity: .7; margin-bottom: 4px; font-weight: 700; }
   .votacao-form input, .votacao-form select, .votacao-form textarea {
@@ -361,9 +365,10 @@
   }
   .place-card .place-del {
     background: transparent; border: none; color: var(--ink-soft);
-    cursor: pointer; font-size: 1.3rem; line-height: 1; padding: 0 4px;
+    cursor: pointer; font-size: 1.3rem; line-height: 1;
+    min-width: 40px; min-height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
-  .place-card .place-del:hover { color: #b33a3a; }
+  @media (hover: hover) { .place-card .place-del:hover { color: #b33a3a; } }
   .place-card.consenso { border-left: 4px solid var(--teal); background: #fafaf7; }
   .place-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
   .place-card h4 { font-family: 'Fraunces', Georgia, serif; font-size: 1.05rem; color: var(--teal-deep); margin: 0; }
@@ -383,13 +388,15 @@
   .place-card button { padding: 6px 12px; font-size: .75rem; border: 1px solid var(--ink-soft); background: transparent;
     color: var(--ink-soft); border-radius: 4px; cursor: pointer; transition: all .15s ease;
   }
-  .place-card button:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+  /* :hover só em dispositivos com mouse — no celular o hover "gruda" depois do toque e o botão parece travado */
+  @media (hover: hover) { .place-card button:hover { background: var(--ink); color: #fff; border-color: var(--ink); } }
   .place-card button.voted { background: var(--gold); color: #2b241c; border-color: var(--gold); }
   .place-card button.vote-eu { width: 100%; padding: 9px; font-size: .82rem; font-weight: 700; }
   .place-card .interesse-actions { display: flex; gap: 8px; margin-top: 12px; }
-  .place-card .int-btn { flex: 1; padding: 9px; font-size: .8rem; font-weight: 700; border-radius: 6px;
-    cursor: pointer; border: 1px solid var(--ink-soft); background: transparent; color: var(--ink-soft); transition: all .15s ease; }
-  .place-card .int-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .place-card .int-btn { flex: 1; min-height: 44px; padding: 10px 9px; font-size: .8rem; font-weight: 700; border-radius: 6px;
+    cursor: pointer; border: 1px solid var(--ink-soft); background: transparent; color: var(--ink-soft); transition: all .15s ease;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  @media (hover: hover) { .place-card .int-btn:hover { border-color: var(--ink); color: var(--ink); } }
   .place-card .int-sim.ativo { background: var(--gold); color: #2b241c; border-color: var(--gold); }
   .place-card .int-nao.ativo { background: #b33a3a; color: #fff; border-color: #b33a3a; }
   .place-card .sem-interesse-line { font-size: .75rem; color: #b33a3a; margin: 6px 0 0; opacity: .9; }
@@ -1108,39 +1115,45 @@ function agendarRenderVotacao(){
   }, 300);
 }
 
+// Busca uma Wikipédia (pt/es) por texto — resolve o melhor artigo pro nome+cidade e traz
+// uma foto grande (800px) que representa bem o lugar. Bem mais eficaz que casar título exato.
+async function buscarNaWiki(lang, nome, cidade){
+  const q = encodeURIComponent(`${nome} ${cidade}`);
+  const url = `https://${lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&gsrlimit=1&prop=pageimages|extracts|pageprops|info&piprop=thumbnail&pithumbsize=800&exintro=1&explaintext=1&exchars=320&inprop=url&format=json&origin=*`;
+  try {
+    const r = await fetch(url);
+    if(!r.ok) return null;
+    const d = await r.json();
+    const pages = d && d.query && d.query.pages;
+    if(!pages) return null;
+    const page = Object.values(pages)[0];
+    if(!page) return null;
+    const img = (page.thumbnail && /^https:\/\//.test(page.thumbnail.source)) ? page.thumbnail.source : "";
+    // Só considera "encontrado" se veio foto — o objetivo aqui é ter uma imagem que defina o lugar
+    if(!img) return null;
+    return {
+      found: true,
+      descricao: page.extract || "",
+      imagem: img,
+      link: page.fullurl || "",
+      instagram: "",
+      site: "",
+      qid: (page.pageprops && page.pageprops.wikibase_item) || ""
+    };
+  } catch(e){ return null; }
+}
+
 // Busca descrição + foto + Instagram/site do lugar. Fica em cache (não repete a cada sync).
 function buscarInfoLocal(local){
   const key = infoKey(local.nome);
   if(infoCache[key] !== undefined || infoPendentes.has(key)) return;
   infoPendentes.add(key);
 
-  const tentativas = [
-    "https://pt.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(local.nome),
-    "https://es.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(local.nome)
-  ];
-
   (async () => {
-    let resultado = null;
-    let qid = "";
-    for(const url of tentativas){
-      try {
-        const r = await fetch(url);
-        if(!r.ok) continue;
-        const d = await r.json();
-        if(d && d.extract && d.type !== "disambiguation"){
-          resultado = {
-            found: true,
-            descricao: d.extract,
-            imagem: (d.thumbnail && /^https:\/\//.test(d.thumbnail.source)) ? d.thumbnail.source : "",
-            link: (d.content_urls && d.content_urls.desktop) ? d.content_urls.desktop.page : "",
-            instagram: "",
-            site: ""
-          };
-          qid = d.wikibase_item || "";
-          break;
-        }
-      } catch(e){ /* CORS/rede: ignora e tenta a próxima */ }
-    }
+    // Tenta PT, depois ES — a primeira que trouxer foto vence
+    let resultado = await buscarNaWiki("pt", local.nome, local.cidade);
+    if(!resultado) resultado = await buscarNaWiki("es", local.nome, local.cidade);
+    const qid = resultado ? resultado.qid : "";
 
     // Complementa via Wikidata: Instagram (P2003) e site oficial (P856)
     if(resultado && qid){
@@ -1362,12 +1375,21 @@ function mostrarSugestoes(){
     return;
   }
 
+  // Escapa o nome (pode ter aspas/acentos) e usa data-attr + delegação em vez de onclick inline com string
   listDiv.innerHTML = similares.slice(0, 5).map(s => `
-    <div style="padding:8px 12px;border-bottom:1px solid rgba(var(--hairline),.1);cursor:pointer;color:var(--cream-text);font-size:.85rem;transition:background .15s ease" onmouseover="this.style.background='rgba(var(--hairline),.12)'" onmouseout="this.style.background='transparent'" onclick="selecionarSugestao('${s.nome.replace(/'/g, "\\'")}')" title="Similaridade: ${Math.round(s.similaridade * 100)}%">
-      ${s.nome}
+    <div class="sugestao-item" data-sugestao="${esc(s.nome)}" title="Similaridade: ${Math.round(s.similaridade * 100)}%">
+      ${esc(s.nome)}
       <span style="color:var(--cream-text);opacity:.5;font-size:.75rem">(${Math.round(s.similaridade * 100)}% similar)</span>
     </div>
   `).join("");
+
+  if(!listDiv._delegado){
+    listDiv._delegado = true;
+    listDiv.addEventListener("click", ev => {
+      const item = ev.target.closest("[data-sugestao]");
+      if(item) selecionarSugestao(item.getAttribute("data-sugestao"));
+    });
+  }
 
   listDiv.style.display = "block";
 }
