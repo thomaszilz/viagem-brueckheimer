@@ -1313,7 +1313,7 @@ function mediaHtml(local){
   if(info.found){
     const desc = info.descricao.length > 240 ? info.descricao.slice(0, 240) + "…" : info.descricao;
     return `<div class="place-media">
-      ${info.imagem ? `<img src="${esc(info.imagem)}" alt="${esc(local.nome)}" loading="lazy">` : ""}
+      ${info.imagem ? `<img src="${esc(info.imagem)}" alt="${esc(local.nome)}">` : ""}
       <p class="media-desc">${esc(desc)}</p>
       ${linksHtml(local, info)}
     </div>`;
@@ -1321,7 +1321,7 @@ function mediaHtml(local){
   // Não achou na Wikipédia — usa o que a família adicionou na mão, ou oferece pra adicionar
   const temManual = local.descricaoManual || local.fotoManual;
   return `<div class="place-media">
-    ${local.fotoManual ? `<img src="${esc(local.fotoManual)}" alt="${esc(local.nome)}" loading="lazy" onerror="this.style.display='none'">` : ""}
+    ${local.fotoManual ? `<img src="${esc(local.fotoManual)}" alt="${esc(local.nome)}" onerror="this.style.display='none'">` : ""}
     ${local.descricaoManual ? `<p class="media-desc">${esc(local.descricaoManual)}</p>` : ""}
     <button type="button" class="media-editar-btn" onclick="editarMediaManual(${JSON.stringify(local.id)})">${temManual ? "✏️ Editar descrição/foto" : "➕ Adicionar descrição e foto"}</button>
     ${linksHtml(local, info)}
