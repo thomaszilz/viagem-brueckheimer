@@ -3849,7 +3849,7 @@ function renderMemorias(){
       <div class="fotos-grid">
         ${fotos.map((f,idx) => `
           <div class="foto-card">
-            <img src="${esc(f)}" alt="Foto da viagem" loading="lazy" onerror="this.parentElement.classList.add('foto-erro')">
+            <img src="${esc(f)}" alt="Foto da viagem" onerror="this.parentElement.classList.add('foto-erro')">
             <button type="button" class="foto-del" data-foto-del="${idx}" title="Remover">×</button>
           </div>
         `).join("")}
