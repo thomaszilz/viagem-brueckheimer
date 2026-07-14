@@ -1611,6 +1611,7 @@ function renderVotacao(){
 
   if(locais.length === 0){
     container.innerHTML = `<p style="color:var(--cream-text);opacity:.6;padding:20px;text-align:center">Nenhum local sugerido ainda para ${cidadeSelecionada}. Complete o formulário ao lado para começar!</p>`;
+    container.dataset.cidade = "";
     return;
   }
 
@@ -1634,7 +1635,16 @@ function renderVotacao(){
     });
   }
 
-  container.innerHTML = locais.map(local => placeCardHtml(local)).join("");
+  // Se a lista já está montada pra essa mesma cidade, atualiza cirurgicamente (só o que mudou)
+  // em vez de recriar tudo — recriar destrói e reconstrói a foto de CADA card, o que aparecia como
+  // piscar/recarregar a tela toda vez que alguém adicionava um local ou votava (inclusive o sync
+  // automático a cada 5s, que roda pra todo mundo conectado mesmo sem eles fazerem nada).
+  if(container.dataset.cidade === cidadeSelecionada){
+    sincronizarCardsVotacao(container, locais);
+  } else {
+    container.innerHTML = locais.map(local => placeCardHtml(local)).join("");
+    container.dataset.cidade = cidadeSelecionada;
+  }
 
   // Delegação de eventos (anexada uma única vez) — imune a nomes com aspas/apóstrofos
   if(!container._delegado){
@@ -1650,6 +1660,38 @@ function renderVotacao(){
       }
     });
   }
+}
+
+// Atualiza a lista de votação já montada na tela sem destruir e recriar os cards que não mudaram.
+// Compara com o que já está no DOM: card novo → insere; card que sumiu (removido por alguém) →
+// remove; card que já existe → só troca a seção de votos (e a foto, se o link manual mudou) e
+// reposiciona (appendChild na ordem certa só move o nó existente, não recarrega a imagem dele).
+function sincronizarCardsVotacao(container, locaisOrdenados){
+  const existentes = new Map();
+  Array.from(container.children).forEach(el => {
+    const id = el.getAttribute("data-local-id");
+    if(id) existentes.set(id, el);
+  });
+  const idsAlvo = new Set(locaisOrdenados.map(l => String(l.id)));
+  existentes.forEach((el, id) => { if(!idsAlvo.has(id)) el.remove(); });
+
+  locaisOrdenados.forEach(local => {
+    const id = String(local.id);
+    let el = existentes.get(id);
+    const sigFoto = (local.fotoManual || "") + "|" + (local.descricaoManual || "");
+    if(!el){
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = placeCardHtml(local);
+      el = wrapper.firstElementChild;
+    } else {
+      el.classList.toggle("consenso", local.votos.length === VIAJANTES.length);
+      const secao = el.querySelector(".place-voting-secao");
+      if(secao) secao.innerHTML = votingSecaoHtml(local);
+      if(el.dataset.sigFoto !== sigFoto) atualizarMediaCard(local);
+    }
+    el.dataset.sigFoto = sigFoto;
+    container.appendChild(el);
+  });
 }
 
 const CORES_VIAJANTES = {Thomas:"#2f6b63", "Júlia":"#c1543a", Mateus:"#24406e", Paula:"#b33a3a", Juliane:"#e8b23d"};
