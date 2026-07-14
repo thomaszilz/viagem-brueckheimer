@@ -1051,23 +1051,63 @@ const STORE_GEOCODE = "family_trip_geocode_cache";
 function carregarGeocodeCache(){ try { return JSON.parse(localStorage.getItem(STORE_GEOCODE) || "{}"); } catch(e){ return {}; } }
 function salvarGeocodeCache(c){ localStorage.setItem(STORE_GEOCODE, JSON.stringify(c)); }
 
-async function geocodificarBairro(bairro, cidade){
-  if(!bairro || bairro === BAIRRO_A_CONFIRMAR) return CIDADES_COORDS[cidade] || null;
-  const cache = carregarGeocodeCache();
-  const chave = `${bairro}|${cidade}`.toLowerCase();
-  if(cache[chave]) return cache[chave];
+// Nominatim pede no máximo ~1 requisição/segundo — essa fila garante isso mesmo quando várias
+// buscas (bairro + nome, de vários locais) disparam em sequência.
+let ultimaBuscaNominatim = 0;
+async function buscarCoordenada(query){
+  const espera = 350 - (Date.now() - ultimaBuscaNominatim);
+  if(espera > 0) await new Promise(r => setTimeout(r, espera));
+  ultimaBuscaNominatim = Date.now();
   try {
-    const query = encodeURIComponent(`${bairro}, ${cidade}`);
-    const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`);
+    const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`);
     const data = await resp.json();
-    if(data && data[0]){
-      const coord = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-      cache[chave] = coord;
-      salvarGeocodeCache(cache);
-      return coord;
-    }
+    if(data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
   } catch(e){ console.log("Geocode error:", e); }
-  return CIDADES_COORDS[cidade] || null;
+  return null;
+}
+
+// Desloca uma coordenada num raiozinho (~200-400m), sempre igual pro mesmo "seed" — usada só como
+// último recurso, pra vários locais "a confirmar" da mesma cidade não caírem todos empilhados no
+// mesmo pixel do centro (parecendo que só 1 ou 2 marcadores apareceram no mapa).
+function deslocarCoordenada(base, seed){
+  let hash = 0;
+  const s = String(seed);
+  for(let i = 0; i < s.length; i++){ hash = (hash * 31 + s.charCodeAt(i)) >>> 0; }
+  const angulo = (hash % 360) * Math.PI / 180;
+  const raio = 0.002 + (hash % 100) / 100 * 0.002;
+  return [base[0] + Math.cos(angulo) * raio, base[1] + Math.sin(angulo) * raio];
+}
+
+// Acha a coordenada de UM local sugerido. Prioridade: 1) bairro (se souberem qual é) 2) o próprio
+// nome do local (landmarks como "Obelisco" ou "Calle Florida" o Nominatim geralmente acha direto,
+// e isso é bem melhor que cair no centro genérico da cidade) 3) centro da cidade com pequeno desvio.
+// Rejeita resultado do Nominatim se cair longe demais da cidade — nomes tipo "Calle Florida" ou
+// "Praça Central" existem em vários países, e às vezes o primeiro resultado da busca é em outro lugar
+// do mundo. Sem essa checagem, o pino ia parar lá, bem longe do mapa da viagem.
+function coordenadaPlausivel(coord, cidade){
+  const base = CIDADES_COORDS[cidade];
+  if(!base || !coord) return false;
+  return haversineKm(base, coord) <= 50;
+}
+
+async function geocodificarLocal(local){
+  const cache = carregarGeocodeCache();
+  const temBairro = local.bairro && local.bairro !== BAIRRO_A_CONFIRMAR;
+
+  if(temBairro){
+    const chave = `${local.bairro}|${local.cidade}`.toLowerCase();
+    if(cache[chave]) return cache[chave];
+    const coord = await buscarCoordenada(`${local.bairro}, ${local.cidade}`);
+    if(coord && coordenadaPlausivel(coord, local.cidade)){ cache[chave] = coord; salvarGeocodeCache(cache); return coord; }
+  }
+
+  const chaveNome = `nome:${local.nome}|${local.cidade}`.toLowerCase();
+  if(cache[chaveNome]) return cache[chaveNome];
+  const coordNome = await buscarCoordenada(`${local.nome}, ${local.cidade}`);
+  if(coordNome && coordenadaPlausivel(coordNome, local.cidade)){ cache[chaveNome] = coordNome; salvarGeocodeCache(cache); return coordNome; }
+
+  const base = CIDADES_COORDS[local.cidade];
+  return base ? deslocarCoordenada(base, local.id) : null;
 }
 
 const CATEGORIA_COR = {
@@ -2813,12 +2853,7 @@ async function renderMapaModoLugares(){
   const bounds = [];
   for(const local of locais){
     if(meuToken !== mapaLugaresToken) return; // uma chamada mais nova assumiu — para aqui
-    const cache = carregarGeocodeCache();
-    const chave = `${local.bairro}|${local.cidade}`.toLowerCase();
-    const jaEmCache = !!cache[chave];
-    const coord = await geocodificarBairro(local.bairro, local.cidade);
-    if(meuToken !== mapaLugaresToken) return;
-    if(!jaEmCache) await new Promise(r => setTimeout(r, 350));
+    const coord = await geocodificarLocal(local);
     if(meuToken !== mapaLugaresToken) return;
     if(!coord || mapaModo !== "lugares") continue;
     bounds.push(coord);
