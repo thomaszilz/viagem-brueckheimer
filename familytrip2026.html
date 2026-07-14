@@ -809,7 +809,6 @@
   .post-it-responsavel:hover { background: rgba(43,36,28,.16); }
   .post-it-resp-img { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
   .post-it-resp-emoji { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:rgba(255,255,255,.5); font-size:.6rem; flex-shrink:0; }
-  .post-it-resp-todos { display: inline-flex; gap: 2px; flex-shrink: 0; }
   .post-it-autor {
     display: block; margin-top: 8px; font-family: 'Work Sans', sans-serif;
     font-size: .62rem; font-style: normal; color: rgba(43,36,28,.5);
@@ -3233,7 +3232,7 @@ function renderInicio(){
             <button type="button" class="post-it-responsavel" data-pendencia-responsavel="${esc(p.id)}" title="${p.responsavel ? "Responsável: " + esc(p.responsavel) : "Responsável: todo mundo (toque para atribuir a alguém)"}">
               ${p.responsavel
                 ? avatarHtmlDe(p.responsavel, "post-it-resp") + " " + esc(p.responsavel)
-                : `<span class="post-it-resp-todos">${VIAJANTES.map(v => avatarHtmlDe(v, "post-it-resp")).join("")}</span> Todo mundo`}
+                : `<span class="post-it-resp-emoji">👥</span> Todo mundo`}
             </button>
             ${p.autor ? `<span class="post-it-autor">adicionado por ${esc(p.autor)}</span>` : ""}
           </div>
