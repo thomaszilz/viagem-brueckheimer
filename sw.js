@@ -5,7 +5,7 @@
 // todo mundo vê a versão nova automaticamente na próxima vez que abrir o app —
 // ninguém precisa reinstalar nada.
 
-const CACHE_NAME = "brueckheimer-2026-v12";
+const CACHE_NAME = "brueckheimer-2026-v13";
 const CORE_ASSETS = [
   "./familytrip2026.html",
   "./manifest.json"
@@ -29,6 +29,12 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  // Só cuida dos arquivos do próprio site (HTML, manifest). Fotos e mapas de fora (postimg.cc,
+  // Wikipédia, OpenStreetMap etc.) passam direto pro navegador — o Safari em modo "instalado"
+  // (adicionado à tela de início) trava esse tipo de imagem externa quando o Service Worker
+  // tenta interceptar e cachear, por isso elas sumiam só depois de instalar o app.
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
   event.respondWith(
     fetch(event.request)
       .then((resp) => {
