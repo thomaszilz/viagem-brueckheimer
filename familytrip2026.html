@@ -1644,6 +1644,13 @@ function renderVotacao(){
   } else {
     container.innerHTML = locais.map(local => placeCardHtml(local)).join("");
     container.dataset.cidade = cidadeSelecionada;
+    // Marca a foto/descrição atual de cada card recém-criado — sem isso, a primeira atualização
+    // cirúrgica depois de um rebuild completo (ex: apagar um local) achava que a foto de TODOS os
+    // outros cards tinha mudado (comparando com "nunca marcado") e recarregava elas todas de vez.
+    Array.from(container.children).forEach((el, i) => {
+      const local = locais[i];
+      if(local) el.dataset.sigFoto = (local.fotoManual || "") + "|" + (local.descricaoManual || "");
+    });
   }
 
   // Delegação de eventos (anexada uma única vez) — imune a nomes com aspas/apóstrofos
