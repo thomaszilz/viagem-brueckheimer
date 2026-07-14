@@ -400,7 +400,7 @@
   .place-card .int-sim.ativo { background: var(--gold); color: #2b241c; border-color: var(--gold); }
   .place-card .int-nao.ativo { background: #b33a3a; color: #fff; border-color: #b33a3a; }
   .place-card .sem-interesse-line { font-size: .75rem; color: #b33a3a; margin: 6px 0 0; opacity: .9; }
-  .place-media { margin: 4px 0 12px; }
+  .place-media { margin: 4px 0 12px; min-height: 24px; }
   .place-media img { width: 100%; max-height: 170px; object-fit: cover; border-radius: 6px; margin-bottom: 8px; display: block; }
   .place-media .media-desc { font-size: .82rem; color: var(--ink-soft); line-height: 1.45; margin: 0 0 8px; }
   .place-media .media-loading { font-size: .78rem; color: var(--ink-soft); font-style: italic; }
@@ -985,7 +985,7 @@ function irParaPainel(nomePainel){
   if(nomePainel === "mapa") renderMapaRota();
   if(nomePainel === "viagem") renderViagem();
   if(nomePainel === "inicio") renderInicio();
-  if(nomePainel === "votacao") renderVotacao();
+  if(nomePainel === "votacao"){ delete votacaoOrdemFixa[cidadeSelecionada]; renderVotacao(); }
   if(nomePainel === "roteiro") renderRoteiro();
   if(nomePainel === "resultados") renderResultados();
   if(nomePainel === "bagagem") renderBagagem();
@@ -1286,6 +1286,7 @@ function mudarCidade(cidade){
   document.querySelector(`[data-city="${cidade}"]`).classList.add("active");
   document.getElementById("form-titulo-cidade").textContent = `Sugerir um lugar - ${cidade}`;
   atualizarBairros(cidade);
+  delete votacaoOrdemFixa[cidade]; // troca de cidade = ordem nova, ordenada pelos votos atuais
   renderVotacao();
 }
 
@@ -1525,6 +1526,11 @@ async function removerLocalSheets(localId){
     .catch(err => console.log("Delete error:", err));
 }
 
+// Guarda a ordem dos cards por cidade — só recalculada ao trocar de cidade/reabrir a aba, nunca a
+// cada voto. Antes a lista reordenava (por nº de votos) toda vez que QUALQUER voto mudava, inclusive
+// o seu próprio voto que você acabou de dar — então o card debaixo do seu dedo pulava de lugar bem na
+// hora, e o próximo toque caía em outro botão/link. Isso é o "buga" ao clicar em interesse/não.
+const votacaoOrdemFixa = {};
 function renderVotacao(){
   const todosLocais = carregarLocais();
   const locais = todosLocais.filter(l => l.cidade === cidadeSelecionada);
@@ -1539,7 +1545,21 @@ function renderVotacao(){
     if(!Array.isArray(l.votos)) l.votos = [];
     if(!Array.isArray(l.naoInteresse)) l.naoInteresse = [];
   });
-  locais.sort((a, b) => b.votos.length - a.votos.length);
+
+  const ordem = votacaoOrdemFixa[cidadeSelecionada];
+  if(!ordem){
+    locais.sort((a, b) => b.votos.length - a.votos.length);
+    votacaoOrdemFixa[cidadeSelecionada] = locais.map(l => String(l.id));
+  } else {
+    locais.sort((a, b) => {
+      const ia = ordem.indexOf(String(a.id));
+      const ib = ordem.indexOf(String(b.id));
+      if(ia === -1 && ib === -1) return b.votos.length - a.votos.length;
+      if(ia === -1) return 1;  // local novo (ainda não estava na ordem fixa) entra no fim, sem embaralhar o resto
+      if(ib === -1) return -1;
+      return ia - ib;
+    });
+  }
 
   const cores = {Thomas:"#2f6b63", "Júlia":"#c1543a", Mateus:"#24406e", Paula:"#b33a3a", Juliane:"#e8b23d"};
 
