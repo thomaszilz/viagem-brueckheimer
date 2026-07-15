@@ -451,6 +451,9 @@
     font-size: .74rem; font-weight: 700;
   }
   .media-editar-btn:hover { background: rgba(226,100,59,.08); }
+  /* Versão discreta pro "trocar foto" quando o lugar já tem uma foto automática boa */
+  .media-editar-discreto { border-style: solid; border-color: rgba(var(--hairline),.25); color: var(--ink-soft); font-size: .68rem; padding: 4px 10px; }
+  .media-editar-discreto:hover { background: rgba(var(--hairline),.06); }
   .place-links { display: flex; gap: 8px; flex-wrap: wrap; }
   .place-links a { font-size: .74rem; color: var(--teal-deep); text-decoration: none; font-weight: 700;
     border: 1px solid rgba(47,107,99,.35); padding: 3px 9px; border-radius: 999px; }
@@ -1450,25 +1453,35 @@ function linksHtml(local, info){
 
 function mediaHtml(local){
   const info = infoCache[infoKey(local.nome)];
+  // 1) Foto/descrição que a família colocou na mão MANDA — assim dá pra trocar até a foto automática
+  //    por outra que a família prefira.
+  if(local.fotoManual || local.descricaoManual){
+    return `<div class="place-media">
+      ${local.fotoManual ? `<img src="${esc(local.fotoManual)}" alt="${esc(local.nome)}" onerror="this.style.display='none'">` : ""}
+      ${local.descricaoManual ? `<p class="media-desc">${esc(local.descricaoManual)}</p>` : ""}
+      <button type="button" class="media-editar-btn" onclick="editarMediaManual(${JSON.stringify(local.id)})">✏️ Trocar foto / descrição</button>
+      ${linksHtml(local, info)}
+    </div>`;
+  }
+  // 2) Ainda buscando
   if(info === undefined){
     buscarInfoLocal(local);
     return `<div class="place-media"><span class="media-loading">Buscando fotos e informações…</span>${linksHtml(local, null)}</div>`;
   }
+  // 3) Achou foto automática (Wikipédia/Flickr) — mostra, mas deixa trocar se quiser
   if(info.found){
     const descBruta = info.descricao || "";
     const desc = descBruta.length > 240 ? descBruta.slice(0, 240) + "…" : descBruta;
     return `<div class="place-media">
       ${info.imagem ? `<img src="${esc(info.imagem)}" alt="${esc(local.nome)}">` : ""}
       ${desc ? `<p class="media-desc">${esc(desc)}</p>` : ""}
+      <button type="button" class="media-editar-btn media-editar-discreto" onclick="editarMediaManual(${JSON.stringify(local.id)})">✏️ Trocar foto</button>
       ${linksHtml(local, info)}
     </div>`;
   }
-  // Não achou na Wikipédia — usa o que a família adicionou na mão, ou oferece pra adicionar
-  const temManual = local.descricaoManual || local.fotoManual;
+  // 4) Não achou nada — oferece adicionar (colando link de foto, site ou Instagram)
   return `<div class="place-media">
-    ${local.fotoManual ? `<img src="${esc(local.fotoManual)}" alt="${esc(local.nome)}" onerror="this.style.display='none'">` : ""}
-    ${local.descricaoManual ? `<p class="media-desc">${esc(local.descricaoManual)}</p>` : ""}
-    <button type="button" class="media-editar-btn" onclick="editarMediaManual(${JSON.stringify(local.id)})">${temManual ? "✏️ Editar descrição/foto" : "➕ Adicionar descrição e foto"}</button>
+    <button type="button" class="media-editar-btn" onclick="editarMediaManual(${JSON.stringify(local.id)})">➕ Adicionar foto e descrição</button>
     ${linksHtml(local, info)}
   </div>`;
 }
@@ -1494,19 +1507,92 @@ async function resolverImagemDeLink(url){
   return u;
 }
 
-async function editarMediaManual(localId){
-  const locais = carregarLocais();
-  const local = locais.find(l => String(l.id) === String(localId));
+// Modal de foto/descrição — substitui os prompts nativos (que no iPhone em modo app ficavam feios e
+// pareciam travar). Deixa claro que dá pra colar link de foto, do site OU de um post do Instagram,
+// mostra a foto atual e tem botão pra apagar o link já cadastrado.
+let mediaModalLocalId = null;
+function setupMediaModal(){
+  if(document.getElementById("media-modal")) return;
+  const modal = document.createElement("div");
+  modal.id = "media-modal";
+  modal.style.cssText = "display:none;position:fixed;inset:0;background:rgba(10,7,4,.55);z-index:260;align-items:center;justify-content:center;padding:20px";
+  modal.innerHTML = `
+    <div style="background:var(--paper);color:var(--ink);border-radius:12px;padding:24px;max-width:440px;width:100%;box-shadow:0 30px 60px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto">
+      <h3 style="font-family:'Fraunces',Georgia,serif;color:var(--terracotta-deep);margin:0 0 16px;font-size:1.2rem">Foto e descrição do lugar</h3>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Descrição (opcional)</label>
+        <textarea id="media-modal-desc" rows="2" placeholder="O que tem lá, por que vale a pena…" style="width:100%;padding:10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.9rem;background:var(--paper-2);color:var(--ink);font-family:inherit;resize:vertical"></textarea>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:6px">Foto do lugar</label>
+        <p style="font-size:.82rem;color:var(--ink-soft);margin:0 0 8px;line-height:1.5">📸 Cole o link de uma <b>foto</b>, do <b>site</b> do lugar, ou de um <b>post do Instagram</b> — o app tenta pegar a foto sozinho.</p>
+        <input id="media-modal-foto" type="text" placeholder="ex: instagram.com/p/…  ou  site-do-lugar.com" style="width:100%;padding:10px;border:1px solid rgba(var(--hairline),.25);border-radius:6px;font-size:.85rem;background:var(--paper-2);color:var(--ink);font-family:inherit">
+      </div>
+      <div id="media-modal-preview-wrap" style="display:none;margin-bottom:12px">
+        <img id="media-modal-preview" alt="Foto atual" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px;display:block" onerror="this.style.display='none'">
+        <button type="button" id="media-modal-apagar" style="margin-top:8px;padding:7px 14px;background:rgba(179,58,58,.12);color:#b33a3a;border:1px solid rgba(179,58,58,.4);border-radius:999px;font-weight:700;font-size:.78rem;cursor:pointer">🗑️ Apagar esta foto</button>
+      </div>
+      <p id="media-modal-status" style="font-size:.82rem;color:var(--ink-soft);margin:0 0 12px;min-height:1em"></p>
+      <div style="display:flex;gap:10px">
+        <button type="button" id="media-modal-salvar" style="flex:1;padding:11px;background:var(--gold);color:#2b241c;border:none;border-radius:6px;font-weight:700;cursor:pointer">Salvar</button>
+        <button type="button" id="media-modal-cancelar" style="flex:1;padding:11px;background:rgba(var(--hairline),.15);color:var(--cream-text);border:none;border-radius:6px;font-weight:700;cursor:pointer">Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener("click", ev => { if(ev.target === modal) fecharMediaModal(); });
+  document.getElementById("media-modal-cancelar").addEventListener("click", fecharMediaModal);
+  document.getElementById("media-modal-salvar").addEventListener("click", salvarMediaManual);
+  document.getElementById("media-modal-apagar").addEventListener("click", () => {
+    document.getElementById("media-modal-foto").value = "";
+    document.getElementById("media-modal-preview-wrap").style.display = "none";
+    document.getElementById("media-modal-status").textContent = "Foto apagada — toque em Salvar para confirmar, ou cole um link novo.";
+    document.getElementById("media-modal-foto").focus();
+  });
+}
+function fecharMediaModal(){
+  const m = document.getElementById("media-modal");
+  if(m) m.style.display = "none";
+  mediaModalLocalId = null;
+}
+function editarMediaManual(localId){
+  setupMediaModal();
+  const local = carregarLocais().find(l => String(l.id) === String(localId));
   if(!local) return;
-  const desc = prompt("Descrição curta do lugar (o que tem lá, por que vale a pena visitar):", local.descricaoManual || "");
-  if(desc === null) return;
-  const foto = prompt("Cole o link de uma foto — pode ser o link do site do lugar, de um post do Instagram, ou de uma imagem. O app tenta pegar a foto sozinho:", local.fotoManual || "");
-  if(foto === null) return;
-  local.descricaoManual = (desc || "").trim();
-  local.fotoManual = (foto || "").trim();
-  // Extrai a foto se o que foi colado for a página do lugar (site/Instagram) em vez de uma imagem direta
-  if(local.fotoManual) local.fotoManual = await resolverImagemDeLink(local.fotoManual);
+  mediaModalLocalId = localId;
+  document.getElementById("media-modal-desc").value = local.descricaoManual || "";
+  document.getElementById("media-modal-foto").value = local.fotoManual || "";
+  document.getElementById("media-modal-status").textContent = "";
+  const previewWrap = document.getElementById("media-modal-preview-wrap");
+  const preview = document.getElementById("media-modal-preview");
+  const info = infoCache[infoKey(local.nome)];
+  const fotoAtual = local.fotoManual || (info && info.imagem) || "";
+  if(fotoAtual){ preview.style.display = "block"; preview.src = fotoAtual; previewWrap.style.display = "block"; }
+  else { previewWrap.style.display = "none"; }
+  // O botão "apagar" só aparece quando há um link cadastrado NA MÃO pra remover (a foto automática da
+  // Wikipédia não dá pra apagar — mas dá pra sobrescrever colando outro link).
+  document.getElementById("media-modal-apagar").style.display = local.fotoManual ? "inline-block" : "none";
+  document.getElementById("media-modal").style.display = "flex";
+  setTimeout(() => document.getElementById("media-modal-desc").focus(), 50);
+}
+async function salvarMediaManual(){
+  if(mediaModalLocalId === null) return;
+  const locais = carregarLocais();
+  const local = locais.find(l => String(l.id) === String(mediaModalLocalId));
+  if(!local){ fecharMediaModal(); return; }
+  const salvarBtn = document.getElementById("media-modal-salvar");
+  const status = document.getElementById("media-modal-status");
+  const desc = document.getElementById("media-modal-desc").value.trim();
+  let foto = document.getElementById("media-modal-foto").value.trim();
+  if(foto){
+    salvarBtn.disabled = true; salvarBtn.textContent = "Buscando foto…";
+    status.textContent = "Procurando a foto no link…";
+    foto = await resolverImagemDeLink(foto);
+    salvarBtn.disabled = false; salvarBtn.textContent = "Salvar";
+  }
+  local.descricaoManual = desc;
+  local.fotoManual = foto;
   salvarLocais(locais);
+  fecharMediaModal();
   renderVotacao();
   if(mapaInfoLocalId){
     const l2 = carregarLocais().find(x => String(x.id) === String(mapaInfoLocalId));
