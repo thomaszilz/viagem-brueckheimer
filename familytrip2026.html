@@ -1334,6 +1334,7 @@ async function buscarNaWiki(lang, nome, cidade){
     const page = melhor.page;
     return {
       found: true,
+      fonte: "wikipedia",
       descricao: page.extract || "",
       imagem: melhor.img,
       link: page.fullurl || "",
@@ -1341,6 +1342,37 @@ async function buscarNaWiki(lang, nome, cidade){
       site: "",
       qid: (page.pageprops && page.pageprops.wikibase_item) || ""
     };
+  } catch(e){ return null; }
+}
+
+// Segunda fonte, além da Wikipédia: Openverse (agrega Flickr, museus, bibliotecas — imagens abertas).
+// Ajuda em lugares fotogênicos que não têm artigo próprio na Wikipédia (ex: a Floralis Genérica).
+// Passa pela MESMA validação de título/legenda da Wikipédia — só usa a foto se a legenda casar de
+// verdade com o nome do lugar, senão descarta. É isso que evita voltar a mostrar imagem sem relação.
+async function buscarEmOpenverse(nome, cidade){
+  try {
+    const q = encodeURIComponent(`${nome} ${cidade}`);
+    const r = await fetch(`https://api.openverse.org/v1/images/?q=${q}&page_size=8&mature=false`);
+    if(!r.ok) return null;
+    const d = await r.json();
+    const resultados = (d && d.results) || [];
+    for(const item of resultados){
+      const img = item.url || "";
+      if(!/^https:\/\//.test(img)) continue;
+      if(scoreTituloVsNome(item.title || "", nome, cidade) >= 0.6){
+        return {
+          found: true,
+          fonte: "openverse",
+          descricao: "",
+          imagem: img,
+          link: item.foreign_landing_url || "",
+          instagram: "",
+          site: "",
+          qid: ""
+        };
+      }
+    }
+    return null;
   } catch(e){ return null; }
 }
 
@@ -1354,6 +1386,8 @@ function buscarInfoLocal(local){
     // Tenta PT, depois ES — a primeira que trouxer foto vence
     let resultado = await buscarNaWiki("pt", local.nome, local.cidade);
     if(!resultado) resultado = await buscarNaWiki("es", local.nome, local.cidade);
+    // Se a Wikipédia não achou, tenta outras fontes (Flickr/museus via Openverse)
+    if(!resultado) resultado = await buscarEmOpenverse(local.nome, local.cidade);
     const qid = resultado ? resultado.qid : "";
 
     // Complementa via Wikidata: Instagram (P2003) e site oficial (P856)
@@ -1394,7 +1428,8 @@ function linksHtml(local, info){
     parts.push(`<a href="${esc(info.site)}" target="_blank" rel="noopener">🌐 Site</a>`);
   }
   if(info && info.found && info.link){
-    parts.push(`<a href="${esc(info.link)}" target="_blank" rel="noopener">📖 Wikipédia</a>`);
+    const rotulo = info.fonte === "openverse" ? "📷 Fonte da foto" : "📖 Wikipédia";
+    parts.push(`<a href="${esc(info.link)}" target="_blank" rel="noopener">${rotulo}</a>`);
   }
   parts.push(`<a href="https://www.google.com/search?tbm=isch&q=${q}" target="_blank" rel="noopener">🔍 Fotos</a>`);
   parts.push(`<a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">📍 Mapa</a>`);
@@ -1409,10 +1444,11 @@ function mediaHtml(local){
     return `<div class="place-media"><span class="media-loading">Buscando fotos e informações…</span>${linksHtml(local, null)}</div>`;
   }
   if(info.found){
-    const desc = info.descricao.length > 240 ? info.descricao.slice(0, 240) + "…" : info.descricao;
+    const descBruta = info.descricao || "";
+    const desc = descBruta.length > 240 ? descBruta.slice(0, 240) + "…" : descBruta;
     return `<div class="place-media">
       ${info.imagem ? `<img src="${esc(info.imagem)}" alt="${esc(local.nome)}">` : ""}
-      <p class="media-desc">${esc(desc)}</p>
+      ${desc ? `<p class="media-desc">${esc(desc)}</p>` : ""}
       ${linksHtml(local, info)}
     </div>`;
   }
@@ -3752,11 +3788,20 @@ const PENDENCIAS_MANUAIS_PADRAO = [
 ];
 function carregarPendenciasManuais(){
   let lista;
-  try {
-    const salvo = JSON.parse(localStorage.getItem(STORE_PENDENCIAS_MANUAIS));
-    lista = (Array.isArray(salvo) && salvo.length) ? salvo : PENDENCIAS_MANUAIS_PADRAO.map(p => ({ ...p, feito: false }));
-  } catch(e){
+  const bruto = localStorage.getItem(STORE_PENDENCIAS_MANUAIS);
+  // Distingue "primeira vez neste aparelho" (nunca salvou nada → null → mostra os lembretes padrão)
+  // de "esvaziei de propósito" (lista []). Antes os dois casos caíam no padrão, então apagar TODOS os
+  // avisos fazia os 6 padrões voltarem no próximo render/sync — e como o sync roda a cada 5s, eles
+  // reapareciam e piscavam sem parar ("buga quando apago todos"). Lista vazia agora é respeitada.
+  if(bruto === null){
     lista = PENDENCIAS_MANUAIS_PADRAO.map(p => ({ ...p, feito: false }));
+  } else {
+    try {
+      const salvo = JSON.parse(bruto);
+      lista = Array.isArray(salvo) ? salvo : PENDENCIAS_MANUAIS_PADRAO.map(p => ({ ...p, feito: false }));
+    } catch(e){
+      lista = PENDENCIAS_MANUAIS_PADRAO.map(p => ({ ...p, feito: false }));
+    }
   }
   // Migração: avisos salvos antes de existir ID próprio só eram identificados pela posição no
   // array. Isso fazia marcar como feito/apagar/definir responsável cair no aviso ERRADO sempre que
