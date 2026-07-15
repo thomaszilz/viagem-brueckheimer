@@ -6,6 +6,26 @@
 <title>Brueckheimer 2026 — Argentina &amp; Chile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Os avatares da família ficam salvos no localStorage (sincronizados via Sheets) — abrimos a
+     conexão com o host das fotos e já disparamos o download delas o quanto antes, em paralelo com
+     o resto da página, em vez de esperar o JS renderizar o álbum/mural/votação pra só então
+     descobrir que precisa dessas imagens. Isso é o que faz elas aparecerem mais rápido. -->
+<link rel="preconnect" href="https://i.postimg.cc" crossorigin>
+<script>
+  (function(){
+    try {
+      var custom = JSON.parse(localStorage.getItem("family_trip_avatar_custom") || "{}");
+      var urls = Object.keys(custom).map(function(k){ return custom[k]; }).filter(Boolean);
+      Array.from(new Set(urls)).forEach(function(url){
+        var link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "image";
+        link.href = url;
+        document.head.appendChild(link);
+      });
+    } catch(e){}
+  })();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,420;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,500&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Work+Sans:wght@400;500;600;700;800&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="manifest" href="manifest.json">
@@ -801,12 +821,15 @@
 
   /* Responsável atribuído a um lembrete manual */
   .post-it-responsavel {
-    display: flex; align-items: center; gap: 5px; margin-top: 10px;
+    display: inline-flex; align-items: center; gap: 5px; margin-top: 10px;
     background: rgba(43,36,28,.08); border: none; border-radius: 999px;
     padding: 3px 9px 3px 3px; font-family: 'Work Sans', sans-serif; font-size: .68rem; font-weight: 700;
-    color: #2b241c; cursor: pointer; max-width: 100%;
+    color: #2b241c; cursor: pointer; max-width: 100%; box-sizing: border-box;
   }
   .post-it-responsavel:hover { background: rgba(43,36,28,.16); }
+  /* O nome trunca com "…" dentro do balão em vez de esticar/vazar pra fora do post-it.
+     min-width:0 é o que permite o texto encolher abaixo do tamanho natural num flex container. */
+  .post-it-resp-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .post-it-resp-img { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
   .post-it-resp-emoji { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:rgba(255,255,255,.5); font-size:.6rem; flex-shrink:0; }
   .post-it-autor {
@@ -1178,7 +1201,11 @@ function esc(s){
 }
 
 /* ========= BUSCA DE FOTOS/INFO NA INTERNET (Wikipédia, sem chave) ========= */
-const INFO_CACHE_KEY = "family_trip_info_cache_v2";
+// v3: subimos a versão de propósito — força todos os aparelhos a jogar fora as fotos/descrições
+// erradas que já estavam em cache (buscadas pela lógica antiga que pegava qualquer artigo) e
+// buscar de novo com a validação de título nova. Sem isso, a família continuaria vendo as fotos
+// erradas guardadas localmente mesmo com o código corrigido.
+const INFO_CACHE_KEY = "family_trip_info_cache_v3";
 let infoCache = {};
 try { infoCache = JSON.parse(localStorage.getItem(INFO_CACHE_KEY) || "{}"); } catch(e){ infoCache = {}; }
 const infoPendentes = new Set();
@@ -1218,26 +1245,97 @@ function atualizarMediaCard(local){
   if(mediaEl) mediaEl.outerHTML = mediaHtml(local);
 }
 
-// Busca uma Wikipédia (pt/es) por texto — resolve o melhor artigo pro nome+cidade e traz
-// uma foto grande (800px) que representa bem o lugar. Bem mais eficaz que casar título exato.
+// Normaliza texto pra comparação: minúsculas, sem acento, sem pontuação, espaços colapsados.
+function normalizarTexto(s){
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")   // tira acentos (á→a, ñ→n…)
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Distância de edição (Levenshtein) — usada pra tolerar pequenas diferenças de grafia
+// entre idiomas (ex: "jardim" PT vs "jardín" ES) ao comparar palavra por palavra.
+function distanciaEdicao(a, b){
+  const m = a.length, n = b.length;
+  if(!m) return n;
+  if(!n) return m;
+  let linha = Array.from({length: n + 1}, (_, i) => i);
+  for(let i = 1; i <= m; i++){
+    let ant = linha[0];
+    linha[0] = i;
+    for(let j = 1; j <= n; j++){
+      const tmp = linha[j];
+      linha[j] = a[i-1] === b[j-1] ? ant : 1 + Math.min(ant, linha[j], linha[j-1]);
+      ant = tmp;
+    }
+  }
+  return linha[n];
+}
+// Duas palavras "casam" se forem iguais ou quase (tolera 1 letra em palavras curtas, ~20% nas longas).
+function palavrasCasam(p1, p2){
+  if(p1 === p2) return true;
+  const tolerancia = Math.max(1, Math.floor(Math.max(p1.length, p2.length) * 0.2));
+  return distanciaEdicao(p1, p2) <= tolerancia;
+}
+
+// Quão bem o título de um artigo da Wikipédia bate com o nome que a família digitou (0 a 1).
+// É isso que impede o app de mostrar uma foto aleatória de um artigo sem relação nenhuma:
+// se o nome não casa com o título, a gente descarta e trata como "sem foto".
+function scoreTituloVsNome(titulo, nome, cidade){
+  const t = normalizarTexto(titulo);
+  const n = normalizarTexto(nome);
+  if(!t || !n) return 0;
+  if(t === n) return 1;
+  // Nome inteiro contido no título é o sinal mais forte: "Obelisco" → "Obelisco de Buenos Aires".
+  if(n.length >= 5 && t.includes(n)) return 0.95;
+  // Ignora as palavras da CIDADE na comparação: como buscamos "nome + cidade", muitos artigos se
+  // chamam "X de Buenos Aires", e deixar "buenos"/"aires" na conta diluía o casamento do que importa
+  // (ex: "Jardim Botânico de Buenos Aires", o lugar certo, casava mal por causa do "de Buenos Aires").
+  const cityTokens = new Set(normalizarTexto(cidade).split(" ").filter(Boolean));
+  const distintivas = arr => arr.split(" ").filter(p => p.length > 2 && !cityTokens.has(p));
+  const wN = distintivas(n);
+  const wT = distintivas(t);
+  if(!wN.length || !wT.length) return 0;
+  const matched = wN.filter(pn => wT.some(pt => palavrasCasam(pn, pt))).length;
+  if(!matched) return 0;
+  const coberturaNome = matched / wN.length;   // quanto do nome digitado o título cobre
+  const coberturaTitulo = matched / wT.length; // quanto do título (sem cidade) o nome cobre
+  // Com 2+ palavras distintivas em comum dá pra confiar na melhor das duas coberturas; com só 1
+  // palavra usa a cobertura do nome (mais conservadora), pra não casar por uma palavra genérica solta.
+  return matched >= 2 ? Math.max(coberturaNome, coberturaTitulo) : coberturaNome;
+}
+
+// Busca uma Wikipédia (pt/es) por texto e escolhe o artigo cujo TÍTULO realmente corresponde ao
+// lugar digitado — não simplesmente o primeiro resultado da busca. Antes pegava o 1º resultado com
+// foto, então um lugar sem artigo (ex: um restaurante específico) trazia a imagem de um artigo
+// qualquer que só compartilhava alguma palavra — foto sem relação nenhuma com o lugar.
 async function buscarNaWiki(lang, nome, cidade){
   const q = encodeURIComponent(`${nome} ${cidade}`);
-  const url = `https://${lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&gsrlimit=1&prop=pageimages|extracts|pageprops|info&piprop=thumbnail&pithumbsize=800&exintro=1&explaintext=1&exchars=320&inprop=url&format=json&origin=*`;
+  const url = `https://${lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&gsrlimit=6&prop=pageimages|extracts|pageprops|info&piprop=thumbnail&pithumbsize=800&exintro=1&explaintext=1&exchars=320&inprop=url&format=json&origin=*`;
   try {
     const r = await fetch(url);
     if(!r.ok) return null;
     const d = await r.json();
     const pages = d && d.query && d.query.pages;
     if(!pages) return null;
-    const page = Object.values(pages)[0];
-    if(!page) return null;
-    const img = (page.thumbnail && /^https:\/\//.test(page.thumbnail.source)) ? page.thumbnail.source : "";
-    // Só considera "encontrado" se veio foto — o objetivo aqui é ter uma imagem que defina o lugar
-    if(!img) return null;
+    // Ordena pela relevância da busca (campo index) e escolhe o melhor que case com o nome E tenha foto
+    const candidatos = Object.values(pages).sort((a, b) => (a.index || 0) - (b.index || 0));
+    let melhor = null, melhorScore = 0;
+    for(const page of candidatos){
+      const img = (page.thumbnail && /^https:\/\//.test(page.thumbnail.source)) ? page.thumbnail.source : "";
+      if(!img) continue; // sem foto não serve — o objetivo aqui é ter uma imagem que defina o lugar
+      const score = scoreTituloVsNome(page.title, nome, cidade);
+      if(score > melhorScore){ melhorScore = score; melhor = { page, img }; }
+    }
+    // Exige correspondência mínima entre título e nome — abaixo disso é imagem aleatória, então descarta
+    if(!melhor || melhorScore < 0.6) return null;
+    const page = melhor.page;
     return {
       found: true,
       descricao: page.extract || "",
-      imagem: img,
+      imagem: melhor.img,
       link: page.fullurl || "",
       instagram: "",
       site: "",
@@ -2038,7 +2136,7 @@ function iniciaisDe(nome){
 function avatarHtmlDe(nome, classe){
   const url = avatarUrlDe(nome);
   const inicial = esc(iniciaisDe(nome));
-  if(url) return `<img src="${esc(url)}" alt="${esc(nome)}" class="${classe}-img" data-avatar-fallback-classe="${classe}" data-avatar-fallback-inicial="${inicial}" onerror="avatarImgErro(this)">`;
+  if(url) return `<img src="${esc(url)}" alt="${esc(nome)}" class="${classe}-img" decoding="async" data-avatar-fallback-classe="${classe}" data-avatar-fallback-inicial="${inicial}" onerror="avatarImgErro(this)">`;
   return `<span class="${classe}-emoji avatar-inicial">${inicial}</span>`;
 }
 function avatarImgErro(img){
@@ -3231,8 +3329,8 @@ function renderInicio(){
             <p>${esc(p.texto)}</p>
             <button type="button" class="post-it-responsavel" data-pendencia-responsavel="${esc(p.id)}" title="${p.responsavel ? "Responsável: " + esc(p.responsavel) : "Responsável: todo mundo (toque para atribuir a alguém)"}">
               ${p.responsavel
-                ? avatarHtmlDe(p.responsavel, "post-it-resp") + " " + esc(p.responsavel)
-                : `<span class="post-it-resp-emoji">👥</span> Todo mundo`}
+                ? avatarHtmlDe(p.responsavel, "post-it-resp") + `<span class="post-it-resp-nome">${esc(p.responsavel)}</span>`
+                : `<span class="post-it-resp-emoji">👥</span><span class="post-it-resp-nome">Todos</span>`}
             </button>
             ${p.autor ? `<span class="post-it-autor">adicionado por ${esc(p.autor)}</span>` : ""}
           </div>
