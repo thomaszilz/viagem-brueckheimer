@@ -1462,16 +1462,39 @@ function mediaHtml(local){
   </div>`;
 }
 
-function editarMediaManual(localId){
+// A pessoa pode colar tanto o link direto de uma imagem quanto o link de uma PÁGINA (site do lugar,
+// post do Instagram etc.). Se for uma página, tenta extrair a foto de capa (og:image) dela via um
+// serviço aberto (microlink, com CORS). Assim dá pra dar foto a cafés/comércios que não estão na
+// Wikipédia — a pessoa só cola o link do lugar. Como é ela que escolhe o link, não tem risco de vir
+// uma imagem sem relação. Se não conseguir extrair, mantém o que foi colado.
+async function resolverImagemDeLink(url){
+  const u = (url || "").trim();
+  if(!u) return "";
+  if(/^https?:\/\/\S+\.(jpe?g|png|webp|gif|avif)(\?\S*)?$/i.test(u)) return u; // já é imagem direta
+  if(!/^https?:\/\//i.test(u)) return u; // nem parece link — deixa como está
+  try {
+    const r = await fetch("https://api.microlink.io/?url=" + encodeURIComponent(u));
+    const d = await r.json();
+    if(d && d.status === "success" && d.data){
+      const img = (d.data.image && d.data.image.url) || (d.data.logo && d.data.logo.url) || "";
+      if(/^https:\/\//.test(img)) return img;
+    }
+  } catch(e){ /* serviço indisponível — mantém o link colado */ }
+  return u;
+}
+
+async function editarMediaManual(localId){
   const locais = carregarLocais();
   const local = locais.find(l => String(l.id) === String(localId));
   if(!local) return;
   const desc = prompt("Descrição curta do lugar (o que tem lá, por que vale a pena visitar):", local.descricaoManual || "");
   if(desc === null) return;
-  const foto = prompt("Link de uma foto (opcional, cole a URL):", local.fotoManual || "");
+  const foto = prompt("Cole o link de uma foto — pode ser o link do site do lugar, de um post do Instagram, ou de uma imagem. O app tenta pegar a foto sozinho:", local.fotoManual || "");
   if(foto === null) return;
   local.descricaoManual = (desc || "").trim();
   local.fotoManual = (foto || "").trim();
+  // Extrai a foto se o que foi colado for a página do lugar (site/Instagram) em vez de uma imagem direta
+  if(local.fotoManual) local.fotoManual = await resolverImagemDeLink(local.fotoManual);
   salvarLocais(locais);
   renderVotacao();
   if(mapaInfoLocalId){
