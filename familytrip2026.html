@@ -1205,7 +1205,7 @@ function esc(s){
 // erradas que já estavam em cache (buscadas pela lógica antiga que pegava qualquer artigo) e
 // buscar de novo com a validação de título nova. Sem isso, a família continuaria vendo as fotos
 // erradas guardadas localmente mesmo com o código corrigido.
-const INFO_CACHE_KEY = "family_trip_info_cache_v3";
+const INFO_CACHE_KEY = "family_trip_info_cache_v4";
 let infoCache = {};
 try { infoCache = JSON.parse(localStorage.getItem(INFO_CACHE_KEY) || "{}"); } catch(e){ infoCache = {}; }
 const infoPendentes = new Set();
@@ -1287,24 +1287,35 @@ function scoreTituloVsNome(titulo, nome, cidade){
   const t = normalizarTexto(titulo);
   const n = normalizarTexto(nome);
   if(!t || !n) return 0;
-  if(t === n) return 1;
-  // Nome inteiro contido no título é o sinal mais forte: "Obelisco" → "Obelisco de Buenos Aires".
-  if(n.length >= 5 && t.includes(n)) return 0.95;
-  // Ignora as palavras da CIDADE na comparação: como buscamos "nome + cidade", muitos artigos se
-  // chamam "X de Buenos Aires", e deixar "buenos"/"aires" na conta diluía o casamento do que importa
-  // (ex: "Jardim Botânico de Buenos Aires", o lugar certo, casava mal por causa do "de Buenos Aires").
-  const cityTokens = new Set(normalizarTexto(cidade).split(" ").filter(Boolean));
-  const distintivas = arr => arr.split(" ").filter(p => p.length > 2 && !cityTokens.has(p));
-  const wN = distintivas(n);
-  const wT = distintivas(t);
-  if(!wN.length || !wT.length) return 0;
-  const matched = wN.filter(pn => wT.some(pt => palavrasCasam(pn, pt))).length;
-  if(!matched) return 0;
-  const coberturaNome = matched / wN.length;   // quanto do nome digitado o título cobre
-  const coberturaTitulo = matched / wT.length; // quanto do título (sem cidade) o nome cobre
-  // Com 2+ palavras distintivas em comum dá pra confiar na melhor das duas coberturas; com só 1
-  // palavra usa a cobertura do nome (mais conservadora), pra não casar por uma palavra genérica solta.
-  return matched >= 2 ? Math.max(coberturaNome, coberturaTitulo) : coberturaNome;
+  const cityTokens = normalizarTexto(cidade).split(" ").filter(Boolean);
+  const cityset = new Set(cityTokens);
+  let score;
+  if(t === n){
+    score = 1;
+  } else if(n.length >= 5 && t.includes(n)){
+    // Nome inteiro contido no título é sinal forte: "Obelisco" → "Obelisco de Buenos Aires".
+    score = 0.95;
+  } else {
+    // Ignora as palavras da CIDADE na comparação: como buscamos "nome + cidade", muitos artigos se
+    // chamam "X de Buenos Aires", e deixar "buenos"/"aires" na conta diluía o casamento do que importa
+    // (ex: "Jardim Botânico de Buenos Aires", o lugar certo, casava mal por causa do "de Buenos Aires").
+    const distintivas = arr => arr.split(" ").filter(p => p.length > 2 && !cityset.has(p));
+    const wN = distintivas(n);
+    const wT = distintivas(t);
+    if(!wN.length || !wT.length) return 0;
+    const matched = wN.filter(pn => wT.some(pt => palavrasCasam(pn, pt))).length;
+    if(!matched) return 0;
+    const coberturaNome = matched / wN.length;   // quanto do nome digitado o título cobre
+    const coberturaTitulo = matched / wT.length; // quanto do título (sem cidade) o nome cobre
+    // Com 2+ palavras distintivas em comum dá pra confiar na melhor das duas coberturas; com só 1
+    // palavra usa a cobertura do nome (mais conservadora), pra não casar por uma palavra genérica solta.
+    score = matched >= 2 ? Math.max(coberturaNome, coberturaTitulo) : coberturaNome;
+  }
+  // Âncora na cidade: se o título contém o nome da cidade (ex: "Obelisco de Buenos Aires"), é
+  // fortemente preferido a um homônimo genérico do mundo ("Obelisco") ou a um lugar de mesmo nome em
+  // outro país. Foi o que faltava pro Obelisco: o artigo genérico vencia o de Buenos Aires por 1.0 x 0.95.
+  if(cityTokens.length && cityTokens.every(tok => t.includes(tok))) score += 0.25;
+  return score;
 }
 
 // Busca uma Wikipédia (pt/es) por texto e escolhe o artigo cujo TÍTULO realmente corresponde ao
