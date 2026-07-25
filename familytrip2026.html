@@ -560,7 +560,10 @@
   .count-status { display:inline-block; margin-top:14px; font-size:.75rem; font-weight:700; padding:5px 14px; border-radius:999px; }
   .count-status.prov { background:rgba(217,138,61,.2); color:var(--gold); border:1px solid rgba(217,138,61,.45); }
   .count-status.ok { background:rgba(47,107,99,.25); color:#8fd8cc; border:1px solid rgba(47,107,99,.55); }
-  .viagem-status { display:flex; align-items:center; gap:9px; margin-top:16px; padding-top:14px; border-top:1px solid rgba(var(--hairline),.2); font-size:.85rem; color:var(--cream-text); cursor:pointer; }
+  .count-status.parcial { background:rgba(78,110,142,.22); color:var(--boca-blue); border:1px solid rgba(78,110,142,.5); }
+  .viagem-passagens { margin-top:16px; padding-top:14px; border-top:1px solid rgba(var(--hairline),.2); }
+  .viagem-passagens-titulo { display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); font-weight:700; margin-bottom:8px; }
+  .viagem-status { display:flex; align-items:center; gap:9px; font-size:.9rem; color:var(--cream-text); cursor:pointer; padding:5px 0; }
   .viagem-status input { width:17px; height:17px; accent-color:var(--gold); cursor:pointer; }
   .home-cidades { grid-column:1 / -1; display:flex; gap:12px; flex-wrap:wrap; }
   .home-cidade { flex:1; min-width:150px; background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:14px; padding:16px 18px; box-shadow:0 10px 22px -14px var(--shadow); }
@@ -689,6 +692,10 @@
   .mapa-pin-casa {
     width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: #8a6539; font-size: 1rem; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,.35);
+  }
+  .mapa-pin-escala {
+    width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: #7c6f5c; font-size: .8rem; border: 2px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,.3);
   }
   .mapa-km-label {
     font-family: 'Work Sans', sans-serif; font-size: .72rem; font-weight: 700; color: var(--ink-soft);
@@ -1094,6 +1101,8 @@ const CIDADES_COORDS = {
 };
 /* Ponto de origem/retorno da viagem — não entra na votação, só aparece no mapa como saída/chegada */
 const PORTO_ALEGRE_COORD = [-30.0346, -51.2177];
+/* Escala do voo de ida: conexão em São Paulo (Guarulhos), no caminho para Buenos Aires */
+const SAO_PAULO_GRU_COORD = [-23.4322, -46.4694];
 
 function haversineKm(a, b){
   const R = 6371;
@@ -2595,6 +2604,8 @@ const STORE_VIAGEM = "family_trip_viagem";
 const VIAGEM_PADRAO = {
   inicio: "2026-08-29",
   hora: "08:00",
+  idaComprada: false,
+  voltaComprada: false,
   confirmado: false,
   cidades: [
     { nome: "Buenos Aires", noites: 6 },
@@ -2608,10 +2619,23 @@ function carregarViagem(){
     const v = JSON.parse(localStorage.getItem(STORE_VIAGEM));
     if(v && v.inicio && Array.isArray(v.cidades)){
       if(!v.hora) v.hora = "08:00";
+      // Migração do modelo antigo (um único "confirmado") pro novo (ida e volta separadas): a passagem
+      // pode ser comprada em partes, então guardamos ida e volta em separado. Config antiga vira as duas
+      // iguais ao valor de "confirmado".
+      if(v.idaComprada === undefined && v.voltaComprada === undefined){
+        v.idaComprada = !!v.confirmado;
+        v.voltaComprada = !!v.confirmado;
+      }
       return v;
     }
   } catch(e){}
   return JSON.parse(JSON.stringify(VIAGEM_PADRAO));
+}
+// Estado das passagens: "ambas" (ida e volta), "ida" (só a ida), ou "nenhuma".
+function statusPassagens(v){
+  if(v.idaComprada && v.voltaComprada) return "ambas";
+  if(v.idaComprada) return "ida";
+  return "nenhuma";
 }
 let viagemEditadaEm = 0;
 let pushViagemTimer = null;
@@ -2962,10 +2986,17 @@ function renderViagem(){
         <span><strong>${totalNoites}</strong> noites no total</span>
         <span>Volta prevista: <strong>${fmtData(fim)}</strong></span>
       </div>
-      <label class="viagem-status">
-        <input type="checkbox" id="viagem-confirmado" ${v.confirmado ? "checked" : ""}>
-        <span>Passagens compradas — datas confirmadas</span>
-      </label>
+      <div class="viagem-passagens">
+        <span class="viagem-passagens-titulo">Passagens compradas</span>
+        <label class="viagem-status">
+          <input type="checkbox" id="viagem-ida" ${v.idaComprada ? "checked" : ""}>
+          <span>🛫 Ida comprada</span>
+        </label>
+        <label class="viagem-status">
+          <input type="checkbox" id="viagem-volta" ${v.voltaComprada ? "checked" : ""}>
+          <span>🛬 Volta comprada</span>
+        </label>
+      </div>
     </div>
 
     <div class="cambio-card">
@@ -3024,7 +3055,8 @@ function renderViagem(){
       const v2 = carregarViagem();
       if(ev.target.id === "viagem-inicio-input"){ v2.inicio = ev.target.value; }
       else if(ev.target.id === "viagem-hora-input"){ v2.hora = ev.target.value || "08:00"; }
-      else if(ev.target.id === "viagem-confirmado"){ v2.confirmado = ev.target.checked; }
+      else if(ev.target.id === "viagem-ida"){ v2.idaComprada = ev.target.checked; v2.confirmado = v2.idaComprada && v2.voltaComprada; }
+      else if(ev.target.id === "viagem-volta"){ v2.voltaComprada = ev.target.checked; v2.confirmado = v2.idaComprada && v2.voltaComprada; }
       else return;
       salvarViagem(v2);
       renderViagem();
@@ -3113,10 +3145,14 @@ function renderMapaModoRota(){
   const bounds = [];
   let distanciaTotal = 0;
 
-  // Rota completa: saída de Porto Alegre -> cidades do roteiro -> volta pra Porto Alegre
+  // Rota completa: saída de Porto Alegre -> (escala São Paulo) -> cidades do roteiro -> volta pra Porto Alegre
   const fim = trechos.length ? trechos[trechos.length-1].checkout : null;
+  const primeiraCidade = trechos.length ? trechos[0].nome : "";
   const pontos = [
     { nome: "Porto Alegre", coord: PORTO_ALEGRE_COORD, tipo: "partida", data: partidaDataHora(v) },
+    // Escala do voo de ida em São Paulo (Guarulhos) — só aparece quando o 1º destino é Buenos Aires,
+    // que é para onde a passagem de ida foi comprada (PoA → GRU → Aeroparque).
+    ...(primeiraCidade === "Buenos Aires" ? [{ nome: "São Paulo (Guarulhos)", coord: SAO_PAULO_GRU_COORD, tipo: "escala" }] : []),
     ...trechos.map(t => ({ nome: t.nome, coord: CIDADES_COORDS[t.nome], tipo: "cidade" })),
     { nome: "Porto Alegre", coord: PORTO_ALEGRE_COORD, tipo: "volta", data: fim }
   ];
@@ -3131,17 +3167,20 @@ function renderMapaModoRota(){
       numero++;
       const cor = coresCidade[(numero-1) % coresCidade.length];
       icone = L.divIcon({ className: "mapa-icone-wrap", html: `<div class="mapa-pin-marcador" style="background:${cor}">${numero}</div>`, iconSize: [32,32], iconAnchor: [16,16] });
+    } else if(p.tipo === "escala"){
+      icone = L.divIcon({ className: "mapa-icone-wrap", html: `<div class="mapa-pin-escala">✈️</div>`, iconSize: [28,28], iconAnchor: [14,14] });
     } else {
       icone = L.divIcon({ className: "mapa-icone-wrap", html: `<div class="mapa-pin-casa">🏠</div>`, iconSize: [32,32], iconAnchor: [16,16] });
     }
 
     const marker = L.marker(p.coord, { icon: icone }).addTo(mapaMarkersLayer);
-    const rotulo = p.tipo === "partida" ? "Saída · Porto Alegre" : p.tipo === "volta" ? "Volta · Porto Alegre" : `${numero}. ${p.nome}`;
+    const rotulo = p.tipo === "partida" ? "Saída · Porto Alegre" : p.tipo === "volta" ? "Volta · Porto Alegre" : p.tipo === "escala" ? "Escala · São Paulo (Guarulhos)" : `${numero}. ${p.nome}`;
     marker.bindTooltip(esc(rotulo), { direction: "top", offset: [0,-16] });
     // Popup curto direto no pin (feedback imediato ao tocar) + card completo logo abaixo do mapa
-    marker.bindPopup(`<strong>${esc(rotulo)}</strong>`, { closeButton: true, maxWidth: 220, autoPan: true });
+    const popupExtra = p.tipo === "escala" ? "<br><span style='font-size:.85em'>Conexão da ida para Buenos Aires</span>" : "";
+    marker.bindPopup(`<strong>${esc(rotulo)}</strong>${popupExtra}`, { closeButton: true, maxWidth: 220, autoPan: true });
     if(p.tipo === "cidade") marker.on("click", () => mostrarInfoCidadeEscroll(p.nome));
-    else marker.on("click", () => mostrarInfoPortoAlegreEscroll(p.tipo, p.data, v.hora));
+    else if(p.tipo === "partida" || p.tipo === "volta") marker.on("click", () => mostrarInfoPortoAlegreEscroll(p.tipo, p.data, v.hora));
 
     if(i < pontos.length - 1 && pontos[i+1].coord){
       const prox = pontos[i+1].coord;
@@ -3165,6 +3204,7 @@ function renderMapaModoRota(){
   `;
   document.getElementById("mapa-legenda").innerHTML =
     `<span><i style="background:#8a6539"></i>🏠 Porto Alegre · saída e volta</span>` +
+    (primeiraCidade === "Buenos Aires" ? `<span><i style="background:#7c6f5c"></i>✈️ Escala · São Paulo (ida)</span>` : "") +
     trechos.map((t,i)=>`<span><i style="background:${coresCidade[i%coresCidade.length]}"></i>${i+1}. ${esc(t.nome)} · ${t.noites} ${t.noites===1?"noite":"noites"}</span>`).join("");
 }
 
@@ -3360,7 +3400,7 @@ function renderInicio(){
 
   const trechos = viagemTrechos();
   const v = carregarViagem();
-  const confirmado = v.confirmado;
+  const statusPass = statusPassagens(v);
   const inicio = trechos.length ? trechos[0].checkin : null;
   const fim = trechos.length ? trechos[trechos.length-1].checkout : null;
   const hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -3422,7 +3462,7 @@ function renderInicio(){
           <div class="count-label">${countLabel}</div>
         `}
         ${inicio ? `<div class="count-sub">${fmtData(inicio)} ${esc(v.hora)} → ${fmtData(fim)} · ${trechos.reduce((s,t)=>s+t.noites,0)} noites</div>` : ""}
-        <div class="count-status ${confirmado ? "ok" : "prov"}">${confirmado ? "✓ Datas confirmadas" : "📅 Provisório · passagens ainda não compradas"}</div>
+        <div class="count-status ${statusPass === "ambas" ? "ok" : statusPass === "ida" ? "parcial" : "prov"}">${statusPass === "ambas" ? "✓ Passagens compradas · datas confirmadas" : statusPass === "ida" ? "🛫 Ida comprada · falta a passagem de volta" : "📅 Provisório · passagens ainda não compradas"}</div>
       </div>
 
       <div class="home-cidades">
@@ -4075,8 +4115,11 @@ function calcularPendencias(){
   const locais = carregarLocais();
   const pendencias = [];
 
-  if(!v.confirmado){
+  const passagens = statusPassagens(v);
+  if(passagens === "nenhuma"){
     pendencias.push({ texto: "Comprar as passagens! As datas ainda estão provisórias.", urgencia: "alta", acao: { painel: "viagem" } });
+  } else if(passagens === "ida"){
+    pendencias.push({ texto: "Comprar a passagem de VOLTA (a ida já está garantida).", urgencia: "media", acao: { painel: "viagem" } });
   }
 
   if(locais.length === 0){
