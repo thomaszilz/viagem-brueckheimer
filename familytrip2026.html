@@ -753,6 +753,99 @@
   .bagagem-add input { flex:1; padding:7px 10px; border:1px solid rgba(var(--hairline),.18); border-radius:6px; font-size:.82rem; background:transparent; color:var(--ink); font-family:inherit; }
   .bagagem-add button { width:32px; border:none; border-radius:6px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; font-size:1rem; }
 
+  /* ===== PASSAGENS E HOSPEDAGEM (aba Viagem) ===== */
+  .logistica-card { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:18px; padding:24px 26px; box-shadow:0 16px 34px -22px var(--shadow); margin-top:22px; }
+  .logistica-card h3 { font-family:'Fraunces',Georgia,serif; color:var(--ink); font-size:1.25rem; margin:0 0 4px; }
+  .logistica-hint { font-size:.85rem; color:var(--ink-soft); margin:0 0 18px; }
+  .logistica-lista { display:grid; gap:14px; }
+  .logistica-item { position:relative; background:var(--paper-2); border:1px solid rgba(var(--hairline),.1); border-radius:14px; padding:16px 18px; }
+  .logistica-item-topo { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+  .logistica-item-titulo { font-family:'Fraunces',Georgia,serif; font-weight:700; color:var(--teal-deep); font-size:1.05rem; }
+  .logistica-item-valor { font-weight:800; color:var(--terracotta-deep); font-size:.95rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .logistica-linhas { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px 18px; }
+  .logistica-campo { font-size:.83rem; color:var(--ink); }
+  .logistica-campo b { display:block; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:700; margin-bottom:2px; }
+  .logistica-obs { font-size:.82rem; color:var(--ink-soft); margin:10px 0 0; font-style:italic; }
+  .logistica-acoes { position:absolute; top:10px; right:10px; display:flex; gap:4px; }
+  .logistica-acoes button { background:transparent; border:none; color:var(--ink-soft); opacity:.45; cursor:pointer; font-size:.95rem; line-height:1; padding:3px; }
+  .logistica-acoes button:hover { opacity:1; color:var(--terracotta-deep); }
+  .logistica-add { margin-top:16px; background:var(--teal); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-weight:700; font-size:.85rem; cursor:pointer; font-family:inherit; }
+  .logistica-vazio { font-size:.86rem; color:var(--ink-soft); margin:0; padding:14px 0; }
+  .logistica-link { color:var(--teal-deep); font-weight:700; text-decoration:none; font-size:.83rem; }
+  .logistica-link:hover { text-decoration:underline; }
+
+  /* ===== DESPESAS (rateio) ===== */
+  .desp-topo { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; margin-bottom:24px; }
+  .desp-kpi { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:16px; padding:18px 20px; box-shadow:0 12px 26px -18px var(--shadow); }
+  .desp-kpi-rotulo { font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); font-weight:700; margin-bottom:6px; }
+  .desp-kpi-valor { font-family:'Fraunces',Georgia,serif; font-size:1.75rem; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1.1; }
+  .desp-kpi-nota { font-size:.78rem; color:var(--ink-soft); margin-top:5px; }
+  .desp-kpi.positivo .desp-kpi-valor { color:var(--teal-deep); }
+  .desp-kpi.negativo .desp-kpi-valor { color:var(--river-red); }
+
+  .desp-secao { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:18px; padding:24px 26px; box-shadow:0 16px 34px -22px var(--shadow); margin-bottom:22px; }
+  .desp-secao h3 { font-family:'Fraunces',Georgia,serif; color:var(--ink); font-size:1.25rem; margin:0 0 4px; }
+  .desp-secao-hint { font-size:.85rem; color:var(--ink-soft); margin:0 0 18px; }
+
+  .desp-saldos { display:grid; gap:10px; }
+  .desp-saldo-linha { display:flex; align-items:center; gap:12px; }
+  .desp-saldo-nome { display:flex; align-items:center; gap:8px; min-width:118px; font-size:.88rem; font-weight:700; color:var(--ink); }
+  .desp-saldo-avatar-img { width:26px; height:26px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+  .desp-saldo-avatar-emoji { width:26px; height:26px; border-radius:50%; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:.78rem; font-weight:700; flex-shrink:0; }
+  .desp-saldo-barra { flex:1; height:10px; background:rgba(var(--hairline),.08); border-radius:5px; position:relative; overflow:hidden; }
+  .desp-saldo-barra i { position:absolute; top:0; bottom:0; border-radius:5px; }
+  .desp-saldo-barra i.credor { background:var(--teal); left:50%; }
+  .desp-saldo-barra i.devedor { background:var(--river-red); right:50%; }
+  .desp-saldo-barra::after { content:""; position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:rgba(var(--hairline),.28); }
+  .desp-saldo-valor { min-width:106px; text-align:right; font-size:.86rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .desp-saldo-valor.credor { color:var(--teal-deep); }
+  .desp-saldo-valor.devedor { color:var(--river-red); }
+  .desp-saldo-valor.zerado { color:var(--ink-soft); font-weight:600; }
+  .desp-saldo-detalhe { font-size:.74rem; color:var(--ink-soft); min-width:150px; text-align:right; font-variant-numeric:tabular-nums; }
+
+  .desp-acerto-lista { display:grid; gap:10px; }
+  .desp-acerto { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:var(--paper-2); border:1px solid rgba(60,122,115,.25); border-radius:12px; padding:13px 16px; }
+  .desp-acerto-texto { font-size:.9rem; color:var(--ink); }
+  .desp-acerto-texto strong { color:var(--teal-deep); }
+  .desp-acerto-valor { font-weight:800; color:var(--terracotta-deep); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .desp-acerto-btn { background:var(--teal); color:#fff; border:none; border-radius:7px; padding:7px 13px; font-size:.78rem; font-weight:700; cursor:pointer; font-family:inherit; }
+  .desp-quitado { font-size:.9rem; color:var(--teal-deep); font-weight:700; margin:0; }
+
+  .desp-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; align-items:end; }
+  .desp-form .field-full { grid-column:1/-1; }
+  .desp-form label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:700; margin-bottom:5px; }
+  .desp-form input, .desp-form select { width:100%; padding:9px 11px; border:1px solid rgba(var(--hairline),.2); border-radius:8px; font-size:.88rem; background:var(--paper-2); color:var(--ink); font-family:inherit; }
+  .desp-participantes { display:flex; flex-wrap:wrap; gap:8px; }
+  .desp-chip { display:flex; align-items:center; gap:7px; background:var(--paper-2); border:1px solid rgba(var(--hairline),.18); border-radius:20px; padding:6px 13px 6px 8px; font-size:.83rem; cursor:pointer; user-select:none; color:var(--ink); }
+  .desp-chip input { width:15px; height:15px; accent-color:var(--teal); cursor:pointer; margin:0; padding:0; }
+  .desp-chip.marcado { background:rgba(60,122,115,.14); border-color:rgba(60,122,115,.45); font-weight:700; }
+  .desp-form-acoes { grid-column:1/-1; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .desp-form-acoes button { background:var(--gold); color:#2b241c; border:none; border-radius:8px; padding:11px 22px; font-weight:800; font-size:.88rem; cursor:pointer; font-family:inherit; }
+  .desp-conversao { font-size:.8rem; color:var(--ink-soft); }
+  .desp-erro { color:var(--river-red); font-size:.83rem; min-height:1em; grid-column:1/-1; margin:0; }
+
+  .desp-filtros { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .desp-filtro { background:transparent; border:1px solid rgba(var(--hairline),.2); color:var(--ink-soft); border-radius:20px; padding:6px 14px; font-size:.8rem; cursor:pointer; font-family:inherit; }
+  .desp-filtro.ativo { background:var(--teal); border-color:var(--teal); color:#fff; font-weight:700; }
+
+  .desp-lista { display:grid; gap:12px; }
+  .desp-item { position:relative; background:var(--paper-2); border:1px solid rgba(var(--hairline),.1); border-radius:13px; padding:14px 46px 14px 17px; }
+  .desp-item-topo { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .desp-item-desc { font-weight:700; font-size:.95rem; color:var(--ink); }
+  .desp-item-valor { font-weight:800; font-size:.95rem; color:var(--terracotta-deep); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .desp-item-original { font-size:.76rem; color:var(--ink-soft); font-weight:600; margin-left:6px; }
+  .desp-item-meta { font-size:.79rem; color:var(--ink-soft); margin-top:6px; display:flex; flex-wrap:wrap; gap:5px 12px; }
+  .desp-item-cat { display:inline-block; font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; font-weight:800; padding:2px 8px; border-radius:10px; background:rgba(var(--hairline),.08); color:var(--ink-soft); }
+  .desp-item-del { position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--ink-soft); opacity:.4; cursor:pointer; font-size:1.05rem; line-height:1; }
+  .desp-item-del:hover { opacity:1; color:var(--river-red); }
+  .desp-vazio { font-size:.88rem; color:var(--ink-soft); margin:0; }
+  .desp-cambio-nota { font-size:.78rem; color:var(--ink-soft); margin:14px 0 0; }
+  @media (max-width: 640px){
+    .desp-saldo-detalhe { display:none; }
+    .desp-saldo-nome { min-width:96px; font-size:.83rem; }
+    .desp-saldo-valor { min-width:88px; font-size:.82rem; }
+  }
+
   /* ===== SELOS (conquistas, agora na Home) ===== */
   .selos-secao { margin-top:34px; }
   .selos-secao h3 { font-family:'Fraunces',Georgia,serif; color:var(--ink); font-size:1.2rem; margin:0 0 14px; }
@@ -866,6 +959,7 @@
       <button class="navbtn" data-panel="viagem">Viagem</button>
       <button class="navbtn" data-panel="votacao">Votação</button>
       <button class="navbtn" data-panel="roteiro">Roteiro</button>
+      <button class="navbtn" data-panel="despesas">Despesas</button>
       <button class="navbtn" data-panel="resultados">Resultados</button>
       <button class="navbtn" data-panel="mapa">Mapa</button>
       <button class="navbtn" data-panel="bagagem">Bagagem</button>
@@ -901,6 +995,7 @@
   <button type="button" class="drawer-navbtn" data-panel="viagem">🗓️ Viagem</button>
   <button type="button" class="drawer-navbtn" data-panel="votacao">🗳️ Votação</button>
   <button type="button" class="drawer-navbtn" data-panel="roteiro">📅 Roteiro</button>
+  <button type="button" class="drawer-navbtn" data-panel="despesas">💸 Despesas</button>
   <button type="button" class="drawer-navbtn" data-panel="resultados">🏆 Resultados</button>
   <button type="button" class="drawer-navbtn" data-panel="mapa">🗺️ Mapa</button>
   <button type="button" class="drawer-navbtn" data-panel="bagagem">🧳 Bagagem</button>
@@ -983,6 +1078,16 @@
     <div id="roteiro-conteudo"></div>
   </section>
 
+  <section class="panel" id="panel-despesas">
+    <div class="panel-head">
+      <button type="button" class="ajuda-btn" data-ajuda="despesas" title="Como usar esta aba">?</button>
+      <span class="eyebrow">Quanto cada um deve</span>
+      <h2>Despesas da viagem</h2>
+      <p>Cada um lança o que pagou e quem entra no rateio. O app converte tudo pra real, soma e diz no fim quem paga quanto pra quem — no menor número de transferências possível.</p>
+    </div>
+    <div id="despesas-conteudo"></div>
+  </section>
+
   <section class="panel" id="panel-resultados">
     <div class="panel-head">
       <button type="button" class="ajuda-btn" data-ajuda="resultados" title="Como usar esta aba">?</button>
@@ -1053,6 +1158,7 @@ function irParaPainel(nomePainel){
   if(nomePainel === "inicio") renderInicio();
   if(nomePainel === "votacao"){ delete votacaoOrdemFixa[cidadeSelecionada]; renderVotacao(); }
   if(nomePainel === "roteiro") renderRoteiro();
+  if(nomePainel === "despesas") renderDespesas();
   if(nomePainel === "resultados") renderResultados();
   if(nomePainel === "bagagem") renderBagagem();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2038,6 +2144,22 @@ function atualizarCardVoto(localId){
 let SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbziouvKIwXk9sS_XX3xQM4oY9i3K9mvyH2OpB1hBBlu9xd91RFnkHoESSm__TsQwexNYQ/exec";
 let USE_SHEETS = SHEETS_API_URL.length > 0;
 
+/* Uma única leitura de getConfig por ciclo, compartilhada por todos que precisam dela.
+   Antes cada assunto (viagem, avatares, acessos, bagagem, avisos, roteiro) fazia o SEU próprio
+   getConfig — a mesma requisição, seis vezes, a cada 5 segundos, em cada aparelho aberto. Isso
+   gastava dados e bateria da família à toa e ainda arriscava estourar o limite de execuções
+   simultâneas do Apps Script (quando estoura, o app trava pra todo mundo ao mesmo tempo).
+   Agora quem chamar junto no mesmo instante divide a mesma resposta. */
+let configEmVoo = null;
+function obterConfigRemota(){
+  if(configEmVoo) return configEmVoo;
+  configEmVoo = fetch(SHEETS_API_URL + "?action=getConfig")
+    .then(r => r.json())
+    .catch(err => { console.log("Config sync error:", err); return null; })
+    .then(data => { configEmVoo = null; return data; });
+  return configEmVoo;
+}
+
 function setUpSheetsIntegration(){
   const modal = document.createElement("div");
   modal.id = "sheets-modal";
@@ -2245,10 +2367,20 @@ async function adicionarLocalSheets(){
   }
 }
 
-/* Auto-sync a cada 5 segundos se conectado ao Sheets */
+/* Auto-sync a cada 5 segundos se conectado ao Sheets.
+   Pausa quando o app está em segundo plano (aba escondida ou celular no bolso): não adianta
+   sincronizar uma tela que ninguém está olhando, e isso consumia dados e bateria o dia inteiro.
+   Ao voltar pro app, sincroniza na hora em vez de esperar o próximo ciclo. */
+function sincronizarTudo(){
+  if(!USE_SHEETS) return;
+  syncFromSheets(); syncViagem(); syncAvatares(); syncAcessos();
+  syncBagagemCompartilhada(); syncPendenciasManuais(); syncRoteiro(); syncDespesas();
+}
 setInterval(() => {
-  if(USE_SHEETS){ syncFromSheets(); syncViagem(); syncAvatares(); syncAcessos(); syncBagagemCompartilhada(); syncPendenciasManuais(); syncRoteiro(); }
+  if(document.hidden) return;
+  sincronizarTudo();
 }, 5000);
+document.addEventListener("visibilitychange", () => { if(!document.hidden) sincronizarTudo(); });
 
 /* ================= LOGIN / CADASTRO ================= */
 let USUARIO = localStorage.getItem("family_trip_usuario") || "";
@@ -2324,8 +2456,7 @@ function salvarAvatarEscolha(nome, url){
 }
 function syncAvatares(){
   if(!USE_SHEETS || !SHEETS_API_URL) return;
-  fetch(SHEETS_API_URL + "?action=getConfig")
-    .then(r => r.json())
+  obterConfigRemota()
     .then(data => {
       if(data && data.success && data.avatares){
         if(JSON.stringify(carregarAvatarCustom()) !== JSON.stringify(data.avatares)){
@@ -2355,8 +2486,7 @@ function registrarAcesso(nome){
 }
 function syncAcessos(){
   if(!USE_SHEETS || !SHEETS_API_URL) return;
-  fetch(SHEETS_API_URL + "?action=getConfig")
-    .then(r => r.json())
+  obterConfigRemota()
     .then(data => {
       if(data && data.success && data.acessos){
         if(JSON.stringify(carregarAcessos()) !== JSON.stringify(data.acessos)){
@@ -2611,7 +2741,9 @@ const VIAGEM_PADRAO = {
     { nome: "Buenos Aires", noites: 6 },
     { nome: "Santiago", noites: 3 },
     { nome: "Viña del Mar", noites: 2 }
-  ]
+  ],
+  voos: [],
+  hospedagens: []
 };
 
 function carregarViagem(){
@@ -2626,6 +2758,9 @@ function carregarViagem(){
         v.idaComprada = !!v.confirmado;
         v.voltaComprada = !!v.confirmado;
       }
+      // Voos e hospedagens entraram depois — config antiga não tem essas listas
+      if(!Array.isArray(v.voos)) v.voos = [];
+      if(!Array.isArray(v.hospedagens)) v.hospedagens = [];
       return v;
     }
   } catch(e){}
@@ -2660,8 +2795,7 @@ function salvarViagem(v){
 function syncViagem(){
   if(!USE_SHEETS) return;
   if(Date.now() - viagemEditadaEm < 4000) return; // não sobrescreve edição recente sua
-  fetch(SHEETS_API_URL + "?action=getConfig")
-    .then(r => r.json())
+  obterConfigRemota()
     .then(data => {
       if(data && data.success && data.viagem){
         const novo = JSON.stringify(data.viagem);
@@ -2748,6 +2882,36 @@ function climaDoPeriodo(cidade, dataInicio, dataFim){
   return { min: Math.round((a.min + b.min) / 2), max: Math.round((a.max + b.max) / 2) };
 }
 
+/* ===== MOEDAS E FORMATAÇÃO DE DINHEIRO (usado pelo câmbio, pelas passagens e pelas despesas) ===== */
+const MOEDAS = {
+  BRL: { nome: "Real (R$)", simbolo: "R$", casas: 2 },
+  ARS: { nome: "Peso argentino (ARS)", simbolo: "AR$", casas: 2 },
+  CLP: { nome: "Peso chileno (CLP)", simbolo: "CL$", casas: 0 },
+  USD: { nome: "Dólar (US$)", simbolo: "US$", casas: 2 }
+};
+function fmtBRL(v){
+  return "R$ " + (Math.round(v * 100) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtMoeda(v, moeda){
+  const m = MOEDAS[moeda] || MOEDAS.BRL;
+  return m.simbolo + " " + v.toLocaleString("pt-BR", { minimumFractionDigits: m.casas, maximumFractionDigits: m.casas });
+}
+/* Lê número escrito do jeito brasileiro. Um simples replace(",",".") transformava "2.400,00" em
+   2,40 — o ponto de milhar virava decimal e a despesa entrava com valor mil vezes menor, sem erro
+   nenhum na tela. Regras: se tem vírgula, ela é o decimal e os pontos são milhar; se só tem pontos
+   e eles separam grupos de 3 dígitos ("2.400"), são milhar; qualquer outro ponto é decimal
+   ("0.003396", que é como a cotação automática vem preenchida). */
+function parseNumeroBR(texto){
+  let s = String(texto == null ? "" : texto).trim().replace(/\s/g, "").replace(/[R$€]/gi, "");
+  if(!s) return NaN;
+  if(s.indexOf(",") > -1){
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if(/^-?\d{1,3}(\.\d{3})+$/.test(s)){
+    s = s.replace(/\./g, "");
+  }
+  return parseFloat(s);
+}
+
 /* ===== CÂMBIO RÁPIDO (BRL ↔ ARS ↔ CLP) — cotação pública, sem chave de API ===== */
 const STORE_CAMBIO = "family_trip_cambio_cache";
 function carregarCambioCache(){ try { return JSON.parse(localStorage.getItem(STORE_CAMBIO)); } catch(e){ return null; } }
@@ -2756,12 +2920,14 @@ function salvarCambioCache(c){ localStorage.setItem(STORE_CAMBIO, JSON.stringify
 async function obterCambio(){
   const cache = carregarCambioCache();
   const agora = Date.now();
-  if(cache && (agora - cache.atualizado) < 12 * 3600 * 1000) return cache;
+  // Exige USD no cache também: quem já tinha cotação salva antes da aba Despesas existir precisa
+  // rebuscar uma vez, senão lançar despesa em dólar ficaria sem cotação automática pra sempre.
+  if(cache && cache.USD && (agora - cache.atualizado) < 12 * 3600 * 1000) return cache;
   try {
     const resp = await fetch("https://open.er-api.com/v6/latest/BRL");
     const data = await resp.json();
     if(data && data.result === "success" && data.rates && data.rates.ARS && data.rates.CLP){
-      const novo = { ARS: data.rates.ARS, CLP: data.rates.CLP, atualizado: agora };
+      const novo = { ARS: data.rates.ARS, CLP: data.rates.CLP, USD: data.rates.USD, atualizado: agora };
       salvarCambioCache(novo);
       return novo;
     }
@@ -2812,8 +2978,12 @@ async function carregarCambioNaTela(){
 const STORE_ROTEIRO = "family_trip_roteiro";
 function carregarRoteiro(){ try { return JSON.parse(localStorage.getItem(STORE_ROTEIRO) || "{}"); } catch(e){ return {}; } }
 function salvarRoteiroLocal(r){ localStorage.setItem(STORE_ROTEIRO, JSON.stringify(r)); }
+// Mesma proteção dos votos e avisos: sem ela, o sync de 5s podia ler a planilha ANTES de o POST
+// terminar de gravar e apagar da tela a atividade que a pessoa acabou de adicionar ao dia.
+let roteiroProtegidoAte = 0;
 function salvarRoteiro(r){
   salvarRoteiroLocal(r);
+  roteiroProtegidoAte = Date.now() + 8000;
   if(USE_SHEETS){
     fetch(SHEETS_API_URL + "?action=setConfig", {
       method: "POST", redirect: "follow",
@@ -2824,8 +2994,8 @@ function salvarRoteiro(r){
 }
 function syncRoteiro(){
   if(!USE_SHEETS || !SHEETS_API_URL) return;
-  fetch(SHEETS_API_URL + "?action=getConfig")
-    .then(r => r.json())
+  if(Date.now() < roteiroProtegidoAte) return; // deixa o POST recém-enviado chegar antes de reler
+  obterConfigRemota()
     .then(data => {
       if(data && data.success && data.roteiro){
         if(JSON.stringify(carregarRoteiro()) !== JSON.stringify(data.roteiro)){
@@ -2999,6 +3169,8 @@ function renderViagem(){
       </div>
     </div>
 
+    ${logisticaHtml(v)}
+
     <div class="cambio-card">
       <h3>💱 Câmbio rápido</h3>
       <p class="cambio-hint">Digite o valor em reais — as outras moedas atualizam sozinhas, sempre a partir dele. Cotação do dia, só de referência — confira antes de trocar dinheiro de verdade.</p>
@@ -3030,6 +3202,18 @@ function renderViagem(){
   if(!cont._delegado){
     cont._delegado = true;
     cont.addEventListener("click", ev => {
+      // Passagens e hospedagem
+      if(ev.target.closest("[data-voo-novo]")){ abrirLogisticaModal("voo", null); return; }
+      if(ev.target.closest("[data-hosp-nova]")){ abrirLogisticaModal("hospedagem", null); return; }
+      const editarVoo = ev.target.closest("[data-voo-editar]");
+      if(editarVoo){ abrirLogisticaModal("voo", editarVoo.getAttribute("data-voo-editar")); return; }
+      const editarHosp = ev.target.closest("[data-hosp-editar]");
+      if(editarHosp){ abrirLogisticaModal("hospedagem", editarHosp.getAttribute("data-hosp-editar")); return; }
+      const removerVoo = ev.target.closest("[data-voo-remover]");
+      if(removerVoo){ removerLogistica("voo", removerVoo.getAttribute("data-voo-remover")); return; }
+      const removerHosp = ev.target.closest("[data-hosp-remover]");
+      if(removerHosp){ removerLogistica("hospedagem", removerHosp.getAttribute("data-hosp-remover")); return; }
+
       const btn = ev.target.closest("button[data-viagem-mais],button[data-viagem-menos],button[data-viagem-subir],button[data-viagem-descer]");
       if(!btn || btn.disabled) return;
       const v2 = carregarViagem();
@@ -3064,6 +3248,239 @@ function renderViagem(){
       renderInicio();
     });
   }
+}
+
+/* ================= PASSAGENS E HOSPEDAGEM =================
+   Ficam dentro da config "viagem" (mesma chave já sincronizada), como duas listas: voos[] e
+   hospedagens[]. Todo mundo vê o mesmo — a ideia é que ninguém precise procurar o e-mail da
+   compra no aeroporto ou o endereço do Airbnb na hora de pegar um táxi. */
+function fmtDataCurta(iso){
+  const d = parseData(iso);
+  if(!d) return "—";
+  return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function fmtValorLogistica(valor, moeda){
+  const v = parseFloat(valor);
+  if(isNaN(v) || v <= 0) return "";
+  return fmtMoeda(v, moeda || "BRL");
+}
+function mapaLinkDe(texto){
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(texto);
+}
+// Só deixa passar link http/https — evita que um "javascript:..." colado por engano vire href clicável
+function linkSeguro(url){
+  const u = String(url || "").trim();
+  return /^https?:\/\//i.test(u) ? u : "";
+}
+
+function vooHtml(voo){
+  const trecho = [voo.de, voo.para].filter(Boolean).join(" → ") || "Trecho";
+  const rotulo = voo.tipo === "ida" ? "🛫 Ida" : voo.tipo === "volta" ? "🛬 Volta" : "✈️ Trecho";
+  return `
+    <div class="logistica-item">
+      <div class="logistica-acoes">
+        <button type="button" data-voo-editar="${esc(String(voo.id))}" title="Editar">✏️</button>
+        <button type="button" data-voo-remover="${esc(String(voo.id))}" title="Remover">×</button>
+      </div>
+      <div class="logistica-item-topo">
+        <span class="logistica-item-titulo">${rotulo} · ${esc(trecho)}</span>
+        ${fmtValorLogistica(voo.valor, voo.moeda) ? `<span class="logistica-item-valor">${esc(fmtValorLogistica(voo.valor, voo.moeda))}</span>` : ""}
+      </div>
+      <div class="logistica-linhas">
+        <span class="logistica-campo"><b>Data</b>${esc(fmtDataCurta(voo.data))}${voo.horaPartida ? " · " + esc(voo.horaPartida) : ""}</span>
+        ${voo.horaChegada ? `<span class="logistica-campo"><b>Chegada</b>${esc(voo.horaChegada)}</span>` : ""}
+        ${voo.cia ? `<span class="logistica-campo"><b>Companhia</b>${esc(voo.cia)}</span>` : ""}
+        ${voo.voo ? `<span class="logistica-campo"><b>Voo</b>${esc(voo.voo)}</span>` : ""}
+        ${voo.localizador ? `<span class="logistica-campo"><b>Localizador</b><span class="mono">${esc(voo.localizador)}</span></span>` : ""}
+      </div>
+      ${voo.obs ? `<p class="logistica-obs">${esc(voo.obs)}</p>` : ""}
+    </div>
+  `;
+}
+
+function hospedagemHtml(h){
+  const noites = (parseData(h.checkin) && parseData(h.checkout))
+    ? Math.round((parseData(h.checkout) - parseData(h.checkin)) / 86400000) : null;
+  const link = linkSeguro(h.link);
+  return `
+    <div class="logistica-item">
+      <div class="logistica-acoes">
+        <button type="button" data-hosp-editar="${esc(String(h.id))}" title="Editar">✏️</button>
+        <button type="button" data-hosp-remover="${esc(String(h.id))}" title="Remover">×</button>
+      </div>
+      <div class="logistica-item-topo">
+        <span class="logistica-item-titulo">🏠 ${esc(h.nome || h.cidade || "Hospedagem")}</span>
+        ${fmtValorLogistica(h.valor, h.moeda) ? `<span class="logistica-item-valor">${esc(fmtValorLogistica(h.valor, h.moeda))}</span>` : ""}
+      </div>
+      <div class="logistica-linhas">
+        ${h.cidade ? `<span class="logistica-campo"><b>Cidade</b>${esc(h.cidade)}</span>` : ""}
+        <span class="logistica-campo"><b>Check-in</b>${esc(fmtDataCurta(h.checkin))}</span>
+        <span class="logistica-campo"><b>Check-out</b>${esc(fmtDataCurta(h.checkout))}${noites !== null ? ` · ${noites} ${noites === 1 ? "noite" : "noites"}` : ""}</span>
+        ${h.endereco ? `<span class="logistica-campo" style="grid-column:1/-1"><b>Endereço</b>${esc(h.endereco)} — <a class="logistica-link" href="${esc(mapaLinkDe(h.endereco + " " + (h.cidade || "")))}" target="_blank" rel="noopener">abrir no mapa</a></span>` : ""}
+        ${link ? `<span class="logistica-campo" style="grid-column:1/-1"><b>Reserva</b><a class="logistica-link" href="${esc(link)}" target="_blank" rel="noopener">abrir a reserva</a></span>` : ""}
+      </div>
+      ${h.obs ? `<p class="logistica-obs">${esc(h.obs)}</p>` : ""}
+    </div>
+  `;
+}
+
+function logisticaHtml(v){
+  const voos = (v.voos || []).slice().sort((a,b) => String(a.data || "").localeCompare(String(b.data || "")));
+  const hosp = (v.hospedagens || []).slice().sort((a,b) => String(a.checkin || "").localeCompare(String(b.checkin || "")));
+  return `
+    <div class="logistica-card">
+      <h3>✈️ Passagens</h3>
+      <p class="logistica-hint">Os voos comprados, com horário e localizador à mão — sem precisar caçar o e-mail da compra no aeroporto.</p>
+      <div class="logistica-lista">
+        ${voos.length ? voos.map(vooHtml).join("") : `<p class="logistica-vazio">Nenhuma passagem cadastrada ainda.</p>`}
+      </div>
+      <button type="button" class="logistica-add" data-voo-novo="1">+ Adicionar passagem</button>
+    </div>
+
+    <div class="logistica-card">
+      <h3>🏠 Hospedagem</h3>
+      <p class="logistica-hint">Onde a família fica em cada cidade, com endereço pronto pra mostrar ao motorista.</p>
+      <div class="logistica-lista">
+        ${hosp.length ? hosp.map(hospedagemHtml).join("") : `<p class="logistica-vazio">Nenhuma hospedagem cadastrada ainda.</p>`}
+      </div>
+      <button type="button" class="logistica-add" data-hosp-nova="1">+ Adicionar hospedagem</button>
+    </div>
+  `;
+}
+
+/* ---- Modal de edição (serve pros dois: voo e hospedagem) ---- */
+let logisticaModalTipo = null; // "voo" | "hospedagem"
+let logisticaModalId = null;   // null = novo
+
+const CAMPOS_VOO = [
+  { chave: "tipo", rotulo: "Tipo", tipo: "select", opcoes: [["ida","Ida"],["volta","Volta"],["trecho","Trecho no meio da viagem"]] },
+  { chave: "de", rotulo: "Saindo de", placeholder: "ex: Porto Alegre (POA)" },
+  { chave: "para", rotulo: "Chegando em", placeholder: "ex: Buenos Aires (EZE)" },
+  { chave: "data", rotulo: "Data", tipo: "date" },
+  { chave: "horaPartida", rotulo: "Hora de partida", tipo: "time" },
+  { chave: "horaChegada", rotulo: "Hora de chegada", tipo: "time" },
+  { chave: "cia", rotulo: "Companhia", placeholder: "ex: Gol" },
+  { chave: "voo", rotulo: "Número do voo", placeholder: "ex: G3 7654" },
+  { chave: "localizador", rotulo: "Localizador / reserva", placeholder: "ex: ABC123" },
+  { chave: "valor", rotulo: "Valor total pago", placeholder: "0,00", inputmode: "decimal" },
+  { chave: "moeda", rotulo: "Moeda", tipo: "select", opcoes: Object.keys(MOEDAS).map(m => [m, MOEDAS[m].nome]) },
+  { chave: "obs", rotulo: "Observação", placeholder: "ex: escala de 2h em São Paulo", full: true }
+];
+const CAMPOS_HOSPEDAGEM = [
+  { chave: "cidade", rotulo: "Cidade", tipo: "select", opcoes: CIDADES.map(c => [c, c]) },
+  { chave: "nome", rotulo: "Nome do lugar", placeholder: "ex: Airbnb do Palermo Soho" },
+  { chave: "checkin", rotulo: "Check-in", tipo: "date" },
+  { chave: "checkout", rotulo: "Check-out", tipo: "date" },
+  { chave: "endereco", rotulo: "Endereço completo", placeholder: "rua, número, bairro", full: true },
+  { chave: "link", rotulo: "Link da reserva", placeholder: "https://…", full: true },
+  { chave: "valor", rotulo: "Valor total", placeholder: "0,00", inputmode: "decimal" },
+  { chave: "moeda", rotulo: "Moeda", tipo: "select", opcoes: Object.keys(MOEDAS).map(m => [m, MOEDAS[m].nome]) },
+  { chave: "obs", rotulo: "Observação", placeholder: "ex: senha do portão, wi-fi, contato do anfitrião", full: true }
+];
+
+function setupLogisticaModal(){
+  if(document.getElementById("logistica-modal")) return;
+  const modal = document.createElement("div");
+  modal.id = "logistica-modal";
+  modal.style.cssText = "display:none;position:fixed;inset:0;background:rgba(10,7,4,.6);z-index:255;align-items:center;justify-content:center;padding:20px";
+  modal.innerHTML = `
+    <div style="background:var(--paper);color:var(--ink);border-radius:14px;padding:26px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 60px rgba(0,0,0,.5)">
+      <h3 id="logistica-modal-titulo" style="font-family:'Fraunces',Georgia,serif;color:var(--terracotta-deep);margin:0 0 18px;font-size:1.2rem"></h3>
+      <div id="logistica-modal-campos" class="desp-form"></div>
+      <p id="logistica-modal-erro" style="color:var(--river-red);font-size:.83rem;margin:12px 0 0;min-height:1em"></p>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button type="button" id="logistica-modal-salvar" style="flex:1;padding:11px;background:var(--gold);color:#2b241c;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">Salvar</button>
+        <button type="button" id="logistica-modal-cancelar" style="flex:1;padding:11px;background:rgba(var(--hairline),.15);color:var(--cream-text);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById("logistica-modal-cancelar").addEventListener("click", fecharLogisticaModal);
+  document.getElementById("logistica-modal-salvar").addEventListener("click", salvarLogisticaModal);
+  modal.addEventListener("click", ev => { if(ev.target === modal) fecharLogisticaModal(); });
+}
+function fecharLogisticaModal(){
+  const m = document.getElementById("logistica-modal");
+  if(m) m.style.display = "none";
+  logisticaModalTipo = null;
+  logisticaModalId = null;
+}
+function abrirLogisticaModal(tipo, id){
+  setupLogisticaModal();
+  logisticaModalTipo = tipo;
+  logisticaModalId = id || null;
+  const v = carregarViagem();
+  const lista = tipo === "voo" ? (v.voos || []) : (v.hospedagens || []);
+  const item = id ? lista.find(x => String(x.id) === String(id)) : null;
+  const campos = tipo === "voo" ? CAMPOS_VOO : CAMPOS_HOSPEDAGEM;
+  document.getElementById("logistica-modal-titulo").textContent =
+    (item ? "Editar " : "Adicionar ") + (tipo === "voo" ? "passagem" : "hospedagem");
+  document.getElementById("logistica-modal-erro").textContent = "";
+  document.getElementById("logistica-modal-campos").innerHTML = campos.map(c => {
+    const valor = item ? (item[c.chave] ?? "") : (c.chave === "moeda" ? "BRL" : "");
+    if(c.tipo === "select"){
+      return `<div class="${c.full ? "field-full" : ""}">
+        <label for="log-${c.chave}">${esc(c.rotulo)}</label>
+        <select id="log-${c.chave}">
+          ${c.opcoes.map(([val,txt]) => `<option value="${esc(val)}" ${String(valor) === val ? "selected" : ""}>${esc(txt)}</option>`).join("")}
+        </select>
+      </div>`;
+    }
+    return `<div class="${c.full ? "field-full" : ""}">
+      <label for="log-${c.chave}">${esc(c.rotulo)}</label>
+      <input id="log-${c.chave}" type="${c.tipo || "text"}" value="${esc(valor)}" placeholder="${esc(c.placeholder || "")}" ${c.inputmode ? `inputmode="${c.inputmode}"` : ""}>
+    </div>`;
+  }).join("");
+  document.getElementById("logistica-modal").style.display = "flex";
+}
+function salvarLogisticaModal(){
+  const tipo = logisticaModalTipo;
+  if(!tipo) return;
+  const campos = tipo === "voo" ? CAMPOS_VOO : CAMPOS_HOSPEDAGEM;
+  const erro = document.getElementById("logistica-modal-erro");
+  const dados = {};
+  campos.forEach(c => {
+    const el = document.getElementById("log-" + c.chave);
+    let val = el ? el.value.trim() : "";
+    if(c.chave === "valor") val = parseNumeroBR(val) || 0;
+    dados[c.chave] = val;
+  });
+
+  if(tipo === "voo" && !dados.data){ erro.textContent = "Informe a data do voo."; return; }
+  if(tipo === "hospedagem" && (!dados.checkin || !dados.checkout)){ erro.textContent = "Informe check-in e check-out."; return; }
+  if(tipo === "hospedagem" && dados.checkout < dados.checkin){ erro.textContent = "O check-out não pode ser antes do check-in."; return; }
+  if(tipo === "hospedagem" && dados.link && !linkSeguro(dados.link)){ erro.textContent = "O link da reserva precisa começar com http:// ou https://."; return; }
+
+  const v = carregarViagem();
+  const lista = tipo === "voo" ? (v.voos = v.voos || []) : (v.hospedagens = v.hospedagens || []);
+  if(logisticaModalId){
+    const idx = lista.findIndex(x => String(x.id) === String(logisticaModalId));
+    if(idx > -1) lista[idx] = { ...lista[idx], ...dados };
+  } else {
+    lista.push({ id: Date.now() + Math.random(), ...dados, criadoPor: USUARIO || "" });
+  }
+  // A passagem cadastrada já responde sozinha o "ida/volta comprada" — evita a checkbox dizer uma
+  // coisa e a lista de voos dizer outra.
+  if(tipo === "voo"){
+    if((v.voos || []).some(x => x.tipo === "ida")) v.idaComprada = true;
+    if((v.voos || []).some(x => x.tipo === "volta")) v.voltaComprada = true;
+    v.confirmado = v.idaComprada && v.voltaComprada;
+  }
+  salvarViagem(v);
+  fecharLogisticaModal();
+  renderViagem();
+  renderInicio();
+}
+function removerLogistica(tipo, id){
+  confirmarAcao(tipo === "voo" ? "Remover essa passagem?" : "Remover essa hospedagem?").then(ok => {
+    if(!ok) return;
+    const v = carregarViagem();
+    if(tipo === "voo") v.voos = (v.voos || []).filter(x => String(x.id) !== String(id));
+    else v.hospedagens = (v.hospedagens || []).filter(x => String(x.id) !== String(id));
+    salvarViagem(v);
+    renderViagem();
+    renderInicio();
+  });
 }
 
 /* ================= MAPA DA VIAGEM (trajeto) ================= */
@@ -3711,8 +4128,12 @@ function carregarBagagemCompartilhada(){
   return inicial;
 }
 function salvarBagagemCompartilhadaLocal(b){ localStorage.setItem(STORE_BAGAGEM_COMPARTILHADA, JSON.stringify(b)); }
+// Mesma proteção dos votos e avisos — sem ela o item recém-marcado/adicionado na lista da família
+// voltava atrás sozinho quando o sync de 5s chegava antes da planilha terminar de gravar.
+let bagagemProtegidoAte = 0;
 function salvarBagagemCompartilhada(b){
   salvarBagagemCompartilhadaLocal(b);
+  bagagemProtegidoAte = Date.now() + 8000;
   if(USE_SHEETS){
     fetch(SHEETS_API_URL + "?action=setConfig", {
       method: "POST", redirect: "follow",
@@ -3723,8 +4144,8 @@ function salvarBagagemCompartilhada(b){
 }
 function syncBagagemCompartilhada(){
   if(!USE_SHEETS || !SHEETS_API_URL) return;
-  fetch(SHEETS_API_URL + "?action=getConfig")
-    .then(r => r.json())
+  if(Date.now() < bagagemProtegidoAte) return;
+  obterConfigRemota()
     .then(data => {
       if(data && data.success && data.bagagem){
         if(JSON.stringify(carregarBagagemCompartilhada()) !== JSON.stringify(data.bagagem)){
@@ -3838,6 +4259,453 @@ function renderBagagem(){
       adicionar(input.getAttribute("data-bag-tipo"), input.getAttribute("data-bag-input-cat"));
     });
   }
+}
+
+/* ================= DESPESAS (rateio da viagem) =================
+   Modelo: cada despesa guarda o valor NA MOEDA EM QUE FOI PAGA + a cotação usada no momento do
+   lançamento (quantos reais vale 1 unidade daquela moeda). A cotação fica congelada de propósito:
+   se ela fosse recalculada todo dia, o quanto cada um deve mudaria sozinho depois da viagem e
+   ninguém conseguiria fechar a conta. Os "acertos" são pagamentos reais já feitos entre duas
+   pessoas (dinheiro que trocou de mão), e entram no saldo junto com as despesas. */
+const STORE_DESPESAS = "family_trip_despesas";
+const DESPESAS_CATEGORIAS = ["Hospedagem", "Transporte", "Alimentação", "Passeios", "Compras", "Outros"];
+
+function carregarDespesas(){
+  try {
+    const salvo = JSON.parse(localStorage.getItem(STORE_DESPESAS));
+    if(salvo && Array.isArray(salvo.itens)) return { itens: salvo.itens, acertos: Array.isArray(salvo.acertos) ? salvo.acertos : [] };
+  } catch(e){}
+  return { itens: [], acertos: [] };
+}
+function salvarDespesasLocal(d){ localStorage.setItem(STORE_DESPESAS, JSON.stringify(d)); }
+// Mesma proteção já usada em votos e avisos: o sync roda a cada 5s e pode chegar com a versão
+// ANTIGA da planilha antes de o POST terminar de gravar, apagando da tela a despesa recém-lançada.
+let despesasProtegidoAte = 0;
+function salvarDespesas(d){
+  salvarDespesasLocal(d);
+  despesasProtegidoAte = Date.now() + 8000;
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=setConfig", {
+      method: "POST", redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ despesas: d })
+    }).catch(err => console.log("Despesas sync error:", err));
+  }
+}
+function syncDespesas(){
+  if(!USE_SHEETS || !SHEETS_API_URL) return;
+  if(Date.now() < despesasProtegidoAte) return;
+  obterConfigRemota().then(data => {
+    if(data && data.success && data.despesas && Array.isArray(data.despesas.itens)){
+      if(JSON.stringify(carregarDespesas()) !== JSON.stringify(data.despesas)){
+        salvarDespesasLocal({ itens: data.despesas.itens, acertos: Array.isArray(data.despesas.acertos) ? data.despesas.acertos : [] });
+        renderDespesas();
+        renderInicio();
+      }
+    }
+  });
+}
+
+// Quantos reais vale 1 unidade da moeda, segundo a cotação já buscada pela aba Viagem
+function cotacaoSugerida(moeda){
+  if(moeda === "BRL") return 1;
+  const c = carregarCambioCache();
+  if(!c || !c[moeda]) return null;
+  return 1 / c[moeda];
+}
+function despesaEmBRL(item){
+  const cot = (typeof item.cotacao === "number" && item.cotacao > 0) ? item.cotacao : 1;
+  return (parseFloat(item.valor) || 0) * cot;
+}
+
+/* Saldo de cada pessoa: o que ela pagou menos o que lhe cabe, mais/menos os acertos já feitos.
+   Positivo = a família deve pra ela. Negativo = ela deve pra família. */
+function calcularSaldos(){
+  const d = carregarDespesas();
+  const saldos = {}, pago = {}, devido = {};
+  VIAJANTES.forEach(v => { saldos[v] = 0; pago[v] = 0; devido[v] = 0; });
+  d.itens.forEach(item => {
+    const brl = despesaEmBRL(item);
+    const parts = (item.participantes || []).filter(p => saldos.hasOwnProperty(p));
+    if(!parts.length) return;
+    const quota = brl / parts.length;
+    if(saldos.hasOwnProperty(item.pagoPor)){ saldos[item.pagoPor] += brl; pago[item.pagoPor] += brl; }
+    parts.forEach(p => { saldos[p] -= quota; devido[p] += quota; });
+  });
+  // Acerto = dinheiro que já trocou de mão: quem pagou fica mais credor, quem recebeu fica menos.
+  (d.acertos || []).forEach(a => {
+    const v = parseFloat(a.valor) || 0;
+    if(saldos.hasOwnProperty(a.de)) saldos[a.de] += v;
+    if(saldos.hasOwnProperty(a.para)) saldos[a.para] -= v;
+  });
+  return { saldos, pago, devido, total: d.itens.reduce((s,i) => s + despesaEmBRL(i), 0) };
+}
+
+/* Fecha a conta no menor número de transferências: quem mais deve paga pra quem mais tem a receber. */
+function calcularAcertosSugeridos(saldos){
+  const devedores = [], credores = [];
+  Object.keys(saldos).forEach(p => {
+    const s = saldos[p];
+    if(s < -0.01) devedores.push({ pessoa: p, valor: -s });
+    else if(s > 0.01) credores.push({ pessoa: p, valor: s });
+  });
+  devedores.sort((a,b) => b.valor - a.valor);
+  credores.sort((a,b) => b.valor - a.valor);
+  const transferencias = [];
+  let i = 0, j = 0;
+  while(i < devedores.length && j < credores.length){
+    const v = Math.min(devedores[i].valor, credores[j].valor);
+    if(v > 0.01) transferencias.push({ de: devedores[i].pessoa, para: credores[j].pessoa, valor: v });
+    devedores[i].valor -= v;
+    credores[j].valor -= v;
+    if(devedores[i].valor <= 0.01) i++;
+    if(credores[j].valor <= 0.01) j++;
+  }
+  return transferencias;
+}
+
+let despesaFiltroCategoria = "";
+let despesaMoedaForm = "BRL";
+let despesaParticipantesForm = null; // null = ainda não mexeram, assume todos
+
+function despesaParticipantesAtuais(){
+  if(despesaParticipantesForm === null) return VIAJANTES.slice();
+  return despesaParticipantesForm.slice();
+}
+
+function renderDespesas(){
+  const cont = document.getElementById("despesas-conteudo");
+  if(!cont) return;
+  const d = carregarDespesas();
+  const { saldos, pago, devido, total } = calcularSaldos();
+  const transferencias = calcularAcertosSugeridos(saldos);
+  const meuSaldo = USUARIO ? (saldos[USUARIO] || 0) : null;
+  const maiorAbs = Math.max(1, ...VIAJANTES.map(v => Math.abs(saldos[v] || 0)));
+  const participantesForm = despesaParticipantesAtuais();
+  const cotAtual = cotacaoSugerida(despesaMoedaForm);
+  const hoje = isoDeData(new Date());
+  const itensFiltrados = d.itens
+    .filter(i => !despesaFiltroCategoria || i.categoria === despesaFiltroCategoria)
+    .slice()
+    .sort((a,b) => String(b.data || "").localeCompare(String(a.data || "")) || (b.criadoEm || 0) - (a.criadoEm || 0));
+
+  cont.innerHTML = `
+    <div class="desp-topo">
+      <div class="desp-kpi">
+        <div class="desp-kpi-rotulo">Total gasto até agora</div>
+        <div class="desp-kpi-valor">${fmtBRL(total)}</div>
+        <div class="desp-kpi-nota">${d.itens.length} ${d.itens.length === 1 ? "despesa lançada" : "despesas lançadas"}</div>
+      </div>
+      <div class="desp-kpi">
+        <div class="desp-kpi-rotulo">Média por pessoa</div>
+        <div class="desp-kpi-valor">${fmtBRL(total / VIAJANTES.length)}</div>
+        <div class="desp-kpi-nota">se tudo fosse dividido entre os ${VIAJANTES.length}</div>
+      </div>
+      ${USUARIO ? `
+        <div class="desp-kpi ${meuSaldo > 0.01 ? "positivo" : meuSaldo < -0.01 ? "negativo" : ""}">
+          <div class="desp-kpi-rotulo">Seu saldo, ${esc(USUARIO)}</div>
+          <div class="desp-kpi-valor">${fmtBRL(Math.abs(meuSaldo))}</div>
+          <div class="desp-kpi-nota">${meuSaldo > 0.01 ? "a família te deve" : meuSaldo < -0.01 ? "você deve pra família" : "você está quite"}</div>
+        </div>
+      ` : `
+        <div class="desp-kpi">
+          <div class="desp-kpi-rotulo">Seu saldo</div>
+          <div class="desp-kpi-valor" style="font-size:1.1rem">Entre no app</div>
+          <div class="desp-kpi-nota">pra ver quanto você deve ou tem a receber</div>
+        </div>
+      `}
+    </div>
+
+    <div class="desp-secao">
+      <h3>⚖️ Como está cada um</h3>
+      <p class="desp-secao-hint">Barra pra direita = pagou mais do que a parte dele. Pra esquerda = ainda deve.</p>
+      <div class="desp-saldos">
+        ${VIAJANTES.map(v => {
+          const s = saldos[v] || 0;
+          const pct = Math.min(50, Math.abs(s) / maiorAbs * 50);
+          const classe = s > 0.01 ? "credor" : s < -0.01 ? "devedor" : "zerado";
+          return `
+            <div class="desp-saldo-linha">
+              <span class="desp-saldo-nome">${avatarHtmlDe(v, "desp-saldo-avatar")}${esc(v)}</span>
+              <span class="desp-saldo-barra">${classe !== "zerado" ? `<i class="${classe}" style="width:${pct}%"></i>` : ""}</span>
+              <span class="desp-saldo-detalhe">pagou ${fmtBRL(pago[v])} · cabe ${fmtBRL(devido[v])}</span>
+              <span class="desp-saldo-valor ${classe}">${classe === "zerado" ? "quite" : (s > 0 ? "+" : "−") + fmtBRL(Math.abs(s)).replace("R$ ", "R$ ")}</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="desp-secao">
+      <h3>🤝 Acerto de contas</h3>
+      <p class="desp-secao-hint">A forma mais curta de todo mundo ficar quite. Quando alguém pagar de verdade, toque em “já paguei” pra registrar.</p>
+      ${transferencias.length ? `
+        <div class="desp-acerto-lista">
+          ${transferencias.map((t,i) => `
+            <div class="desp-acerto">
+              <span class="desp-acerto-texto"><strong>${esc(t.de)}</strong> paga para <strong>${esc(t.para)}</strong></span>
+              <span style="display:flex;align-items:center;gap:12px">
+                <span class="desp-acerto-valor">${fmtBRL(t.valor)}</span>
+                <button type="button" class="desp-acerto-btn" data-acerto="${i}">já paguei</button>
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<p class="desp-quitado">${d.itens.length ? "✅ Todo mundo quite — não há nada a acertar." : "Nenhuma despesa lançada ainda."}</p>`}
+      ${(d.acertos || []).length ? `
+        <p class="desp-cambio-nota">Acertos já registrados: ${(d.acertos || []).map(a => `${esc(a.de)} → ${esc(a.para)} ${fmtBRL(parseFloat(a.valor) || 0)}`).join(" · ")}
+        <button type="button" class="desp-filtro" data-desfazer-acerto="1" style="margin-left:8px">desfazer o último</button></p>
+      ` : ""}
+    </div>
+
+    <div class="desp-secao">
+      <h3>➕ Lançar uma despesa</h3>
+      <p class="desp-secao-hint">Registre na moeda em que você pagou — o app converte pra real e congela a cotação do dia.</p>
+      <div class="desp-form">
+        <div class="field-full">
+          <label for="desp-descricao">O que foi</label>
+          <input type="text" id="desp-descricao" placeholder="ex: jantar no Don Julio" maxlength="80">
+        </div>
+        <div>
+          <label for="desp-valor">Valor pago</label>
+          <input type="text" id="desp-valor" inputmode="decimal" placeholder="0,00">
+        </div>
+        <div>
+          <label for="desp-moeda">Moeda</label>
+          <select id="desp-moeda">
+            ${Object.keys(MOEDAS).map(m => `<option value="${m}" ${m === despesaMoedaForm ? "selected" : ""}>${esc(MOEDAS[m].nome)}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label for="desp-categoria">Categoria</label>
+          <select id="desp-categoria">
+            ${DESPESAS_CATEGORIAS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label for="desp-pagopor">Quem pagou</label>
+          <select id="desp-pagopor">
+            ${VIAJANTES.map(v => `<option value="${esc(v)}" ${v === USUARIO ? "selected" : ""}>${esc(v)}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label for="desp-data">Dia</label>
+          <input type="date" id="desp-data" value="${esc(hoje)}">
+        </div>
+        <div class="field-full">
+          <label>Dividir entre quem</label>
+          <div class="desp-participantes">
+            ${VIAJANTES.map(v => `
+              <label class="desp-chip ${participantesForm.includes(v) ? "marcado" : ""}">
+                <input type="checkbox" data-desp-participante="${esc(v)}" ${participantesForm.includes(v) ? "checked" : ""}>
+                <span>${esc(v)}</span>
+              </label>
+            `).join("")}
+          </div>
+        </div>
+        ${despesaMoedaForm !== "BRL" ? `
+          <div class="field-full">
+            <label for="desp-cotacao">Cotação usada — quantos reais vale 1 ${esc(despesaMoedaForm)}</label>
+            <input type="text" id="desp-cotacao" inputmode="decimal" value="${cotAtual ? cotAtual.toFixed(6) : ""}" placeholder="ex: 0,004500">
+            <p class="desp-conversao" style="margin:6px 0 0">${cotAtual ? `Cotação do dia buscada na aba Viagem. Dá pra corrigir na mão se você trocou dinheiro num câmbio com taxa diferente.` : `Não foi possível buscar a cotação automática — abra a aba <strong>Viagem</strong> com internet ou digite o valor na mão.`}</p>
+          </div>
+        ` : ""}
+        <p class="desp-erro" id="desp-erro"></p>
+        <div class="desp-form-acoes">
+          <button type="button" id="desp-salvar">Lançar despesa</button>
+          <span class="desp-conversao" id="desp-previa"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="desp-secao">
+      <h3>🧾 Todas as despesas</h3>
+      <div class="desp-filtros">
+        <button type="button" class="desp-filtro ${despesaFiltroCategoria === "" ? "ativo" : ""}" data-desp-filtro="">Todas</button>
+        ${DESPESAS_CATEGORIAS.map(c => `<button type="button" class="desp-filtro ${despesaFiltroCategoria === c ? "ativo" : ""}" data-desp-filtro="${esc(c)}">${esc(c)}</button>`).join("")}
+      </div>
+      ${itensFiltrados.length ? `
+        <div class="desp-lista">
+          ${itensFiltrados.map(item => {
+            const brl = despesaEmBRL(item);
+            const parts = (item.participantes || []);
+            const todos = parts.length === VIAJANTES.length;
+            return `
+              <div class="desp-item">
+                <div class="desp-item-topo">
+                  <span class="desp-item-desc">${esc(item.descricao)}</span>
+                  <span class="desp-item-valor">${fmtBRL(brl)}${item.moeda !== "BRL" ? `<span class="desp-item-original"> (${fmtMoeda(parseFloat(item.valor) || 0, item.moeda)})</span>` : ""}</span>
+                </div>
+                <div class="desp-item-meta">
+                  <span class="desp-item-cat">${esc(item.categoria || "Outros")}</span>
+                  <span>💳 ${esc(item.pagoPor)} pagou</span>
+                  <span>👥 ${todos ? "todos" : parts.map(esc).join(", ")} — ${fmtBRL(parts.length ? brl / parts.length : 0)} cada</span>
+                  ${item.data ? `<span>📅 ${esc(item.data.split("-").reverse().join("/"))}</span>` : ""}
+                </div>
+                <button type="button" class="desp-item-del" data-desp-del="${esc(String(item.id))}" title="Remover despesa">×</button>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      ` : `<p class="desp-vazio">${d.itens.length ? "Nenhuma despesa nessa categoria." : "Nada lançado ainda. Assim que alguém pagar a primeira conta, registre aqui."}</p>`}
+      <p class="desp-cambio-nota">A cotação de cada despesa fica congelada no dia do lançamento, pra conta não mudar sozinha depois. Valores são de controle interno da família — confira o extrato do cartão pro valor exato.</p>
+    </div>
+  `;
+
+  atualizarPreviaDespesa();
+
+  if(!cont._delegado){
+    cont._delegado = true;
+    cont.addEventListener("click", ev => {
+      const filtro = ev.target.closest("[data-desp-filtro]");
+      if(filtro){ despesaFiltroCategoria = filtro.getAttribute("data-desp-filtro"); renderDespesas(); return; }
+
+      const del = ev.target.closest("[data-desp-del]");
+      if(del){
+        const id = del.getAttribute("data-desp-del");
+        confirmarAcao("Remover essa despesa do rateio?").then(ok => {
+          if(!ok) return;
+          const d2 = carregarDespesas();
+          d2.itens = d2.itens.filter(i => String(i.id) !== String(id));
+          salvarDespesas(d2);
+          renderDespesas();
+          renderInicio();
+        });
+        return;
+      }
+
+      const acerto = ev.target.closest("[data-acerto]");
+      if(acerto){
+        const idx = +acerto.getAttribute("data-acerto");
+        const t = calcularAcertosSugeridos(calcularSaldos().saldos)[idx];
+        if(!t) return;
+        confirmarAcao(`Registrar que ${t.de} já pagou ${fmtBRL(t.valor)} para ${t.para}?`).then(ok => {
+          if(!ok) return;
+          const d2 = carregarDespesas();
+          d2.acertos = d2.acertos || [];
+          d2.acertos.push({ id: Date.now() + Math.random(), de: t.de, para: t.para, valor: Math.round(t.valor * 100) / 100, registradoPor: USUARIO || "", em: Date.now() });
+          salvarDespesas(d2);
+          renderDespesas();
+          return;
+        });
+        return;
+      }
+
+      if(ev.target.closest("[data-desfazer-acerto]")){
+        confirmarAcao("Desfazer o último acerto registrado?").then(ok => {
+          if(!ok) return;
+          const d2 = carregarDespesas();
+          (d2.acertos || []).pop();
+          salvarDespesas(d2);
+          renderDespesas();
+        });
+        return;
+      }
+
+      if(ev.target.id === "desp-salvar") lancarDespesa();
+    });
+
+    cont.addEventListener("change", ev => {
+      const chk = ev.target.closest("[data-desp-participante]");
+      if(chk){
+        const nome = chk.getAttribute("data-desp-participante");
+        const atuais = despesaParticipantesAtuais();
+        despesaParticipantesForm = chk.checked
+          ? Array.from(new Set(atuais.concat([nome])))
+          : atuais.filter(p => p !== nome);
+        chk.closest(".desp-chip").classList.toggle("marcado", chk.checked);
+        atualizarPreviaDespesa();
+        return;
+      }
+      if(ev.target.id === "desp-moeda"){
+        despesaMoedaForm = ev.target.value;
+        const rascunho = {
+          descricao: cont.querySelector("#desp-descricao")?.value || "",
+          valor: cont.querySelector("#desp-valor")?.value || "",
+          categoria: cont.querySelector("#desp-categoria")?.value || "",
+          pagoPor: cont.querySelector("#desp-pagopor")?.value || "",
+          data: cont.querySelector("#desp-data")?.value || ""
+        };
+        renderDespesas();
+        // Redesenhar troca o formulário inteiro (o campo de cotação aparece/some) — devolve o que já foi digitado
+        const q = id => cont.querySelector(id);
+        if(q("#desp-descricao")) q("#desp-descricao").value = rascunho.descricao;
+        if(q("#desp-valor")) q("#desp-valor").value = rascunho.valor;
+        if(q("#desp-categoria")) q("#desp-categoria").value = rascunho.categoria;
+        if(q("#desp-pagopor")) q("#desp-pagopor").value = rascunho.pagoPor;
+        if(q("#desp-data") && rascunho.data) q("#desp-data").value = rascunho.data;
+        atualizarPreviaDespesa();
+      }
+    });
+
+    cont.addEventListener("input", ev => {
+      if(ev.target.id === "desp-valor" || ev.target.id === "desp-cotacao") atualizarPreviaDespesa();
+    });
+
+    cont.addEventListener("keydown", ev => {
+      if(ev.key === "Enter" && (ev.target.id === "desp-descricao" || ev.target.id === "desp-valor")){
+        ev.preventDefault();
+        lancarDespesa();
+      }
+    });
+  }
+}
+
+function numeroDoCampo(id){
+  const el = document.getElementById(id);
+  if(!el) return NaN;
+  return parseNumeroBR(el.value);
+}
+
+function atualizarPreviaDespesa(){
+  const previa = document.getElementById("desp-previa");
+  if(!previa) return;
+  const valor = numeroDoCampo("desp-valor");
+  const parts = despesaParticipantesAtuais();
+  if(isNaN(valor) || valor <= 0 || !parts.length){ previa.textContent = ""; return; }
+  const cot = despesaMoedaForm === "BRL" ? 1 : (numeroDoCampo("desp-cotacao") || cotacaoSugerida(despesaMoedaForm));
+  if(!cot || isNaN(cot)){ previa.textContent = ""; return; }
+  const brl = valor * cot;
+  previa.textContent = `= ${fmtBRL(brl)} · ${fmtBRL(brl / parts.length)} para cada um dos ${parts.length}`;
+}
+
+function lancarDespesa(){
+  const erro = document.getElementById("desp-erro");
+  const descricao = (document.getElementById("desp-descricao")?.value || "").trim();
+  const valor = numeroDoCampo("desp-valor");
+  const categoria = document.getElementById("desp-categoria")?.value || "Outros";
+  const pagoPor = document.getElementById("desp-pagopor")?.value || "";
+  const data = document.getElementById("desp-data")?.value || isoDeData(new Date());
+  const participantes = despesaParticipantesAtuais();
+  if(erro) erro.textContent = "";
+
+  if(!USUARIO){ abrirLogin(); return; }
+  if(!descricao){ if(erro) erro.textContent = "Escreva o que foi essa despesa."; return; }
+  if(isNaN(valor) || valor <= 0){ if(erro) erro.textContent = "Digite um valor maior que zero."; return; }
+  if(!pagoPor){ if(erro) erro.textContent = "Escolha quem pagou."; return; }
+  if(!participantes.length){ if(erro) erro.textContent = "Marque pelo menos uma pessoa pra dividir."; return; }
+
+  let cotacao = 1;
+  if(despesaMoedaForm !== "BRL"){
+    cotacao = numeroDoCampo("desp-cotacao");
+    if(isNaN(cotacao) || cotacao <= 0) cotacao = cotacaoSugerida(despesaMoedaForm);
+    if(!cotacao || isNaN(cotacao) || cotacao <= 0){
+      if(erro) erro.textContent = "Informe quantos reais vale 1 " + despesaMoedaForm + " (a cotação automática não veio).";
+      return;
+    }
+  }
+
+  const d = carregarDespesas();
+  d.itens.push({
+    id: Date.now() + Math.random(),
+    descricao, valor, moeda: despesaMoedaForm, cotacao,
+    categoria, pagoPor, participantes, data,
+    criadoPor: USUARIO, criadoEm: Date.now()
+  });
+  salvarDespesas(d);
+  despesaParticipantesForm = null;
+  renderDespesas();
+  renderInicio();
 }
 
 /* ================= MEMÓRIAS (mural de fotos + selos/conquistas) ================= */
@@ -3992,8 +4860,7 @@ function salvarPendenciasManuais(lista){
 function syncPendenciasManuais(){
   if(!USE_SHEETS || !SHEETS_API_URL) return;
   if(Date.now() < pendenciasProtegidoAte) return;
-  fetch(SHEETS_API_URL + "?action=getConfig")
-    .then(r => r.json())
+  obterConfigRemota()
     .then(data => {
       if(data && data.success && data.pendencias){
         if(JSON.stringify(carregarPendenciasManuais()) !== JSON.stringify(data.pendencias)){
@@ -4242,6 +5109,10 @@ const AJUDA_TEXTOS = {
     titulo: "Como usar o Mapa",
     texto: "Alterne entre \"Rota da viagem\" (o trajeto entre as cidades, com distâncias) e \"Todos os lugares sugeridos\" (cada lugar votado, plotado pelo bairro). Toque em qualquer pin pra ver um resumo na hora — o cartão com todos os detalhes aparece logo abaixo do mapa."
   },
+  despesas: {
+    titulo: "Como usar as Despesas",
+    texto: "Sempre que alguém pagar alguma coisa da viagem, lance aqui: o que foi, quanto, em qual moeda, quem pagou e entre quem divide (dá pra desmarcar quem não entrou naquela conta). O app converte pra real usando a cotação do dia — que fica congelada no lançamento, pra conta não mudar sozinha depois — e mostra o saldo de cada um. Em \"Acerto de contas\" ele calcula o menor número de transferências pra todo mundo ficar quite; quando alguém pagar de verdade, toque em \"já paguei\" pra registrar. Tudo sincroniza com a família na hora."
+  },
   bagagem: {
     titulo: "Como usar a Bagagem",
     texto: "Duas listas: a compartilhada sincroniza com todo mundo (mostra quem já marcou cada item) e a pessoal fica só no seu aparelho, pra coisas individuais. Marque o item quando arrumar a mala, ou adicione novos itens em qualquer categoria."
@@ -4305,12 +5176,14 @@ renderResultados();
 renderMapaRota();
 renderBagagem();
 renderRoteiro();
+renderDespesas();
 syncViagem();
 syncAvatares();
 syncAcessos();
 syncBagagemCompartilhada();
 syncPendenciasManuais();
 syncRoteiro();
+syncDespesas();
 if(!USUARIO) setTimeout(abrirLogin, 300);
 
 /* PWA: só registra quando hospedado (https ou localhost) — não funciona abrindo o arquivo direto do computador */
