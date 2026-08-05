@@ -753,6 +753,67 @@
   .bagagem-add input { flex:1; padding:7px 10px; border:1px solid rgba(var(--hairline),.18); border-radius:6px; font-size:.82rem; background:transparent; color:var(--ink); font-family:inherit; }
   .bagagem-add button { width:32px; border:none; border-radius:6px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; font-size:1rem; }
 
+  /* ===== AVISO DE CONEXÃO ===== */
+  .aviso-conexao {
+    position: fixed; left: 12px; right: 12px; z-index: 200;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--terracotta-deep); color: #fff;
+    border-radius: 12px; padding: 12px 16px; font-size: .83rem; line-height: 1.45;
+    box-shadow: 0 14px 34px -14px rgba(0,0,0,.55);
+    transform: translateY(140%); opacity: 0; pointer-events: none;
+    transition: transform .28s ease, opacity .28s ease;
+  }
+  .aviso-conexao.visivel { transform: translateY(0); opacity: 1; }
+  @media (max-width: 760px) { .aviso-conexao { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); } }
+  @media (min-width: 761px) { .aviso-conexao { left: auto; right: 20px; max-width: 400px; } }
+
+  /* ===== ACABAMENTO GERAL =====
+     Duas coisas que faltavam no app inteiro e aparecem na hora em que alguém precisa delas:
+     foco visível pra quem navega por teclado, e respeito a "reduzir movimento" — tem gente que
+     sente enjoo com animação, e o sistema operacional já sabe disso. */
+  :where(a, button, input, select, textarea, [role="button"]):focus-visible {
+    outline: 2px solid var(--terracotta);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important; scroll-behavior: auto !important;
+    }
+  }
+
+  /* ===== MAPA: filtros, pinos e "perto de mim" ===== */
+  .mapa-filtros { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .mapa-filtro-grupo { display: flex; gap: 7px; flex-wrap: wrap; }
+  .mapa-filtro {
+    background: var(--paper); border: 1px solid rgba(var(--hairline),.16); color: var(--ink-soft);
+    border-radius: 20px; padding: 7px 15px; font-size: .79rem; cursor: pointer; font-family: inherit; font-weight: 600;
+  }
+  .mapa-filtro:hover { border-color: var(--teal); color: var(--teal-deep); }
+  .mapa-filtro.ativo { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 700; }
+  .mapa-filtro-perto { margin-left: auto; background: var(--gold); border-color: var(--gold); color: #2b241c; font-weight: 700; }
+  .mapa-filtro-perto:hover { background: var(--gold-deep); border-color: var(--gold-deep); color: #fff; }
+  @media (max-width: 560px){ .mapa-filtro-perto { margin-left: 0; width: 100%; } }
+
+  /* O pino: bolinha da categoria + anel que preenche com os votos. Sem fundo nem borda do Leaflet. */
+  .pino-local { background: none; border: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+  .pino-local svg { display: block; }
+  .pino-consenso { filter: drop-shadow(0 0 6px rgba(217,138,61,.85)) drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+
+  .mapa-legenda-anel { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; color: var(--ink-soft); }
+  .perto-lista { display: grid; gap: 7px; width: 100%; }
+  .perto-lista > strong { font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-soft); }
+  .perto-item {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    background: var(--paper); border: 1px solid rgba(var(--hairline),.12); border-radius: 10px;
+    padding: 10px 14px; cursor: pointer; font-family: inherit;
+  }
+  .perto-item:hover { border-color: var(--teal); background: rgba(60,122,115,.06); }
+  .perto-dist { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--teal-deep); font-size: .82rem; min-width: 58px; }
+  .perto-nome { font-weight: 700; color: var(--ink); font-size: .88rem; flex: 1; }
+  .perto-cat { font-size: .72rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+
   /* ===== BARRA FIXA DE NAVEGAÇÃO (celular) ===== */
   .bottom-nav { display: none; }
   @media (max-width: 760px) {
@@ -1359,7 +1420,11 @@ function haversineKm(a, b){
   const dLat = (b[0]-a[0]) * Math.PI/180;
   const dLon = (b[1]-a[1]) * Math.PI/180;
   const s = Math.sin(dLat/2)**2 + Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLon/2)**2;
-  return Math.round(2 * R * Math.asin(Math.sqrt(s)));
+  // Devolve a distância exata. Antes arredondava pra quilômetro inteiro aqui dentro, o que servia
+  // pro único uso da época (distância entre cidades, na casa das centenas de km) mas fazia a função
+  // responder ZERO pra qualquer coisa abaixo de 500 metros — justo a escala que interessa pra
+  // "perto de mim" andando pela cidade. Quem exibe é que arredonda, cada um na sua escala.
+  return 2 * R * Math.asin(Math.sqrt(s));
 }
 
 /* ---- Geocodificação (Nominatim/OpenStreetMap, gratuito, sem chave) ---- */
@@ -1370,15 +1435,13 @@ function salvarGeocodeCache(c){ localStorage.setItem(STORE_GEOCODE, JSON.stringi
 // Nominatim pede no máximo ~1 requisição/segundo — essa fila garante isso mesmo quando várias
 // buscas (bairro + nome, de vários locais) disparam em sequência.
 let ultimaBuscaNominatim = 0;
+// Passa pela MESMA fila da busca de lugares. Antes esta função tinha o próprio limitador de 350ms,
+// o que dava quase 3 consultas por segundo — o triplo do que o Nominatim permite. Com 42 lugares
+// pra localizar de uma vez, é o tipo de rajada que faz o serviço bloquear o IP, e aí o mapa
+// simplesmente para de funcionar pra família inteira sem nenhuma mensagem de erro.
 async function buscarCoordenada(query){
-  const espera = 350 - (Date.now() - ultimaBuscaNominatim);
-  if(espera > 0) await new Promise(r => setTimeout(r, espera));
-  ultimaBuscaNominatim = Date.now();
-  try {
-    const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`);
-    const data = await resp.json();
-    if(data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-  } catch(e){ console.log("Geocode error:", e); }
+  const dados = await nominatimBuscar(query);
+  if(dados && dados[0]) return [parseFloat(dados[0].lat), parseFloat(dados[0].lon)];
   return null;
 }
 
@@ -1406,22 +1469,39 @@ function coordenadaPlausivel(coord, cidade){
   return haversineKm(base, coord) <= 50;
 }
 
+/* A ordem aqui estava invertida, e era o pior defeito do mapa: procurava primeiro o BAIRRO e só
+   depois o nome do lugar. Como a chave do cache do bairro é a mesma pra todo mundo, os 24 lugares
+   de Buenos Aires que ficam em Palermo recebiam a coordenada IDÊNTICA — todos empilhados no mesmo
+   pixel, e só dava pra tocar no de cima. O mapa parecia ter 5 pinos quando tinha 24.
+   Agora procura o nome do lugar primeiro (que desde a busca no mapa é o nome canônico, e muitas
+   vezes já vem com a coordenada exata) e, quando precisa cair no bairro ou na cidade, desloca cada
+   um num raiozinho fixo — assim continuam separáveis e cada um é clicável. */
 async function geocodificarLocal(local){
   const cache = carregarGeocodeCache();
-  const temBairro = local.bairro && local.bairro !== BAIRRO_A_CONFIRMAR;
 
-  if(temBairro){
-    const chave = `${local.bairro}|${local.cidade}`.toLowerCase();
-    if(cache[chave]) return cache[chave];
-    const coord = await buscarCoordenada(`${local.bairro}, ${local.cidade}`);
-    if(coord && coordenadaPlausivel(coord, local.cidade)){ cache[chave] = coord; salvarGeocodeCache(cache); return coord; }
-  }
-
+  // 1) O lugar em si — é o único jeito de o pino cair na porta certa
   const chaveNome = `nome:${local.nome}|${local.cidade}`.toLowerCase();
   if(cache[chaveNome]) return cache[chaveNome];
   const coordNome = await buscarCoordenada(`${local.nome}, ${local.cidade}`);
-  if(coordNome && coordenadaPlausivel(coordNome, local.cidade)){ cache[chaveNome] = coordNome; salvarGeocodeCache(cache); return coordNome; }
+  if(coordNome && coordenadaPlausivel(coordNome, local.cidade)){
+    cache[chaveNome] = coordNome; salvarGeocodeCache(cache); return coordNome;
+  }
 
+  // 2) Não achou o lugar: usa o bairro, mas espalhado — senão vira uma pilha só
+  const temBairro = local.bairro && local.bairro !== BAIRRO_A_CONFIRMAR;
+  if(temBairro){
+    const chaveBairro = `${local.bairro}|${local.cidade}`.toLowerCase();
+    let centroBairro = cache[chaveBairro];
+    if(!centroBairro){
+      const coord = await buscarCoordenada(`${local.bairro}, ${local.cidade}`);
+      if(coord && coordenadaPlausivel(coord, local.cidade)){
+        centroBairro = coord; cache[chaveBairro] = coord; salvarGeocodeCache(cache);
+      }
+    }
+    if(centroBairro) return deslocarCoordenada(centroBairro, local.id);
+  }
+
+  // 3) Último recurso: centro da cidade, também espalhado
   const base = CIDADES_COORDS[local.cidade];
   return base ? deslocarCoordenada(base, local.id) : null;
 }
@@ -2159,7 +2239,9 @@ function escolherLugarOSM(indice){
   // centro do bairro, que é o que o app fazia quando só tinha o nome digitado.
   if(r.lat && r.lon){
     const cache = carregarGeocodeCache();
-    cache[`${nome}, ${cidadeSelecionada}`] = { lat: parseFloat(r.lat), lon: parseFloat(r.lon) };
+    // Mesma chave e mesmo formato [lat, lon] que o mapa usa, senão a coordenada exata ficaria
+    // guardada num canto que ninguém lê e o pino continuaria caindo no centro do bairro.
+    cache[`nome:${nome}|${cidadeSelecionada}`.toLowerCase()] = [parseFloat(r.lat), parseFloat(r.lon)];
     salvarGeocodeCache(cache);
   }
 
@@ -2739,9 +2821,38 @@ function obterConfigRemota(){
   if(configEmVoo) return configEmVoo;
   configEmVoo = fetch(SHEETS_API_URL + "?action=getConfig")
     .then(r => r.json())
-    .catch(err => { console.log("Config sync error:", err); return null; })
+    .then(d => { marcarConexao(true); return d; })
+    .catch(err => { console.log("Config sync error:", err); marcarConexao(false); return null; })
     .then(data => { configEmVoo = null; return data; });
   return configEmVoo;
+}
+
+/* Aviso de conexão. Sem isso, quando a planilha não respondia — o que vai acontecer bastante no
+   exterior — o app simplesmente mostrava os dados antigos calado, e a família não tinha como saber
+   se estava vendo o que os outros acabaram de mudar ou uma foto congelada de horas atrás. Um voto
+   dado nesse estado fica no aparelho e sobe sozinho quando a conexão volta. */
+let estaOnline = true;
+let ultimaSincronia = 0;
+function marcarConexao(ok){
+  if(ok) ultimaSincronia = Date.now();
+  if(ok === estaOnline) return;
+  estaOnline = ok;
+  renderAvisoConexao();
+}
+function renderAvisoConexao(){
+  let barra = document.getElementById("aviso-conexao");
+  if(!barra){
+    barra = document.createElement("div");
+    barra.id = "aviso-conexao";
+    barra.className = "aviso-conexao";
+    document.body.appendChild(barra);
+  }
+  if(estaOnline){ barra.classList.remove("visivel"); return; }
+  const min = ultimaSincronia ? Math.round((Date.now() - ultimaSincronia) / 60000) : null;
+  barra.innerHTML = `<span>📴 Sem conexão com a planilha — você está vendo os dados salvos${
+    min !== null ? ` de ${min < 1 ? "menos de um minuto" : min === 1 ? "um minuto" : min + " minutos"} atrás` : ""
+  }. O que você marcar agora sobe sozinho quando a internet voltar.</span>`;
+  barra.classList.add("visivel");
 }
 
 function setUpSheetsIntegration(){
@@ -2813,6 +2924,7 @@ function syncFromSheets(){
   fetch(SHEETS_API_URL + "?action=getLocais")
     .then(r => r.json())
     .then(data => {
+      marcarConexao(true);
       if(data && data.success && data.locais){
         const antigos = carregarLocais();
         const antigosPorId = new Map(antigos.map(l => [String(l.id), l]));
@@ -2856,7 +2968,7 @@ function syncFromSheets(){
         }
       }
     })
-    .catch(err => console.log("Sync error:", err));
+    .catch(err => { console.log("Sync error:", err); marcarConexao(false); });
 }
 
 function votarLocalSheets(localId, pessoa, localNome, tipo){
@@ -2965,6 +3077,10 @@ setInterval(() => {
   sincronizarTudo();
 }, 5000);
 document.addEventListener("visibilitychange", () => { if(!document.hidden) sincronizarTudo(); });
+// O próprio navegador avisa quando o aparelho perde/recupera a rede — mais rápido que esperar
+// uma requisição falhar por timeout, que no exterior pode demorar dezenas de segundos.
+window.addEventListener("offline", () => marcarConexao(false));
+window.addEventListener("online", () => { marcarConexao(true); sincronizarTudo(); });
 
 /* ================= LOGIN / CADASTRO ================= */
 let USUARIO = localStorage.getItem("family_trip_usuario") || "";
@@ -4083,6 +4199,7 @@ function renderMapaRota(){
         <button type="button" class="mapa-modo-btn ativo" data-mapa-modo="rota">🗺️ Rota da viagem</button>
         <button type="button" class="mapa-modo-btn" data-mapa-modo="lugares">📍 Todos os lugares sugeridos</button>
       </div>
+      <div id="mapa-filtros-wrap"></div>
       <div id="mapa-leaflet" class="mapa-leaflet"></div>
       <div class="mapa-info" id="mapa-info"></div>
       <div class="mapa-stats" id="mapa-stats"></div>
@@ -4090,7 +4207,21 @@ function renderMapaRota(){
     `;
     cont.addEventListener("click", ev => {
       const btn = ev.target.closest("[data-mapa-modo]");
-      if(btn) trocarModoMapa(btn.getAttribute("data-mapa-modo"));
+      if(btn){ trocarModoMapa(btn.getAttribute("data-mapa-modo")); return; }
+
+      const cidadeBtn = ev.target.closest("[data-mapa-cidade]");
+      if(cidadeBtn){ mapaFiltroCidade = cidadeBtn.getAttribute("data-mapa-cidade"); renderMapaModoLugares(); return; }
+
+      const estadoBtn = ev.target.closest("[data-mapa-estado]");
+      if(estadoBtn){ mapaFiltroEstado = estadoBtn.getAttribute("data-mapa-estado"); renderMapaModoLugares(); return; }
+
+      if(ev.target.closest("#btn-perto-de-mim")){ mostrarPertoDeMim(); return; }
+
+      const pertoItem = ev.target.closest("[data-perto-id]");
+      if(pertoItem){
+        const local = carregarLocais().find(l => String(l.id) === pertoItem.getAttribute("data-perto-id"));
+        if(local) mostrarInfoLocalMapaEscroll(local);
+      }
     });
 
     const box = document.getElementById("mapa-info");
@@ -4129,6 +4260,9 @@ function trocarModoMapa(modo){
   mapaModo = modo;
   document.querySelectorAll(".mapa-modo-btn").forEach(b => b.classList.toggle("ativo", b.getAttribute("data-mapa-modo") === modo));
   document.getElementById("mapa-info").innerHTML = "";
+  // Os filtros só fazem sentido sobre os lugares sugeridos; na rota da viagem só atrapalhariam
+  const filtros = document.getElementById("mapa-filtros-wrap");
+  if(filtros && modo === "rota") filtros.innerHTML = "";
   renderMapaConteudo();
 }
 
@@ -4186,7 +4320,7 @@ function renderMapaModoRota(){
     if(i < pontos.length - 1 && pontos[i+1].coord){
       const prox = pontos[i+1].coord;
       L.polyline([p.coord, prox], { color: "#e2643b", weight: 3, dashArray: "1 9", lineCap: "round", opacity: .85 }).addTo(mapaMarkersLayer);
-      const km = haversineKm(p.coord, prox);
+      const km = Math.round(haversineKm(p.coord, prox));
       distanciaTotal += km;
       const meio = [(p.coord[0]+prox[0])/2, (p.coord[1]+prox[1])/2];
       L.marker(meio, {
@@ -4216,42 +4350,169 @@ function renderMapaModoRota(){
 // tinha acabado de desenhar, resultando em pins duplicados ou sumindo. Esse contador garante que só
 // a chamada mais recente termine de desenhar; qualquer chamada mais antiga se aborta sozinha.
 let mapaLugaresToken = 0;
+/* O pino é o placar. Antes eram 42 bolinhas idênticas e a cor só dizia a categoria — pra saber se
+   um lugar tinha consenso era preciso tocar em cada um. Agora o anel em volta se preenche conforme
+   os votos entram, e fecha em dourado quando os cinco querem ir: dá pra ler o estado da votação
+   inteira da família de uma olhada só no mapa. */
+function pinoDoLocal(local){
+  const cor = corCategoria(local.categoria);
+  const votos = (local.votos || []).length;
+  const total = VIAJANTES.length || 1;
+  const consenso = votos === VIAJANTES.length && VIAJANTES.length > 0;
+  const raio = 13, circunferencia = 2 * Math.PI * raio;
+  const preenchido = circunferencia * Math.min(1, votos / total);
+  const corAnel = consenso ? "#d98a3d" : "#3c7a73";
+  return L.divIcon({
+    className: "pino-local" + (consenso ? " pino-consenso" : ""),
+    iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -17],
+    html: `<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
+      <circle cx="17" cy="17" r="${raio}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="3.5"/>
+      ${votos ? `<circle cx="17" cy="17" r="${raio}" fill="none" stroke="${corAnel}" stroke-width="3.5"
+        stroke-dasharray="${preenchido.toFixed(1)} ${circunferencia.toFixed(1)}" stroke-linecap="round"
+        transform="rotate(-90 17 17)"/>` : ""}
+      <circle cx="17" cy="17" r="8.5" fill="${cor}" stroke="#fff" stroke-width="2"/>
+    </svg>`
+  });
+}
+
+let mapaFiltroCidade = "";
+let mapaFiltroEstado = "todos"; // todos | consenso | semmeuvoto | semvoto
+
+function locaisDoMapa(){
+  let lista = carregarLocais();
+  if(mapaFiltroCidade) lista = lista.filter(l => l.cidade === mapaFiltroCidade);
+  if(mapaFiltroEstado === "consenso") lista = lista.filter(l => (l.votos||[]).length === VIAJANTES.length && VIAJANTES.length > 0);
+  else if(mapaFiltroEstado === "semmeuvoto" && USUARIO) lista = lista.filter(l => !(l.votos||[]).includes(USUARIO) && !(l.naoInteresse||[]).includes(USUARIO));
+  else if(mapaFiltroEstado === "semvoto") lista = lista.filter(l => !(l.votos||[]).length && !(l.naoInteresse||[]).length);
+  return lista;
+}
+
+function filtrosMapaHtml(){
+  const estados = [["todos","Todos"], ["consenso","✓ Consenso"], ["semvoto","Sem nenhum voto"]];
+  if(USUARIO) estados.splice(2, 0, ["semmeuvoto","Faltam meu voto"]);
+  return `
+    <div class="mapa-filtros">
+      <div class="mapa-filtro-grupo">
+        <button type="button" class="mapa-filtro ${mapaFiltroCidade === "" ? "ativo" : ""}" data-mapa-cidade="">Todas as cidades</button>
+        ${CIDADES.map(c => `<button type="button" class="mapa-filtro ${mapaFiltroCidade === c ? "ativo" : ""}" data-mapa-cidade="${esc(c)}">${esc(c)}</button>`).join("")}
+      </div>
+      <div class="mapa-filtro-grupo">
+        ${estados.map(([v,t]) => `<button type="button" class="mapa-filtro ${mapaFiltroEstado === v ? "ativo" : ""}" data-mapa-estado="${v}">${esc(t)}</button>`).join("")}
+        <button type="button" class="mapa-filtro mapa-filtro-perto" id="btn-perto-de-mim">📍 Perto de mim</button>
+      </div>
+    </div>`;
+}
+
 async function renderMapaModoLugares(){
   const meuToken = ++mapaLugaresToken;
   mapaMarkersLayer.clearLayers();
-  const locais = carregarLocais();
+  const locais = locaisDoMapa();
+  const totalGeral = carregarLocais().length;
+
+  const barraFiltros = document.getElementById("mapa-filtros-wrap");
+  if(barraFiltros) barraFiltros.innerHTML = filtrosMapaHtml();
 
   document.getElementById("mapa-stats").innerHTML = "";
-  document.getElementById("mapa-legenda").innerHTML = locais.length
-    ? `<span class="mapa-carregando">📍 Localizando os lugares sugeridos…</span>`
-    : `<span class="mapa-carregando">Nenhum lugar sugerido ainda — vá em Votação!</span>`;
+  const legenda = document.getElementById("mapa-legenda");
+  if(!totalGeral){
+    legenda.innerHTML = `<span class="mapa-carregando">Nenhum lugar sugerido ainda. Vá em Votação e sugira o primeiro.</span>`;
+    return;
+  }
+  if(!locais.length){
+    legenda.innerHTML = `<span class="mapa-carregando">Nenhum lugar com esse filtro. Toque em “Todos” para ver os ${totalGeral}.</span>`;
+    return;
+  }
 
   const bounds = [];
+  let feitos = 0;
   for(const local of locais){
     if(meuToken !== mapaLugaresToken) return; // uma chamada mais nova assumiu — para aqui
     const coord = await geocodificarLocal(local);
-    if(meuToken !== mapaLugaresToken) return;
-    if(!coord || mapaModo !== "lugares") continue;
+    if(meuToken !== mapaLugaresToken || mapaModo !== "lugares") return;
+    feitos++;
+    // Mostra o andamento: localizar 42 lugares respeitando o limite do serviço leva alguns
+    // segundos na primeira vez, e um mapa parado sem explicação parece travado.
+    if(feitos < locais.length){
+      legenda.innerHTML = `<span class="mapa-carregando">📍 Localizando os lugares… ${feitos} de ${locais.length}</span>`;
+    }
+    if(!coord) continue;
     bounds.push(coord);
-    const cor = corCategoria(local.categoria);
     const votos = (local.votos||[]).length;
-    const marker = L.circleMarker(coord, { radius: 9, fillColor: cor, color: "#fff", weight: 2, fillOpacity: .9 }).addTo(mapaMarkersLayer);
-    marker.bindTooltip(esc(local.nome), { direction: "top", offset: [0,-10] });
-    // Popup curto direto no pin (feedback imediato ao tocar) + card completo logo abaixo do mapa
-    marker.bindPopup(`<strong>${esc(local.nome)}</strong><br><span style="color:${cor}">${esc(local.categoria || "—")}</span> · ${votos}/${VIAJANTES.length} interesse`, { closeButton: true, maxWidth: 220, autoPan: true });
+    const consenso = votos === VIAJANTES.length && VIAJANTES.length > 0;
+    const marker = L.marker(coord, { icon: pinoDoLocal(local), title: local.nome }).addTo(mapaMarkersLayer);
+    marker.bindTooltip(esc(local.nome), { direction: "top", offset: [0,-16] });
+    marker.bindPopup(
+      `<strong>${esc(local.nome)}</strong><br>
+       <span style="color:${corCategoria(local.categoria)}">${esc(local.categoria || "—")}</span>
+       · ${votos}/${VIAJANTES.length} com interesse${consenso ? " ✓" : ""}`,
+      { closeButton: true, maxWidth: 230, autoPan: true });
     marker.on("click", () => mostrarInfoLocalMapaEscroll(local));
+    // Vai enquadrando enquanto carrega, em vez de deixar o mapa no lugar errado até o fim
+    if(bounds.length === 3 || feitos === locais.length) mapaLeaflet.fitBounds(bounds, { padding: [50,50] });
   }
 
-  if(meuToken !== mapaLugaresToken) return;
-  if(mapaModo !== "lugares") return;
+  if(meuToken !== mapaLugaresToken || mapaModo !== "lugares") return;
   if(bounds.length) mapaLeaflet.fitBounds(bounds, { padding: [50,50] });
 
   const categoriasUsadas = [...new Set(locais.map(l=>l.categoria).filter(Boolean))];
-  document.getElementById("mapa-legenda").innerHTML = categoriasUsadas.map(c=>`<span><i style="background:${corCategoria(c)}"></i>${esc(c)}</span>`).join("");
+  const comConsenso = locais.filter(l => (l.votos||[]).length === VIAJANTES.length && VIAJANTES.length > 0).length;
+  legenda.innerHTML = `
+    <span class="mapa-legenda-anel"><svg width="26" height="26" viewBox="0 0 34 34"><circle cx="17" cy="17" r="13" fill="none" stroke="rgba(var(--hairline),.25)" stroke-width="3.5"/><circle cx="17" cy="17" r="13" fill="none" stroke="#3c7a73" stroke-width="3.5" stroke-dasharray="49 82" stroke-linecap="round" transform="rotate(-90 17 17)"/><circle cx="17" cy="17" r="8.5" fill="#7c6f5c" stroke="#fff" stroke-width="2"/></svg>o anel mostra quantos da família já querem ir</span>
+    ${categoriasUsadas.map(c=>`<span><i style="background:${corCategoria(c)}"></i>${esc(c)}</span>`).join("")}`;
   document.getElementById("mapa-stats").innerHTML = `
-    <div class="mapa-stat"><b>${locais.length}</b><span>${locais.length===1?"lugar sugerido":"lugares sugeridos"}</span></div>
+    <div class="mapa-stat"><b>${locais.length}</b><span>${locais.length===1?"lugar no mapa":"lugares no mapa"}</span></div>
+    <div class="mapa-stat"><b>${comConsenso}</b><span>com consenso</span></div>
     <div class="mapa-stat"><b>${categoriasUsadas.length}</b><span>categorias</span></div>
   `;
+}
+
+/* ---- Perto de mim ----
+   Durante a viagem a pergunta deixa de ser "o que a família votou" e passa a ser "o que tem perto
+   de onde eu estou agora". Como os lugares agora têm coordenada de verdade, dá pra responder isso
+   sem serviço nenhum: o navegador dá a posição e a conta de distância já existe no app. */
+async function mostrarPertoDeMim(){
+  const legenda = document.getElementById("mapa-legenda");
+  if(!navigator.geolocation){
+    legenda.innerHTML = `<span class="mapa-carregando">Este aparelho não informa a localização.</span>`;
+    return;
+  }
+  legenda.innerHTML = `<span class="mapa-carregando">📍 Pegando sua localização…</span>`;
+  let pos;
+  try {
+    pos = await new Promise((ok, erro) => navigator.geolocation.getCurrentPosition(ok, erro, { timeout: 12000, maximumAge: 60000 }));
+  } catch(e){
+    legenda.innerHTML = `<span class="mapa-carregando">Não consegui pegar sua localização. Autorize o acesso no navegador e tente de novo.</span>`;
+    return;
+  }
+  const eu = [pos.coords.latitude, pos.coords.longitude];
+  const lista = [];
+  for(const local of carregarLocais()){
+    const coord = await geocodificarLocal(local);
+    if(coord) lista.push({ local, coord, km: haversineKm(eu, coord) });
+  }
+  lista.sort((a, b) => a.km - b.km);
+  const perto = lista.slice(0, 6);
+
+  mapaMarkersLayer.clearLayers();
+  L.circleMarker(eu, { radius: 9, fillColor: "#4e6e8e", color: "#fff", weight: 3, fillOpacity: 1 })
+    .addTo(mapaMarkersLayer).bindTooltip("Você está aqui", { direction: "top", offset: [0,-10] });
+  perto.forEach(p => {
+    const m = L.marker(p.coord, { icon: pinoDoLocal(p.local), title: p.local.nome }).addTo(mapaMarkersLayer);
+    m.bindTooltip(`${esc(p.local.nome)} · ${p.km < 1 ? Math.round(p.km*1000) + " m" : p.km.toFixed(1) + " km"}`, { direction: "top", offset: [0,-16] });
+    m.on("click", () => mostrarInfoLocalMapaEscroll(p.local));
+  });
+  if(perto.length) mapaLeaflet.fitBounds([eu, ...perto.map(p=>p.coord)], { padding: [50,50] });
+  else mapaLeaflet.setView(eu, 14);
+
+  document.getElementById("mapa-stats").innerHTML = "";
+  legenda.innerHTML = perto.length
+    ? `<div class="perto-lista"><strong>Mais perto de você agora</strong>${perto.map(p => `
+        <button type="button" class="perto-item" data-perto-id="${esc(String(p.local.id))}">
+          <span class="perto-dist">${p.km < 1 ? Math.round(p.km*1000) + " m" : p.km.toFixed(1) + " km"}</span>
+          <span class="perto-nome">${esc(p.local.nome)}</span>
+          <span class="perto-cat">${esc(p.local.categoria || "")}</span>
+        </button>`).join("")}</div>`
+    : `<span class="mapa-carregando">Nenhum lugar sugerido tem coordenada ainda.</span>`;
 }
 
 function mostrarInfoCidade(cidade){
@@ -5691,7 +5952,7 @@ const AJUDA_TEXTOS = {
   },
   mapa: {
     titulo: "Como usar o Mapa",
-    texto: "Alterne entre \"Rota da viagem\" (o trajeto entre as cidades, com distâncias) e \"Todos os lugares sugeridos\" (cada lugar votado, plotado pelo bairro). Toque em qualquer pin pra ver um resumo na hora — o cartão com todos os detalhes aparece logo abaixo do mapa."
+    texto: "Alterne entre \"Rota da viagem\" (o trajeto entre as cidades, com distâncias) e \"Todos os lugares sugeridos\". Cada pino tem um anel em volta que se preenche conforme a família vota — quando os cinco querem ir, ele fecha em dourado. Dá pra filtrar por cidade, ver só os que já têm consenso, ou só os que ainda esperam o seu voto. Durante a viagem, \"📍 Perto de mim\" usa sua localização e lista os lugares sugeridos mais próximos, com a distância. Toque em qualquer pino pra ver o resumo, e o cartão completo aparece abaixo do mapa."
   },
   despesas: {
     titulo: "Como usar as Despesas",
