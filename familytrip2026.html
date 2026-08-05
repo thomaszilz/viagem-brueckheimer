@@ -3256,10 +3256,17 @@ function iniciaisDe(nome){
   return nome ? nome.trim().charAt(0).toUpperCase() : "?";
 }
 // HTML de avatar: usa a caricatura se existir; se não tiver (ou a imagem falhar ao carregar), mostra a inicial do nome
+// Os 5 avatares aparecem MUITAS vezes na tela: cada card de votação mostra quem votou, e ainda tem
+// mural, selos, saldos e a faixa de progresso — dá mais de 100 tags de imagem. Como os arquivos são
+// PNGs em tamanho original mostrados num círculo de ~24px, o navegador decodificava a imagem inteira
+// uma vez por tag, e no celular isso trava a tela.
+//   loading="lazy" resolve o grosso: as 8 abas ficam todas no DOM ao mesmo tempo (só uma visível),
+//   então sem isso o navegador carregava e decodificava também os avatares das abas escondidas.
+//   width/height evitam o layout pulando enquanto cada uma chega.
 function avatarHtmlDe(nome, classe){
   const url = avatarUrlDe(nome);
   const inicial = esc(iniciaisDe(nome));
-  if(url) return `<img src="${esc(url)}" alt="${esc(nome)}" class="${classe}-img" decoding="async" data-avatar-fallback-classe="${classe}" data-avatar-fallback-inicial="${inicial}" onerror="avatarImgErro(this)">`;
+  if(url) return `<img src="${esc(url)}" alt="${esc(nome)}" class="${classe}-img" loading="lazy" decoding="async" width="40" height="40" data-avatar-fallback-classe="${classe}" data-avatar-fallback-inicial="${inicial}" onerror="avatarImgErro(this)">`;
   return `<span class="${classe}-emoji avatar-inicial">${inicial}</span>`;
 }
 function avatarImgErro(img){
