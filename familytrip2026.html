@@ -1447,10 +1447,7 @@ function salvarLocaisMeta(m){
   salvarLocaisMetaLocal(m);
   locaisMetaProtegidoAte = Date.now() + 8000;
   if(USE_SHEETS){
-    fetch(SHEETS_API_URL + "?action=setConfig", {
-      method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ locaisMeta: m })
-    }).catch(err => console.log("Coordenadas sync error:", err));
+    salvarConfigRemota("locaisMeta", m);
   }
 }
 function syncLocaisMeta(){
@@ -2945,6 +2942,93 @@ function obterConfigRemota(){
   return configEmVoo;
 }
 
+/* ================= FILA DE REENVIO (outbox) =================
+   O problema que isto resolve: sem internet, o POST falhava, o erro era engolido no catch e o
+   próximo sync bem-sucedido substituía o estado local pelo do servidor — que nunca recebeu a
+   alteração. O voto ou a despesa lançada na rua simplesmente sumia, sem aviso. Numa viagem ao
+   exterior, com roaming ruim, esse é o cenário normal, não a exceção.
+
+   Agora toda escrita entra numa fila guardada no aparelho antes de tentar subir. Se falhar, fica
+   lá e é reenviada quando a conexão voltar. A fila sobrevive a fechar o app e a reiniciar o
+   celular, porque mora no localStorage. */
+const STORE_OUTBOX = "family_trip_outbox";
+function carregarOutbox(){ try { return JSON.parse(localStorage.getItem(STORE_OUTBOX) || "[]"); } catch(e){ return []; } }
+function salvarOutbox(f){ try { localStorage.setItem(STORE_OUTBOX, JSON.stringify(f)); } catch(e){} }
+
+/* Colapsa itens que se sobrescrevem, pra fila não crescer sem parar nem reenviar estado velho:
+   - setConfig de uma mesma chave: só o último importa (o payload é a coleção inteira)
+   - addVoto da mesma pessoa no mesmo lugar: só o último importa (votar é alternar) */
+function chaveDeColapso(item){
+  if(item.action === "setConfig") return "setConfig|" + Object.keys(item.payload || {}).sort().join(",");
+  if(item.action === "addVoto") return "addVoto|" + item.payload.localId + "|" + item.payload.pessoa;
+  return null; // addLocal, deleteLocal e afins são eventos distintos: nunca colapsam
+}
+
+function enfileirar(action, payload){
+  const fila = carregarOutbox();
+  const ck = chaveDeColapso({ action, payload });
+  const limpa = ck ? fila.filter(i => chaveDeColapso(i) !== ck) : fila;
+  limpa.push({ id: Date.now() + Math.random(), action, payload, em: Date.now(), tentativas: 0 });
+  salvarOutbox(limpa);
+  atualizarAvisoPendentes();
+}
+
+let enviandoOutbox = false;
+async function enviarOutbox(){
+  if(enviandoOutbox || !USE_SHEETS) return;
+  const fila = carregarOutbox();
+  if(!fila.length) return;
+  enviandoOutbox = true;
+  try {
+    for(const item of fila.slice()){
+      try {
+        const r = await fetch(SHEETS_API_URL + "?action=" + item.action, {
+          method: "POST", redirect: "follow",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(item.payload)
+        }).then(x => x.json());
+        // Lê a resposta de verdade: o servidor pode responder 200 e mesmo assim ter recusado
+        // (planilha ocupada, ação desconhecida). Antes isso era descartado e virava silêncio.
+        if(!(r && r.success)) throw new Error((r && r.error) || "recusado pelo servidor");
+        const atual = carregarOutbox().filter(i => i.id !== item.id);
+        salvarOutbox(atual);
+        marcarConexao(true);
+      } catch(e){
+        // Para na primeira falha e mantém a ordem — tentar os seguintes daria estado embaralhado
+        const atual = carregarOutbox();
+        const alvo = atual.find(i => i.id === item.id);
+        if(alvo) alvo.tentativas = (alvo.tentativas || 0) + 1;
+        salvarOutbox(atual);
+        marcarConexao(false);
+        break;
+      }
+    }
+  } finally {
+    enviandoOutbox = false;
+    atualizarAvisoPendentes();
+  }
+}
+
+/* Único caminho de escrita do app. Enfileira primeiro, tenta subir depois. */
+function postApi(action, payload){
+  enfileirar(action, payload);
+  enviarOutbox();
+}
+/* Atalho pras gravações de configuração, que são a maioria */
+function salvarConfigRemota(chave, valor){
+  const p = {}; p[chave] = valor;
+  postApi("setConfig", p);
+}
+function pendentesNaFila(){ return carregarOutbox().length; }
+/* Enquanto houver voto pendente pra um lugar, o sync não pode sobrescrever o que está na tela —
+   senão a alteração some da vista antes mesmo de conseguir subir. */
+function votosPendentesPorLocal(){
+  const s = new Set();
+  carregarOutbox().forEach(i => { if(i.action === "addVoto") s.add(String(i.payload.localId)); });
+  return s;
+}
+function atualizarAvisoPendentes(){ try { renderAvisoConexao(); } catch(e){} }
+
 /* Aviso de conexão. Sem isso, quando a planilha não respondia — o que vai acontecer bastante no
    exterior — o app simplesmente mostrava os dados antigos calado, e a família não tinha como saber
    se estava vendo o que os outros acabaram de mudar ou uma foto congelada de horas atrás. Um voto
@@ -2968,7 +3052,14 @@ function renderAvisoConexao(){
     barra.className = "aviso-conexao";
     document.body.appendChild(barra);
   }
-  if(estaOnline){ barra.classList.remove("visivel"); return; }
+  const pendentes = pendentesNaFila();
+  if(estaOnline && !pendentes){ barra.classList.remove("visivel"); return; }
+  if(estaOnline && pendentes){
+    // Conectado mas ainda com coisa na fila: avisa que está subindo, em vez de fingir que já foi
+    barra.innerHTML = `<span>⏳ Enviando ${pendentes} ${pendentes === 1 ? "alteração" : "alterações"} que ficaram pendentes…</span>`;
+    barra.classList.add("visivel");
+    return;
+  }
   const min = ultimaSincronia ? Math.round((Date.now() - ultimaSincronia) / 60000) : null;
   barra.innerHTML = `<span>📴 Sem conexão com a planilha — você está vendo os dados salvos${
     min !== null ? ` de ${min < 1 ? "menos de um minuto" : min === 1 ? "um minuto" : min + " minutos"} atrás` : ""
@@ -3051,8 +3142,16 @@ function syncFromSheets(){
         const antigosPorId = new Map(antigos.map(l => [String(l.id), l]));
         const agora = Date.now();
 
+        // Lugar com voto ainda na fila de reenvio não pode ser sobrescrito pelo servidor: a
+        // alteração sumiria da tela antes mesmo de conseguir subir. É o que fazia o voto dado
+        // offline desaparecer sem aviso.
+        const comVotoPendente = votosPendentesPorLocal();
         const remotos = data.locais.map(l => {
           const protegidoAte = votoProtegidoAte[String(l.id)];
+          if(comVotoPendente.has(String(l.id))){
+            const local = antigosPorId.get(String(l.id));
+            if(local) return local;
+          }
           if(protegidoAte && agora < protegidoAte){
             // Ainda dentro da janela de proteção: mantém o voto local (otimista) em vez do remoto (pode estar desatualizado)
             const local = antigosPorId.get(String(l.id));
@@ -3101,21 +3200,10 @@ function votarLocalSheets(localId, pessoa, localNome, tipo){
 
   if(!USE_SHEETS) return;
 
-  fetch(SHEETS_API_URL + "?action=addVoto", {
-    method: "POST",
-    redirect: "follow",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({
-      pessoa: pessoa,
-      localId: localId,
-      localNome: localNome,
-      cidade: cidadeSelecionada,
-      tipo: tipo
-    })
-  })
-    .then(r => r.json())
-    .then(data => { if(data && data.success) setTimeout(syncFromSheets, 1200); })
-    .catch(err => console.log("Vote error:", err));
+  // Entra na fila antes de tentar subir: sem internet o voto fica guardado e sobe sozinho depois,
+  // em vez de sumir no próximo sync.
+  postApi("addVoto", { pessoa: pessoa, localId: localId, localNome: localNome, cidade: cidadeSelecionada, tipo: tipo });
+  setTimeout(syncFromSheets, 1500);
 }
 
 async function adicionarLocalSheets(){
@@ -3198,6 +3286,7 @@ async function adicionarLocalSheets(){
    Ao voltar pro app, sincroniza na hora em vez de esperar o próximo ciclo. */
 function sincronizarTudo(){
   if(!USE_SHEETS) return;
+  enviarOutbox(); // o que ficou pendente sobe antes de reler o servidor
   syncFromSheets(); syncViagem(); syncAvatares(); syncAcessos();
   syncBagagemCompartilhada(); syncPendenciasManuais(); syncRoteiro(); syncDespesas(); syncLocaisMeta();
 }
@@ -3209,7 +3298,7 @@ document.addEventListener("visibilitychange", () => { if(!document.hidden) sincr
 // O próprio navegador avisa quando o aparelho perde/recupera a rede — mais rápido que esperar
 // uma requisição falhar por timeout, que no exterior pode demorar dezenas de segundos.
 window.addEventListener("offline", () => marcarConexao(false));
-window.addEventListener("online", () => { marcarConexao(true); sincronizarTudo(); });
+window.addEventListener("online", () => { marcarConexao(true); enviarOutbox(); sincronizarTudo(); });
 
 /* ================= LOGIN / CADASTRO ================= */
 let USUARIO = localStorage.getItem("family_trip_usuario") || "";
@@ -3283,11 +3372,7 @@ function salvarAvatarEscolha(nome, url){
   if(url) m[nome] = url; else delete m[nome];
   salvarAvatarCustomLocal(m);
   if(USE_SHEETS){
-    fetch(SHEETS_API_URL + "?action=setConfig", {
-      method: "POST", redirect: "follow",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ avatares: m })
-    }).catch(err => console.log("Avatar sync error:", err));
+    salvarConfigRemota("avatares", m);
   }
 }
 function syncAvatares(){
@@ -3313,11 +3398,7 @@ function registrarAcesso(nome){
   m[nome] = (m[nome] || 0) + 1;
   salvarAcessosLocal(m);
   if(USE_SHEETS){
-    fetch(SHEETS_API_URL + "?action=setConfig", {
-      method: "POST", redirect: "follow",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ acessos: m })
-    }).catch(err => console.log("Acessos sync error:", err));
+    salvarConfigRemota("acessos", m);
   }
 }
 function syncAcessos(){
@@ -3341,11 +3422,7 @@ window.definirTodosAvatares = function(mapa){
   Object.keys(mapa).forEach(nome => { if(mapa[nome]) atual[nome] = mapa[nome]; });
   salvarAvatarCustomLocal(atual);
   if(USE_SHEETS){
-    fetch(SHEETS_API_URL + "?action=setConfig", {
-      method: "POST", redirect: "follow",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ avatares: atual })
-    }).then(() => console.log("✅ Avatares salvos e sincronizados!")).catch(err => console.log("Erro ao sincronizar:", err));
+    salvarConfigRemota("avatares", atual);
   } else {
     console.log("✅ Avatares salvos neste aparelho (conecte a planilha pra sincronizar com todos).");
   }
@@ -3617,12 +3694,7 @@ function salvarViagem(v){
   if(USE_SHEETS){
     clearTimeout(pushViagemTimer);
     pushViagemTimer = setTimeout(() => {
-      fetch(SHEETS_API_URL + "?action=setConfig", {
-        method: "POST",
-        redirect: "follow",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ viagem: v })
-      }).catch(err => console.log("Config push error:", err));
+      salvarConfigRemota("viagem", v);
     }, 600);
   }
 }
@@ -3841,11 +3913,7 @@ function salvarRoteiro(r){
   salvarRoteiroLocal(r);
   roteiroProtegidoAte = Date.now() + 8000;
   if(USE_SHEETS){
-    fetch(SHEETS_API_URL + "?action=setConfig", {
-      method: "POST", redirect: "follow",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ roteiro: r })
-    }).catch(err => console.log("Roteiro sync error:", err));
+    salvarConfigRemota("roteiro", r);
   }
 }
 function syncRoteiro(){
@@ -5146,11 +5214,7 @@ function salvarBagagemCompartilhada(b){
   salvarBagagemCompartilhadaLocal(b);
   bagagemProtegidoAte = Date.now() + 8000;
   if(USE_SHEETS){
-    fetch(SHEETS_API_URL + "?action=setConfig", {
-      method: "POST", redirect: "follow",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ bagagem: b })
-    }).catch(err => console.log("Bagagem sync error:", err));
+    salvarConfigRemota("bagagem", b);
   }
 }
 function syncBagagemCompartilhada(){
@@ -5296,11 +5360,7 @@ function salvarDespesas(d){
   salvarDespesasLocal(d);
   despesasProtegidoAte = Date.now() + 8000;
   if(USE_SHEETS){
-    fetch(SHEETS_API_URL + "?action=setConfig", {
-      method: "POST", redirect: "follow",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ despesas: d })
-    }).catch(err => console.log("Despesas sync error:", err));
+    salvarConfigRemota("despesas", d);
   }
 }
 function syncDespesas(){
@@ -5861,11 +5921,7 @@ function salvarPendenciasManuais(lista){
   salvarPendenciasManuaisLocal(lista);
   pendenciasProtegidoAte = Date.now() + 8000;
   if(USE_SHEETS){
-    fetch(SHEETS_API_URL + "?action=setConfig", {
-      method: "POST", redirect: "follow",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ pendencias: lista })
-    }).catch(err => console.log("Pendências sync error:", err));
+    salvarConfigRemota("pendencias", lista);
   }
 }
 function syncPendenciasManuais(){
