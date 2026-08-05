@@ -16,7 +16,7 @@
 // arquivo separado — assim continuamos com um só Service Worker cuidando de tudo (cache + push).
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 
-const CACHE_NAME = "brueckheimer-2026-v35";
+const CACHE_NAME = "brueckheimer-2026-v36";
 const CORE_ASSETS = [
   "./familytrip2026.html",
   "./manifest.json"

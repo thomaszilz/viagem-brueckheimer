@@ -1448,10 +1448,35 @@ let ultimaBuscaNominatim = 0;
 // o que dava quase 3 consultas por segundo — o triplo do que o Nominatim permite. Com 42 lugares
 // pra localizar de uma vez, é o tipo de rajada que faz o serviço bloquear o IP, e aí o mapa
 // simplesmente para de funcionar pra família inteira sem nenhuma mensagem de erro.
-async function buscarCoordenada(query){
+/* Escolhe ENTRE os resultados em vez de pegar o primeiro. Buscar "Laguna del Inca" em Santiago
+   devolve três coisas com esse nome exato: duas RUAS (a 5 e 15 km) e o LAGO (a 41 km). O nome bate
+   igualzinho nas três, então quem decide é o tipo — e a família já disse a categoria do lugar
+   quando cadastrou. Pegar o primeiro resultado colocava o pino numa rua residencial qualquer. */
+function pontuarResultadoOSM(r, local){
+  const nomeR = r.name || String(r.display_name || "").split(",")[0];
+  let p = scoreTituloVsNome(nomeR, local.nome, local.cidade);
+  if(p < 0.6) return 0;
+  if(local.categoria && categoriaDeOSM(r) === local.categoria) p += 0.5;
+  // Rua com o nome do lugar é a confusão mais comum: em cidade da região é normal existir uma
+  // "Calle Fulano" homônima do ponto turístico. Só vale quando o próprio lugar é uma via.
+  const ehVia = /^(rua|calle|avenida|av\.?|paseo|passeo)\s/i.test(local.nome || "");
+  if(r.category === "highway" && !ehVia) p -= 0.6;
+  return p;
+}
+
+// Devolve também o país, que é o que a validação usa pra distinguir "passeio longe" de
+// "homônimo do outro lado do mundo".
+async function buscarCoordenada(query, local){
   const dados = await nominatimBuscar(query);
-  if(dados && dados[0]) return [parseFloat(dados[0].lat), parseFloat(dados[0].lon)];
-  return null;
+  if(!dados || !dados.length) return null;
+  let melhor = null, melhorNota = -Infinity;
+  for(const r of dados){
+    const nota = local ? pontuarResultadoOSM(r, local) : 1;
+    if(nota > melhorNota){ melhorNota = nota; melhor = r; }
+  }
+  if(!melhor || (local && melhorNota <= 0)) return null;
+  return { coord: [parseFloat(melhor.lat), parseFloat(melhor.lon)],
+           pais: (melhor.address && melhor.address.country_code) || "" };
 }
 
 // Desloca uma coordenada num raiozinho (~200-400m), sempre igual pro mesmo "seed" — usada só como
@@ -1472,10 +1497,22 @@ function deslocarCoordenada(base, seed){
 // Rejeita resultado do Nominatim se cair longe demais da cidade — nomes tipo "Calle Florida" ou
 // "Praça Central" existem em vários países, e às vezes o primeiro resultado da busca é em outro lugar
 // do mundo. Sem essa checagem, o pino ia parar lá, bem longe do mapa da viagem.
-function coordenadaPlausivel(coord, cidade){
+// O limite de 50 km existe porque nome de lugar se repete pelo mundo ("Calle Florida", "Praça
+// Central") e o primeiro resultado às vezes é em outro país — sem a checagem o pino ia parar lá.
+// Só que passeio de dia inteiro estoura esse limite legitimamente: a Laguna del Inca fica em
+// Portillo, a ~145 km de Santiago, e era rejeitada por isso — o pino caía no centro da cidade e
+// ninguém tinha como saber que estava errado. Agora o que separa os dois casos é o PAÍS, não a
+// distância: até 50 km passa direto; de 50 a 250 km passa se o resultado estiver no mesmo país da
+// cidade; acima disso, ou em outro país, continua barrado.
+const PAIS_DA_CIDADE = { "Buenos Aires": "ar", "Santiago": "cl", "Viña del Mar": "cl" };
+function coordenadaPlausivel(coord, cidade, pais){
   const base = CIDADES_COORDS[cidade];
   if(!base || !coord) return false;
-  return haversineKm(base, coord) <= 50;
+  const km = haversineKm(base, coord);
+  if(km <= 50) return true;
+  if(km > 250) return false;
+  const esperado = PAIS_DA_CIDADE[cidade];
+  return !!(esperado && pais && String(pais).toLowerCase() === esperado);
 }
 
 /* A ordem aqui estava invertida, e era o pior defeito do mapa: procurava primeiro o BAIRRO e só
@@ -1497,13 +1534,20 @@ async function geocodificarLocal(local){
   const chaveNome = `nome:${local.nome}|${local.cidade}`.toLowerCase();
   if(cache[chaveNome]) return cache[chaveNome];
   const temBairro = local.bairro && local.bairro !== BAIRRO_A_CONFIRMAR;
+  // A última tentativa procura no PAÍS, não na cidade. Passeio de dia inteiro fica fora da cidade,
+  // e amarrar a busca a ela empurrava o resultado pra dentro dela na marra: "Laguna del Inca,
+  // Santiago" devolvia um ponto a 15 km do centro, enquanto a laguna de verdade fica em Portillo,
+  // a 86 km. Quem segura homônimo de outro país agora é a validação por país + distância, não o
+  // texto da busca.
+  const NOME_DO_PAIS = { "Buenos Aires": "Argentina", "Santiago": "Chile", "Viña del Mar": "Chile" };
   const consultas = temBairro
     ? [`${local.nome}, ${local.bairro}, ${local.cidade}`, `${local.nome}, ${local.cidade}`]
     : [`${local.nome}, ${local.cidade}`];
+  if(NOME_DO_PAIS[local.cidade]) consultas.push(`${local.nome}, ${NOME_DO_PAIS[local.cidade]}`);
   for(const consulta of consultas){
-    const coordNome = await buscarCoordenada(consulta);
-    if(coordNome && coordenadaPlausivel(coordNome, local.cidade)){
-      cache[chaveNome] = coordNome; salvarGeocodeCache(cache); return coordNome;
+    const achado = await buscarCoordenada(consulta, local);
+    if(achado && coordenadaPlausivel(achado.coord, local.cidade, achado.pais)){
+      cache[chaveNome] = achado.coord; salvarGeocodeCache(cache); return achado.coord;
     }
   }
 
@@ -1512,9 +1556,9 @@ async function geocodificarLocal(local){
     const chaveBairro = `${local.bairro}|${local.cidade}`.toLowerCase();
     let centroBairro = cache[chaveBairro];
     if(!centroBairro){
-      const coord = await buscarCoordenada(`${local.bairro}, ${local.cidade}`);
-      if(coord && coordenadaPlausivel(coord, local.cidade)){
-        centroBairro = coord; cache[chaveBairro] = coord; salvarGeocodeCache(cache);
+      const achadoBairro = await buscarCoordenada(`${local.bairro}, ${local.cidade}`);
+      if(achadoBairro && coordenadaPlausivel(achadoBairro.coord, local.cidade, achadoBairro.pais)){
+        centroBairro = achadoBairro.coord; cache[chaveBairro] = achadoBairro.coord; salvarGeocodeCache(cache);
       }
     }
     if(centroBairro) return deslocarCoordenada(centroBairro, local.id);
