@@ -649,6 +649,7 @@
   }
   /* ===== ROTEIRO DIA A DIA ===== */
   .roteiro-dia { background: var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:16px; padding:20px 22px; margin-bottom:16px; box-shadow:0 12px 26px -16px var(--shadow); }
+  .roteiro-dia-nota { font-size:.8rem; color:var(--ink-soft); margin:0 0 10px; font-style:italic; line-height:1.45; }
   .roteiro-dia-cabecalho { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(var(--hairline),.12); flex-wrap:wrap; }
   .roteiro-dia-data { font-family:'Fraunces',Georgia,serif; font-weight:700; color:var(--ink); font-size:1.05rem; text-transform:capitalize; }
   .roteiro-dia-cidade { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--terracotta-deep); background:rgba(226,100,59,.1); padding:4px 10px; border-radius:999px; }
@@ -3543,6 +3544,26 @@ function fmtData(date){
   return `${DIAS_SEMANA[date.getDay()]} ${String(date.getDate()).padStart(2,"0")} ${MESES_PT[date.getMonth()]}`;
 }
 
+/* A ordem das cidades aparecia em dois lugares que não conversavam: a constante CIDADES (abas da
+   votação, filtros do mapa) dizia Buenos Aires → Santiago → Viña del Mar, enquanto a viagem de
+   verdade é Buenos Aires → Viña del Mar → Santiago. Quem olhava as abas via uma sequência que não
+   é a que vai acontecer. Agora a ordem sai da própria viagem, e passa a ser impossível divergir —
+   se alguém mudar a ordem com as setas ▲▼ na aba Viagem, as abas acompanham. */
+function cidadesEmOrdemDeViagem(){
+  const v = carregarViagem();
+  const daViagem = (v.cidades || []).map(c => c.nome).filter(n => CIDADES.includes(n));
+  // Qualquer cidade que exista no app mas não esteja na viagem entra no fim, pra nunca sumir
+  return daViagem.concat(CIDADES.filter(c => !daViagem.includes(c)));
+}
+function ordenarAbasDeCidade(){
+  const tabs = document.getElementById("cities-tabs");
+  if(!tabs) return;
+  cidadesEmOrdemDeViagem().forEach(nome => {
+    const btn = tabs.querySelector(`[data-city="${CSS.escape(nome)}"]`);
+    if(btn) tabs.appendChild(btn); // reanexar move pro fim: aplicado em ordem, reordena tudo
+  });
+}
+
 function viagemTrechos(){
   const v = carregarViagem();
   let cursor = parseData(v.inicio);
@@ -3720,6 +3741,14 @@ function diasDaViagem(){
       dias.push({ data: addDias(t.checkin, i), cidade: t.nome });
     }
   });
+  // O dia da volta não existia no roteiro. A conta era só a soma das noites, então o roteiro ia de
+  // 28/08 a 10/09 e o dia 11/09 — quando a família ainda acorda em Santiago, faz o check-out e vai
+  // pro aeroporto — simplesmente não tinha onde ser planejado. É justamente um dia que precisa de
+  // combinado (horário do check-out, o que dá tempo de fazer antes, como ir pro aeroporto).
+  const ultimo = trechos[trechos.length - 1];
+  if(ultimo && ultimo.checkout && ultimo.noites > 0){
+    dias.push({ data: ultimo.checkout, cidade: ultimo.nome, volta: true });
+  }
   return dias;
 }
 function isoDeData(date){
@@ -3747,8 +3776,9 @@ function renderRoteiro(){
       <div class="roteiro-dia">
         <div class="roteiro-dia-cabecalho">
           <div class="roteiro-dia-data">${fmtData(d.data)}</div>
-          <div class="roteiro-dia-cidade">${esc(d.cidade)}</div>
+          <div class="roteiro-dia-cidade">${d.volta ? `✈️ Volta · ${esc(d.cidade)}` : esc(d.cidade)}</div>
         </div>
+        ${d.volta ? `<p class="roteiro-dia-nota">Último dia: check-out e viagem de volta. Vale combinar aqui o horário de sair e o que ainda dá tempo de fazer.</p>` : ""}
         <div class="roteiro-itens">
           ${itens.length ? itens.map((it,i) => `
             <div class="roteiro-item">
@@ -3902,6 +3932,7 @@ function renderViagem(){
     </div>
   `;
   carregarCambioNaTela();
+  ordenarAbasDeCidade(); // mudar a ordem aqui reordena as abas da Votação junto
 
   if(!cont._delegado){
     cont._delegado = true;
@@ -4398,7 +4429,7 @@ function filtrosMapaHtml(){
     <div class="mapa-filtros">
       <div class="mapa-filtro-grupo">
         <button type="button" class="mapa-filtro ${mapaFiltroCidade === "" ? "ativo" : ""}" data-mapa-cidade="">Todas as cidades</button>
-        ${CIDADES.map(c => `<button type="button" class="mapa-filtro ${mapaFiltroCidade === c ? "ativo" : ""}" data-mapa-cidade="${esc(c)}">${esc(c)}</button>`).join("")}
+        ${cidadesEmOrdemDeViagem().map(c => `<button type="button" class="mapa-filtro ${mapaFiltroCidade === c ? "ativo" : ""}" data-mapa-cidade="${esc(c)}">${esc(c)}</button>`).join("")}
       </div>
       <div class="mapa-filtro-grupo">
         ${estados.map(([v,t]) => `<button type="button" class="mapa-filtro ${mapaFiltroEstado === v ? "ativo" : ""}" data-mapa-estado="${v}">${esc(t)}</button>`).join("")}
@@ -6013,6 +6044,7 @@ document.addEventListener("click", ev => {
 /* ================= INIT ================= */
 atualizarBairros(cidadeSelecionada);
 atualizarCategorias();
+ordenarAbasDeCidade();
 setUpSheetsIntegration();
 setupLogin();
 renderAuthUI();
