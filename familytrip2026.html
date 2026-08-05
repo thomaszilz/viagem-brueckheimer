@@ -753,6 +753,112 @@
   .bagagem-add input { flex:1; padding:7px 10px; border:1px solid rgba(var(--hairline),.18); border-radius:6px; font-size:.82rem; background:transparent; color:var(--ink); font-family:inherit; }
   .bagagem-add button { width:32px; border:none; border-radius:6px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; font-size:1rem; }
 
+  /* ===== BARRA FIXA DE NAVEGAÇÃO (celular) ===== */
+  .bottom-nav { display: none; }
+  @media (max-width: 760px) {
+    .bottom-nav {
+      display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 180;
+      background: rgba(var(--hairline),.04); backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(var(--hairline),.14);
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -8px 24px -18px var(--shadow);
+    }
+    :root[data-theme="dark"] .bottom-nav { background: rgba(28,23,18,.92); }
+    :root:not([data-theme="dark"]) .bottom-nav { background: rgba(255,255,255,.94); }
+    .bnav-btn {
+      position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      background: transparent; border: none; cursor: pointer; padding: 5px 2px 4px;
+      color: var(--ink-soft); font-family: inherit; border-radius: 10px; min-width: 0;
+    }
+    .bnav-ico { font-size: 1.22rem; line-height: 1; }
+    .bnav-txt { font-size: .66rem; font-weight: 700; letter-spacing: .01em; white-space: nowrap; }
+    .bnav-btn.ativo { color: var(--terracotta-deep); }
+    .bnav-btn.ativo .bnav-ico { transform: translateY(-1px); }
+    .bnav-btn.ativo::before {
+      content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 26px; height: 3px; border-radius: 0 0 3px 3px; background: var(--terracotta);
+    }
+    .bnav-alerta:not(:empty) {
+      position: absolute; top: 2px; right: 50%; margin-right: -20px;
+      min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
+      background: var(--terracotta); color: #fff; font-size: .6rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .bnav-btn .badge-pendencias { position: absolute; top: 3px; right: 50%; margin-right: -18px; }
+    /* espaço pra barra não cobrir o fim do conteúdo */
+    .wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+    footer { margin-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  }
+
+  /* ===== BUSCAR O LUGAR NO MAPA ===== */
+  .busca-lugar-linha { display: flex; gap: 8px; }
+  .busca-lugar-linha input { flex: 1; min-width: 0; }
+  #btn-buscar-lugar {
+    flex-shrink: 0; background: var(--teal); color: #fff; border: none; border-radius: 8px;
+    padding: 0 14px; font-weight: 700; font-size: .82rem; cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+  #btn-buscar-lugar:disabled { opacity: .6; cursor: default; }
+  .busca-lugar-dica { font-size: .74rem; color: var(--ink-soft); margin: 6px 0 0; line-height: 1.45; }
+  .osm-resultados { display: none; margin-top: 10px; background: var(--paper-2); border: 1px solid rgba(var(--hairline),.14); border-radius: 10px; padding: 10px; }
+  .osm-msg { font-size: .8rem; color: var(--ink-soft); margin: 0 0 8px; }
+  .osm-msg.osm-ok { color: var(--teal-deep); margin: 0; }
+  .osm-item {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; text-align: left;
+    background: var(--paper); border: 1px solid rgba(var(--hairline),.12); border-radius: 8px;
+    padding: 9px 12px; margin-bottom: 6px; cursor: pointer; font-family: inherit;
+  }
+  .osm-item:hover { border-color: var(--teal); background: rgba(60,122,115,.07); }
+  .osm-item-nome { font-size: .88rem; font-weight: 700; color: var(--ink); }
+  .osm-item-meta { font-size: .74rem; color: var(--ink-soft); }
+  .osm-manual { background: transparent; border: none; color: var(--ink-soft); font-size: .76rem; cursor: pointer; text-decoration: underline; font-family: inherit; padding: 4px 0 0; }
+
+  /* ===== VOTAÇÃO RÁPIDA ===== */
+  .vr-card {
+    background: var(--paper); color: var(--ink); border-radius: 20px; width: 100%; max-width: 420px;
+    max-height: 92vh; overflow-y: auto; box-shadow: 0 30px 70px rgba(0,0,0,.6); padding: 16px 18px 20px;
+  }
+  .vr-topo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .vr-progresso { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; color: var(--ink-soft); }
+  .vr-fechar { background: transparent; border: none; font-size: 1.5rem; line-height: 1; color: var(--ink-soft); cursor: pointer; padding: 0 4px; }
+  .vr-barra { height: 4px; background: rgba(var(--hairline),.1); border-radius: 2px; overflow: hidden; margin-bottom: 14px; }
+  .vr-barra i { display: block; height: 100%; background: var(--teal); border-radius: 2px; transition: width .25s ease; }
+  .vr-foto { height: 190px; border-radius: 14px; overflow: hidden; background: var(--paper-2); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .vr-foto img { width: 100%; height: 100%; object-fit: cover; }
+  .vr-foto-vazia, .vr-foto.vr-sem-foto::after { font-size: 2.4rem; opacity: .3; }
+  .vr-foto.vr-sem-foto::after { content: "📷"; }
+  .vr-cidade { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--ink-soft); }
+  .vr-nome { font-family: 'Fraunces', Georgia, serif; font-size: 1.4rem; margin: 3px 0 5px; color: var(--ink); line-height: 1.2; }
+  .vr-cat { display: inline-block; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 800; padding: 3px 9px; border-radius: 10px; background: rgba(var(--hairline),.08); color: var(--ink-soft); }
+  .vr-notas { font-size: .87rem; color: var(--ink); margin: 10px 0 0; font-style: italic; line-height: 1.5; }
+  .vr-sugerido { font-size: .76rem; color: var(--ink-soft); margin: 6px 0 0; }
+  .vr-placar { font-size: .8rem; color: var(--teal-deep); font-weight: 700; margin: 10px 0 0; }
+  .vr-acoes { display: flex; gap: 10px; margin-top: 18px; }
+  .vr-btn { flex: 1; padding: 15px 10px; border: none; border-radius: 12px; font-weight: 800; font-size: .92rem; cursor: pointer; font-family: inherit; }
+  .vr-sim { background: var(--teal); color: #fff; }
+  .vr-nao { background: rgba(var(--hairline),.1); color: var(--ink-soft); }
+  .vr-pular { display: block; width: 100%; margin-top: 10px; background: transparent; border: none; color: var(--ink-soft); font-size: .8rem; cursor: pointer; font-family: inherit; padding: 6px; }
+  .vr-fim { text-align: center; padding: 22px 6px 8px; }
+  .vr-fim-emoji { font-size: 3rem; margin-bottom: 10px; }
+  .vr-fim h3 { font-family: 'Fraunces', Georgia, serif; color: var(--teal-deep); margin: 0 0 8px; font-size: 1.35rem; }
+  .vr-fim p { font-size: .9rem; color: var(--ink-soft); margin: 0 0 20px; line-height: 1.55; }
+  .vr-btn-fechar { background: var(--gold); color: #2b241c; width: 100%; }
+
+  /* ===== PROGRESSO DA VOTAÇÃO (faixa no topo da aba) ===== */
+  .votprog { background: var(--paper); border: 1px solid rgba(217,138,61,.28); border-radius: 14px; padding: 15px 18px; margin-bottom: 18px; box-shadow: 0 12px 26px -20px var(--shadow); }
+  .votprog-linha { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .votprog-texto { font-size: .9rem; color: var(--ink); line-height: 1.5; }
+  .votprog-texto strong { color: var(--ink); }
+  .votprog-alerta { display: block; font-size: .8rem; color: var(--terracotta-deep); font-weight: 700; margin-top: 3px; }
+  .votprog-btn { flex-shrink: 0; background: var(--gold); color: #2b241c; border: none; border-radius: 9px; padding: 11px 18px; font-weight: 800; font-size: .85rem; cursor: pointer; font-family: inherit; }
+  .votprog-pessoas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 13px; border-top: 1px solid rgba(var(--hairline),.08); }
+  .votprog-pessoa { display: flex; align-items: center; gap: 7px; background: var(--paper-2); border: 1px solid rgba(var(--hairline),.1); border-radius: 20px; padding: 4px 12px 4px 4px; font-size: .76rem; }
+  .votprog-pessoa.completo { border-color: rgba(60,122,115,.4); background: rgba(60,122,115,.09); }
+  .votprog-avatar-img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+  .votprog-avatar-emoji { width: 24px; height: 24px; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; }
+  .votprog-pessoa-nome { font-weight: 700; color: var(--ink); }
+  .votprog-pessoa-falta { color: var(--ink-soft); }
+  .votprog-pessoa.completo .votprog-pessoa-falta { color: var(--teal-deep); font-weight: 700; }
+
   /* ===== PASSAGENS E HOSPEDAGEM (aba Viagem) ===== */
   .logistica-card { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:18px; padding:24px 26px; box-shadow:0 16px 34px -22px var(--shadow); margin-top:22px; }
   .logistica-card h3 { font-family:'Fraunces',Georgia,serif; color:var(--ink); font-size:1.25rem; margin:0 0 4px; }
@@ -1038,13 +1144,20 @@
       <button class="city-tab" data-city="Viña del Mar" onclick="mudarCidade('Viña del Mar')">Viña del Mar</button>
     </div>
 
+    <div id="votacao-progresso"></div>
+
     <div class="votacao-grid">
       <div class="votacao-form">
         <h3 id="form-titulo-cidade">Sugerir um lugar - Buenos Aires</h3>
         <div class="field">
           <label for="votacao-nome">Nome do local</label>
-          <input id="votacao-nome" type="text" placeholder="ex: Parque Centenario" onkeyup="mostrarSugestoes()">
+          <div class="busca-lugar-linha">
+            <input id="votacao-nome" type="text" placeholder="ex: Parque Centenario" onkeyup="mostrarSugestoes()">
+            <button type="button" id="btn-buscar-lugar" title="Procurar este lugar no mapa">🔎 Procurar</button>
+          </div>
+          <p class="busca-lugar-dica">Digite o nome e toque em <strong>Procurar</strong>: o app acha o lugar no mapa e preenche bairro e categoria sozinho — e é isso que faz a foto certa aparecer depois.</p>
           <div id="sugestoes-list" class="sugestoes-list"></div>
+          <div id="osm-resultados" class="osm-resultados"></div>
         </div>
         <div class="field">
           <label for="votacao-bairro" id="votacao-bairro-label">Bairro / Região</label>
@@ -1120,7 +1233,19 @@
 
 </div>
 
-<footer>Fotos e informações: Wikipédia / Wikidata · Planejamento colaborativo da família — datas e locais sujeitos à votação.</footer>
+<!-- Barra fixa de navegação no celular. Com as 8 abas escondidas atrás do hambúrguer, metade do app
+     ficava invisível pra quem não abre menu — a pesquisa de usabilidade mede uma queda de 30 a 50%
+     na descoberta de recursos quando a navegação fica escondida. Aqui ficam os 4 destinos do dia a
+     dia sempre à vista; o resto continua no menu, em "Mais". -->
+<nav class="bottom-nav" id="bottom-nav" aria-label="Navegação principal">
+  <button type="button" class="bnav-btn ativo" data-panel="inicio"><span class="bnav-ico">🏠</span><span class="bnav-txt">Início</span><span class="badge-pendencias"></span></button>
+  <button type="button" class="bnav-btn" data-panel="votacao"><span class="bnav-ico">🗳️</span><span class="bnav-txt">Votação</span><span class="bnav-alerta" id="bnav-alerta-votacao"></span></button>
+  <button type="button" class="bnav-btn" data-panel="roteiro"><span class="bnav-ico">📅</span><span class="bnav-txt">Roteiro</span></button>
+  <button type="button" class="bnav-btn" data-panel="despesas"><span class="bnav-ico">💸</span><span class="bnav-txt">Despesas</span></button>
+  <button type="button" class="bnav-btn" id="bnav-mais"><span class="bnav-ico">☰</span><span class="bnav-txt">Mais</span></button>
+</nav>
+
+<footer>Fotos e informações: Wikipédia / Wikidata / OpenStreetMap · Planejamento colaborativo da família — datas e locais sujeitos à votação.</footer>
 
 <!-- Leaflet carregado aqui (fim do body) em vez do <head> para não bloquear a pintura inicial da página no celular -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -1151,6 +1276,9 @@ function irParaPainel(nomePainel){
   document.body.setAttribute("data-painel", nomePainel);
   document.querySelectorAll(".navbtn").forEach(b => b.classList.toggle("active", b.dataset.panel === nomePainel));
   document.querySelectorAll(".drawer-navbtn").forEach(b => b.classList.toggle("active", b.dataset.panel === nomePainel));
+  // A barra de baixo tem 5 botões pra 8 abas: quando a aba aberta é uma das que ficam em "Mais",
+  // nenhum botão fica aceso — melhor que acender o errado e confundir onde a pessoa está.
+  document.querySelectorAll(".bnav-btn").forEach(b => b.classList.toggle("ativo", b.dataset.panel === nomePainel));
   document.querySelectorAll("section.panel").forEach(p => p.classList.remove("active"));
   document.getElementById("panel-" + nomePainel).classList.add("active");
   if(nomePainel === "mapa") renderMapaRota();
@@ -1178,6 +1306,22 @@ const drawerClose = document.getElementById("drawer-close");
 function abrirDrawer(){ mobileDrawer.classList.add("open"); drawerBackdrop.classList.add("open"); }
 function fecharDrawer(){ mobileDrawer.classList.remove("open"); drawerBackdrop.classList.remove("open"); }
 hamburgerBtn.addEventListener("click", abrirDrawer);
+
+/* Barra fixa do celular */
+document.getElementById("bottom-nav").addEventListener("click", e => {
+  const btn = e.target.closest(".bnav-btn");
+  if(!btn) return;
+  if(btn.id === "bnav-mais"){ abrirDrawer(); return; }
+  irParaPainel(btn.dataset.panel);
+});
+// Contador no ícone da Votação: quantos lugares ainda esperam o SEU voto. É o empurrão que faltava —
+// antes não havia nada no app dizendo que você tinha 39 lugares parados esperando.
+function atualizarBadgeVotacao(){
+  const el = document.getElementById("bnav-alerta-votacao");
+  if(!el) return;
+  const falta = USUARIO ? locaisSemMeuVoto(USUARIO).length : 0;
+  el.textContent = falta ? (falta > 99 ? "99+" : String(falta)) : "";
+}
 drawerClose.addEventListener("click", fecharDrawer);
 drawerBackdrop.addEventListener("click", fecharDrawer);
 mobileDrawer.addEventListener("click", e => {
@@ -1323,7 +1467,10 @@ function esc(s){
 // erradas que já estavam em cache (buscadas pela lógica antiga que pegava qualquer artigo) e
 // buscar de novo com a validação de título nova. Sem isso, a família continuaria vendo as fotos
 // erradas guardadas localmente mesmo com o código corrigido.
-const INFO_CACHE_KEY = "family_trip_info_cache_v4";
+// v5: obrigatório subir junto com a lógica nova de escolha da foto. Sem isso, cada aparelho
+// continuaria mostrando as fotos erradas que já estavam guardadas localmente (o mercado que virava
+// bairro, o pueblito que virava igreja) mesmo com o código corrigido.
+const INFO_CACHE_KEY = "family_trip_info_cache_v5";
 let infoCache = {};
 try { infoCache = JSON.parse(localStorage.getItem(INFO_CACHE_KEY) || "{}"); } catch(e){ infoCache = {}; }
 const infoPendentes = new Set();
@@ -1425,14 +1572,18 @@ function scoreTituloVsNome(titulo, nome, cidade){
     if(!matched) return 0;
     const coberturaNome = matched / wN.length;   // quanto do nome digitado o título cobre
     const coberturaTitulo = matched / wT.length; // quanto do título (sem cidade) o nome cobre
-    // Com 2+ palavras distintivas em comum dá pra confiar na melhor das duas coberturas; com só 1
-    // palavra usa a cobertura do nome (mais conservadora), pra não casar por uma palavra genérica solta.
-    score = matched >= 2 ? Math.max(coberturaNome, coberturaTitulo) : coberturaNome;
+    // Média harmônica (F1) das duas coberturas, não a MAIOR delas. Com Math.max, um título que era
+    // só um pedaço do nome ganhava nota cheia: "Mercado San Telmo" casava 1.0 com o artigo do BAIRRO
+    // "San Telmo", porque as duas palavras do título estavam no nome — e a família via a foto de uma
+    // rua do bairro no lugar do mercado. O F1 pune o título a que falta uma palavra distintiva do
+    // nome ("mercado"), então o artigo certo passa na frente.
+    score = 2 * coberturaNome * coberturaTitulo / (coberturaNome + coberturaTitulo);
   }
-  // Âncora na cidade: se o título contém o nome da cidade (ex: "Obelisco de Buenos Aires"), é
-  // fortemente preferido a um homônimo genérico do mundo ("Obelisco") ou a um lugar de mesmo nome em
-  // outro país. Foi o que faltava pro Obelisco: o artigo genérico vencia o de Buenos Aires por 1.0 x 0.95.
-  if(cityTokens.length && cityTokens.every(tok => t.includes(tok))) score += 0.25;
+  // Âncora na cidade: se o título contém o nome da cidade (ex: "Obelisco de Buenos Aires"), ganha um
+  // empurrão sobre o homônimo genérico do mundo ("Obelisco"). É só desempate — com o +0.25 de antes
+  // a âncora sequestrava a escolha e fazia artigos vagos, mas com o nome da cidade no título, ganharem
+  // do artigo específico do lugar.
+  if(cityTokens.length && cityTokens.every(tok => t.includes(tok))) score += 0.10;
   return score;
 }
 
@@ -1458,11 +1609,14 @@ async function buscarNaWiki(lang, nome, cidade){
       const score = scoreTituloVsNome(page.title, nome, cidade);
       if(score > melhorScore){ melhorScore = score; melhor = { page, img }; }
     }
-    // Exige correspondência mínima entre título e nome — abaixo disso é imagem aleatória, então descarta
-    if(!melhor || melhorScore < 0.6) return null;
+    if(!melhor) return null;
     const page = melhor.page;
+    // Devolve com a nota. Antes cada idioma decidia sozinho e a busca PARAVA no primeiro que
+    // passasse de 0.6 — então um casamento medíocre em português vencia o artigo certo em espanhol,
+    // que nem chegava a ser consultado. Agora quem chama compara as duas línguas e escolhe a melhor.
     return {
       found: true,
+      score: melhorScore,
       fonte: "wikipedia",
       descricao: page.extract || "",
       imagem: melhor.img,
@@ -1472,6 +1626,104 @@ async function buscarNaWiki(lang, nome, cidade){
       qid: (page.pageprops && page.pageprops.wikibase_item) || ""
     };
   } catch(e){ return null; }
+}
+
+/* ---- Rota autoritativa: OpenStreetMap → Wikidata → foto oficial do Commons ----
+   A Wikipédia obriga a adivinhar: a gente tem um NOME digitado e procura um artigo que combine.
+   Por melhor que seja a validação, é sempre um palpite. Já o OpenStreetMap devolve o lugar em si —
+   e, quando ele está ligado ao Wikidata, o Wikidata diz qual é A foto daquele lugar (propriedade
+   P18). Aí não tem palpite nenhum: é a foto do lugar exato, não de um artigo parecido.
+   Para cafés e restaurantes, que nunca vão ter artigo, o OSM ainda dá o SITE do lugar — e a foto
+   de capa do próprio site costuma ser melhor que qualquer coisa que a gente ache por aí.
+
+   O Nominatim pede no máximo 1 consulta por segundo, então tudo passa por esta fila. */
+let nominatimFila = Promise.resolve();
+function nominatimBuscar(texto){
+  const proxima = nominatimFila.then(async () => {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(texto)}&format=jsonv2&addressdetails=1&extratags=1&limit=5`;
+      const r = await fetch(url, { headers: { "Accept-Language": "pt-BR,es,en" } });
+      if(!r.ok) return [];
+      return await r.json();
+    } catch(e){ return []; }
+  });
+  // Espaça as chamadas mesmo quando a resposta chega rápido — é o limite de uso do serviço.
+  nominatimFila = proxima.then(() => new Promise(res => setTimeout(res, 1100)), () => new Promise(res => setTimeout(res, 1100)));
+  return proxima;
+}
+
+// Monta a URL da imagem do Commons a partir do nome do arquivo guardado no Wikidata
+function urlCommons(arquivo, largura){
+  return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(String(arquivo).replace(/ /g, "_")) + "?width=" + (largura || 800);
+}
+
+async function fotoDoWikidata(qid){
+  try {
+    const r = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${qid}&props=claims&format=json&origin=*`);
+    if(!r.ok) return null;
+    const d = await r.json();
+    const claims = d && d.entities && d.entities[qid] && d.entities[qid].claims;
+    if(!claims) return null;
+    const arquivo = claims.P18 && claims.P18[0] && claims.P18[0].mainsnak && claims.P18[0].mainsnak.datavalue && claims.P18[0].mainsnak.datavalue.value;
+    const site = claims.P856 && claims.P856[0] && claims.P856[0].mainsnak && claims.P856[0].mainsnak.datavalue;
+    const ig = claims.P2003 && claims.P2003[0] && claims.P2003[0].mainsnak && claims.P2003[0].mainsnak.datavalue;
+    return {
+      imagem: arquivo ? urlCommons(arquivo, 800) : "",
+      site: (site && /^https?:\/\//.test(site.value)) ? String(site.value) : "",
+      instagram: ig && ig.value ? String(ig.value).replace(/^@/, "") : ""
+    };
+  } catch(e){ return null; }
+}
+
+// A família escreve em português ("Rua Almirante Montt"), mas o mapa da Argentina e do Chile está
+// em espanhol ("Calle Almirante Montt") — e com o prefixo errado o OSM não acha nada. Só troca o
+// começo, mantendo o nome próprio intacto.
+const PREFIXOS_PT_ES = [[/^rua\s+/i, "Calle "], [/^pra[çc]a\s+/i, "Plaza "], [/^avenida\s+/i, "Avenida "],
+                        [/^jardim\s+/i, "Jardín "], [/^igreja\s+/i, "Iglesia "], [/^teatro\s+/i, "Teatro "],
+                        [/^museu\s+/i, "Museo "], [/^est[áa]dio\s+/i, "Estadio "], [/^parque\s+/i, "Parque "]];
+function variantesDeNome(nome){
+  const lista = [nome];
+  for(const [re, sub] of PREFIXOS_PT_ES){
+    if(re.test(nome)){ lista.push(nome.replace(re, sub)); break; }
+  }
+  return lista;
+}
+
+async function buscarViaOSM(nome, cidade){
+  let resultados = [], nomeUsado = nome;
+  for(const variante of variantesDeNome(nome)){
+    resultados = await nominatimBuscar(`${variante}, ${cidade}`);
+    nomeUsado = variante;
+    if(resultados.length) break;
+  }
+  if(!resultados.length) return null;
+  // Confere que o resultado é mesmo o lugar pedido — o Nominatim também devolve aproximações
+  let alvo = null;
+  for(const r of resultados){
+    const nomeOsm = r.name || String(r.display_name || "").split(",")[0];
+    if(scoreTituloVsNome(nomeOsm, nomeUsado, cidade) >= 0.6){ alvo = r; break; }
+  }
+  if(!alvo) return null;
+  const tags = alvo.extratags || {};
+
+  if(tags.wikidata){
+    const wd = await fotoDoWikidata(tags.wikidata);
+    if(wd && wd.imagem){
+      return { found:true, score:1, fonte:"wikidata", descricao:"", imagem:wd.imagem,
+               link:"https://www.wikidata.org/wiki/" + tags.wikidata,
+               instagram: wd.instagram || "", site: wd.site || tags.website || "", qid: tags.wikidata };
+    }
+  }
+  // Sem Wikidata: tenta a foto de capa do site do próprio lugar (é o caso dos cafés/restaurantes)
+  const site = tags.website || tags["contact:website"] || "";
+  if(/^https?:\/\//.test(site)){
+    const img = await resolverImagemDeLink(site);
+    if(img && img !== site && imagemServeComoFoto(img)){
+      return { found:true, score:0.9, fonte:"site", descricao:"", imagem:img, link:site,
+               instagram: tags["contact:instagram"] || "", site: site, qid:"" };
+    }
+  }
+  return null;
 }
 
 // Segunda fonte, além da Wikipédia: Openverse (agrega Flickr, museus, bibliotecas — imagens abertas).
@@ -1491,6 +1743,7 @@ async function buscarEmOpenverse(nome, cidade){
       if(scoreTituloVsNome(item.title || "", nome, cidade) >= 0.6){
         return {
           found: true,
+          score: scoreTituloVsNome(item.title || "", nome, cidade),
           fonte: "openverse",
           descricao: "",
           imagem: img,
@@ -1512,10 +1765,23 @@ function buscarInfoLocal(local){
   infoPendentes.add(key);
 
   (async () => {
-    // Tenta PT, depois ES — a primeira que trouxer foto vence
-    let resultado = await buscarNaWiki("pt", local.nome, local.cidade);
-    if(!resultado) resultado = await buscarNaWiki("es", local.nome, local.cidade);
-    // Se a Wikipédia não achou, tenta outras fontes (Flickr/museus via Openverse)
+    // 1) Wikipédia em PT e ES, comparadas juntas — vence a melhor nota, não a primeira que responder
+    const candidatos = [];
+    for(const lang of ["pt", "es"]){
+      const r = await buscarNaWiki(lang, local.nome, local.cidade);
+      if(r) candidatos.push(r);
+    }
+    candidatos.sort((a, b) => (b.score || 0) - (a.score || 0));
+    let resultado = (candidatos[0] && candidatos[0].score >= 0.6) ? candidatos[0] : null;
+
+    // 2) Se a Wikipédia não achou, ou achou por pouco, consulta a rota autoritativa (OSM→Wikidata).
+    //    Quando ela responde, ganha: é a foto DAQUELE lugar, não de um artigo que só se parece.
+    if(!resultado || resultado.score < 0.95){
+      const viaOsm = await buscarViaOSM(local.nome, local.cidade);
+      if(viaOsm) resultado = viaOsm;
+    }
+
+    // 3) Último recurso: Openverse (Flickr, museus, bibliotecas), com a mesma validação de legenda
     if(!resultado) resultado = await buscarEmOpenverse(local.nome, local.cidade);
     const qid = resultado ? resultado.qid : "";
 
@@ -1557,8 +1823,8 @@ function linksHtml(local, info){
     parts.push(`<a href="${esc(info.site)}" target="_blank" rel="noopener">🌐 Site</a>`);
   }
   if(info && info.found && info.link){
-    const rotulo = info.fonte === "openverse" ? "📷 Fonte da foto" : "📖 Wikipédia";
-    parts.push(`<a href="${esc(info.link)}" target="_blank" rel="noopener">${rotulo}</a>`);
+    const rotulos = { openverse: "📷 Fonte da foto", wikidata: "🗺️ OpenStreetMap/Wikidata", site: "🌐 Site do lugar", wikipedia: "📖 Wikipédia" };
+    parts.push(`<a href="${esc(info.link)}" target="_blank" rel="noopener">${rotulos[info.fonte] || "📖 Wikipédia"}</a>`);
   }
   parts.push(`<a href="https://www.google.com/search?tbm=isch&q=${q}" target="_blank" rel="noopener">🔍 Fotos</a>`);
   parts.push(`<a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">📍 Mapa</a>`);
@@ -1568,11 +1834,15 @@ function linksHtml(local, info){
 
 function mediaHtml(local){
   const info = infoCache[infoKey(local.nome)];
+  // Um favicon salvo por engano (o caminho antigo aceitava o ícone do site como se fosse foto) não
+  // conta como foto: em vez de esticar um ícone de 16px no card, deixa a busca automática assumir.
+  // O valor continua salvo na planilha, só não é mais exibido como se fosse a foto do lugar.
+  const fotoManual = pareceIconeNaoFoto(local.fotoManual) ? "" : local.fotoManual;
   // 1) Foto/descrição que a família colocou na mão MANDA — assim dá pra trocar até a foto automática
   //    por outra que a família prefira.
-  if(local.fotoManual || local.descricaoManual){
+  if(fotoManual || local.descricaoManual){
     return `<div class="place-media">
-      ${local.fotoManual ? `<img src="${esc(local.fotoManual)}" alt="${esc(local.nome)}" onerror="this.style.display='none'">` : ""}
+      ${fotoManual ? `<img src="${esc(fotoManual)}" alt="${esc(local.nome)}" onerror="this.style.display='none'">` : ""}
       ${local.descricaoManual ? `<p class="media-desc">${esc(local.descricaoManual)}</p>` : ""}
       <button type="button" class="media-editar-btn" onclick="editarMediaManual(${JSON.stringify(local.id)})">✏️ Trocar foto / descrição</button>
       ${linksHtml(local, info)}
@@ -1606,17 +1876,37 @@ function mediaHtml(local){
 // serviço aberto (microlink, com CORS). Assim dá pra dar foto a cafés/comércios que não estão na
 // Wikipédia — a pessoa só cola o link do lugar. Como é ela que escolhe o link, não tem risco de vir
 // uma imagem sem relação. Se não conseguir extrair, mantém o que foi colado.
+// Um ícone de aba não é foto de lugar. O caminho antigo caía no "logo" do site quando não achava
+// og:image, e logo quase sempre é o favicon — foi assim que o Eco Parque Palermo ficou com o
+// favicon do TripAdvisor salvo como foto, e um café de Santiago quase ficou com um ícone do Google
+// esticado no card. Agora só passa imagem de verdade: og:image, tamanho de foto, e nada que cheire
+// a ícone.
+function pareceIconeNaoFoto(url){
+  return /favicon|faviconv2|\.ico(\?|$)|\/icon[s_-]|apple-touch-icon|sprite/i.test(String(url || ""));
+}
+function imagemServeComoFoto(url, largura, altura){
+  if(!/^https:\/\//.test(url || "")) return false;
+  if(pareceIconeNaoFoto(url)) return false;
+  // Quando o serviço informa o tamanho, exige algo de foto mesmo (ícones são 16–128px)
+  if(largura && largura < 300) return false;
+  if(altura && altura < 200) return false;
+  return true;
+}
+
 async function resolverImagemDeLink(url){
   const u = (url || "").trim();
   if(!u) return "";
-  if(/^https?:\/\/\S+\.(jpe?g|png|webp|gif|avif)(\?\S*)?$/i.test(u)) return u; // já é imagem direta
+  if(/^https?:\/\/\S+\.(jpe?g|png|webp|gif|avif)(\?\S*)?$/i.test(u) && !pareceIconeNaoFoto(u)) return u; // já é imagem direta
   if(!/^https?:\/\//i.test(u)) return u; // nem parece link — deixa como está
   try {
     const r = await fetch("https://api.microlink.io/?url=" + encodeURIComponent(u));
     const d = await r.json();
     if(d && d.status === "success" && d.data){
-      const img = (d.data.image && d.data.image.url) || (d.data.logo && d.data.logo.url) || "";
-      if(/^https:\/\//.test(img)) return img;
+      const im = d.data.image;
+      if(im && imagemServeComoFoto(im.url, im.width, im.height)) return im.url;
+      // O "logo" só entra se for grande o bastante pra ser uma imagem de capa, não um ícone
+      const lg = d.data.logo;
+      if(lg && lg.width >= 400 && imagemServeComoFoto(lg.url, lg.width, lg.height)) return lg.url;
     }
   } catch(e){ /* serviço indisponível — mantém o link colado */ }
   return u;
@@ -1741,6 +2031,159 @@ function atualizarBairros(cidade){
     bairros.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join("") +
     `<option value="${BAIRRO_A_CONFIRMAR}">🤷 Não sei / verificar depois</option>`;
 }
+
+/* ================= BUSCAR O LUGAR NO MAPA (OpenStreetMap) =================
+   O app inteiro dependia de uma coisa só: a string que a pessoa digitou. Daí vinham três problemas
+   de uma vez — a foto errada (a busca tinha que adivinhar a que lugar aquele texto se referia), o
+   pin no mapa jogado no centro do bairro, e o mesmo lugar cadastrado duas vezes com grafias
+   diferentes. Escolher o lugar de verdade no mapa resolve os três na origem: o nome fica canônico,
+   o bairro vem do endereço real e a categoria vem do tipo do lugar. */
+
+// Tipo do OpenStreetMap → categoria do app
+const OSM_PARA_CATEGORIA = {
+  restaurant:"Restaurante", fast_food:"Restaurante", food_court:"Restaurante", ice_cream:"Restaurante",
+  cafe:"Bar / Café", bar:"Bar / Café", pub:"Bar / Café", biergarten:"Bar / Café",
+  nightclub:"Vida Noturna", casino:"Vida Noturna",
+  museum:"Museu", gallery:"Arte", artwork:"Arte", theatre:"Arte", arts_centre:"Arts",
+  park:"Parque", garden:"Parque", nature_reserve:"Natureza", forest:"Natureza", water:"Natureza",
+  viewpoint:"Mirante / Vista", attraction:"Passeio / Tour", theme_park:"Passeio / Tour", zoo:"Passeio / Tour",
+  aquarium:"Passeio / Tour", information:"Passeio / Tour",
+  stadium:"Estádio", sports_centre:"Estádio", pitch:"Estádio",
+  monument:"Monumento", memorial:"Monumento", castle:"Histórico", ruins:"Histórico", church:"Histórico",
+  cathedral:"Histórico", chapel:"Histórico", archaeological_site:"Histórico", fort:"Histórico",
+  mall:"Compras", department_store:"Compras", marketplace:"Compras", supermarket:"Compras",
+  bakery:"Bar / Café", confectionery:"Bar / Café", books:"Compras", clothes:"Compras",
+  beach:"Praia", beach_resort:"Praia",
+  hotel:"Hospedagem", hostel:"Hospedagem", guest_house:"Hospedagem", apartment:"Hospedagem"
+};
+function categoriaDeOSM(r){
+  const t = OSM_PARA_CATEGORIA[r.type] || OSM_PARA_CATEGORIA[r.class] || "";
+  if(t && todasCategorias().includes(t)) return t;
+  if(r.category === "historic" || r.class === "historic") return "Histórico";
+  if(r.category === "tourism" || r.class === "tourism") return "Passeio / Tour";
+  if(r.category === "leisure" || r.class === "leisure") return "Parque";
+  if(r.category === "shop" || r.class === "shop") return "Compras";
+  return "";
+}
+function bairroDeOSM(r){
+  const a = r.address || {};
+  return a.suburb || a.neighbourhood || a.quarter || a.city_district || a.borough || a.town || "";
+}
+
+let osmResultadosAtuais = [];
+
+async function buscarLugarNoMapa(){
+  const input = document.getElementById("votacao-nome");
+  const caixa = document.getElementById("osm-resultados");
+  const botao = document.getElementById("btn-buscar-lugar");
+  if(!input || !caixa) return;
+  const termo = (input.value || "").trim();
+  if(termo.length < 3){
+    caixa.innerHTML = `<p class="osm-msg">Escreva pelo menos 3 letras do nome do lugar.</p>`;
+    caixa.style.display = "block";
+    return;
+  }
+  document.getElementById("sugestoes-list").style.display = "none";
+  botao.disabled = true;
+  const rotuloOriginal = botao.textContent;
+  botao.textContent = "Procurando…";
+  caixa.style.display = "block";
+  caixa.innerHTML = `<p class="osm-msg">Procurando "${esc(termo)}" em ${esc(cidadeSelecionada)}…</p>`;
+
+  let resultados = [];
+  for(const variante of variantesDeNome(termo)){
+    resultados = await nominatimBuscar(`${variante}, ${cidadeSelecionada}`);
+    if(resultados.length) break;
+  }
+  botao.disabled = false;
+  botao.textContent = rotuloOriginal;
+
+  // Só interessa o que fica na cidade certa — o Nominatim às vezes devolve um homônimo de outro país
+  osmResultadosAtuais = resultados.filter(r => {
+    const a = r.address || {};
+    const cidadeR = normalizarTexto([a.city, a.town, a.municipality, a.state, a.county].filter(Boolean).join(" "));
+    return !cidadeR || cidadeR.includes(normalizarTexto(cidadeSelecionada).split(" ")[0]);
+  }).sort((a, b) => {
+    // Primeiro quem casa melhor com o nome digitado; empatou, ganha o mais conhecido. Sem isso,
+    // procurar "Floralis" listava uma loja de mesmo nome acima da escultura Floralis Genérica,
+    // porque o nome da loja bate exato — mas não é o que ninguém procura.
+    const sa = Math.round(scoreTituloVsNome(a.name || "", termo, cidadeSelecionada) * 10);
+    const sb = Math.round(scoreTituloVsNome(b.name || "", termo, cidadeSelecionada) * 10);
+    if(sa !== sb) return sb - sa;
+    return (parseFloat(b.importance) || 0) - (parseFloat(a.importance) || 0);
+  }).slice(0, 5);
+
+  if(!osmResultadosAtuais.length){
+    caixa.innerHTML = `<p class="osm-msg">Não achei "${esc(termo)}" no mapa de ${esc(cidadeSelecionada)}. Sem problema — preencha bairro e categoria na mão e adicione assim mesmo.</p>`;
+    return;
+  }
+  caixa.innerHTML = `
+    <p class="osm-msg">Achei ${osmResultadosAtuais.length === 1 ? "este lugar" : "estes lugares"} — toque no certo:</p>
+    ${osmResultadosAtuais.map((r, i) => {
+      const nome = r.name || String(r.display_name || "").split(",")[0];
+      const bairro = bairroDeOSM(r);
+      const cat = categoriaDeOSM(r);
+      const resto = String(r.display_name || "").split(",").slice(1, 3).join(",").trim();
+      return `
+        <button type="button" class="osm-item" data-osm-escolher="${i}">
+          <span class="osm-item-nome">${esc(nome)}</span>
+          <span class="osm-item-meta">${bairro ? "📍 " + esc(bairro) : esc(resto)}${cat ? " · " + esc(cat) : ""}</span>
+        </button>`;
+    }).join("")}
+    <button type="button" class="osm-manual" data-osm-manual="1">Nenhum desses — quero digitar na mão</button>
+  `;
+}
+
+function escolherLugarOSM(indice){
+  const r = osmResultadosAtuais[indice];
+  if(!r) return;
+  const nome = r.name || String(r.display_name || "").split(",")[0];
+  document.getElementById("votacao-nome").value = nome;
+
+  // Bairro: usa o do endereço real. Se ainda não está na lista da cidade, entra como opção nova.
+  const bairro = bairroDeOSM(r);
+  const selBairro = document.getElementById("votacao-bairro");
+  if(bairro && selBairro){
+    if(![...selBairro.options].some(o => o.value === bairro)){
+      const opt = document.createElement("option");
+      opt.value = bairro; opt.textContent = bairro;
+      selBairro.insertBefore(opt, selBairro.options[selBairro.options.length - 1] || null);
+    }
+    selBairro.value = bairro;
+  }
+  const cat = categoriaDeOSM(r);
+  const selCat = document.getElementById("votacao-categoria");
+  if(cat && selCat && [...selCat.options].some(o => o.value === cat)) selCat.value = cat;
+
+  // Guarda a coordenada exata no cache do mapa: o pin passa a cair no lugar certo em vez do
+  // centro do bairro, que é o que o app fazia quando só tinha o nome digitado.
+  if(r.lat && r.lon){
+    const cache = carregarGeocodeCache();
+    cache[`${nome}, ${cidadeSelecionada}`] = { lat: parseFloat(r.lat), lon: parseFloat(r.lon) };
+    salvarGeocodeCache(cache);
+  }
+
+  const caixa = document.getElementById("osm-resultados");
+  caixa.innerHTML = `<p class="osm-msg osm-ok">✓ <strong>${esc(nome)}</strong>${bairro ? " · " + esc(bairro) : ""}${cat ? " · " + esc(cat) : ""} — confira e toque em Adicionar local.</p>`;
+  verificarDuplicatas();
+}
+
+document.addEventListener("click", ev => {
+  if(ev.target.closest("#btn-buscar-lugar")){ buscarLugarNoMapa(); return; }
+  const escolher = ev.target.closest("[data-osm-escolher]");
+  if(escolher){ escolherLugarOSM(+escolher.getAttribute("data-osm-escolher")); return; }
+  if(ev.target.closest("[data-osm-manual]")){
+    const caixa = document.getElementById("osm-resultados");
+    if(caixa){ caixa.style.display = "none"; caixa.innerHTML = ""; }
+  }
+});
+// Enter no nome procura no mapa em vez de não fazer nada
+document.addEventListener("keydown", ev => {
+  if(ev.key === "Enter" && ev.target && ev.target.id === "votacao-nome"){
+    ev.preventDefault();
+    buscarLugarNoMapa();
+  }
+});
 
 /* ================= CATEGORIAS (com opção de criar novas) ================= */
 const CATEGORIAS_PADRAO = [
@@ -1978,6 +2421,10 @@ function renderVotacao(){
   const locais = todosLocais.filter(l => l.cidade === cidadeSelecionada);
   const container = document.getElementById("votacao-places");
 
+  const barraProgresso = document.getElementById("votacao-progresso");
+  if(barraProgresso) barraProgresso.innerHTML = progressoVotacaoHtml();
+  atualizarBadgeVotacao();
+
   if(locais.length === 0){
     container.innerHTML = `<p style="color:var(--cream-text);opacity:.6;padding:20px;text-align:center">Nenhum local sugerido ainda para ${cidadeSelecionada}. Complete o formulário ao lado para começar!</p>`;
     container.dataset.cidade = "";
@@ -2139,6 +2586,143 @@ function atualizarCardVoto(localId){
   const secao = card.querySelector(".place-voting-secao");
   if(secao) secao.innerHTML = votingSecaoHtml(local);
 }
+
+/* ================= VOTAÇÃO RÁPIDA =================
+   O placar mostrava o problema mas não dava o caminho: 8 lugares sem nenhum voto e gente com 3 de
+   42 votados. Não é falta de vontade — é que votar exigia rolar uma lista longa procurando o que
+   ainda faltava, e no meio do caminho a pessoa desistia. Aqui é um lugar por vez, só os que VOCÊ
+   ainda não votou, com foto grande e dois botões. Some da fila assim que você decide. */
+function fotoDoLocal(local){
+  if(local.fotoManual && !pareceIconeNaoFoto(local.fotoManual)) return local.fotoManual;
+  const info = infoCache[infoKey(local.nome)];
+  return (info && info.imagem) || "";
+}
+function locaisSemMeuVoto(pessoa){
+  if(!pessoa) return [];
+  return carregarLocais().filter(l =>
+    !(l.votos || []).includes(pessoa) && !(l.naoInteresse || []).includes(pessoa)
+  );
+}
+let filaVotacaoRapida = [];
+let posicaoVotacaoRapida = 0;
+
+function setupVotacaoRapida(){
+  if(document.getElementById("vr-modal")) return;
+  const m = document.createElement("div");
+  m.id = "vr-modal";
+  m.style.cssText = "display:none;position:fixed;inset:0;background:rgba(10,7,4,.92);z-index:320;align-items:center;justify-content:center;padding:16px";
+  m.innerHTML = `<div class="vr-card" id="vr-card"></div>`;
+  document.body.appendChild(m);
+  m.addEventListener("click", ev => { if(ev.target === m) fecharVotacaoRapida(); });
+  m.addEventListener("click", ev => {
+    const btn = ev.target.closest("[data-vr]");
+    if(!btn) return;
+    const acao = btn.getAttribute("data-vr");
+    if(acao === "fechar"){ fecharVotacaoRapida(); return; }
+    if(acao === "pular"){ posicaoVotacaoRapida++; renderVotacaoRapida(); return; }
+    const local = filaVotacaoRapida[posicaoVotacaoRapida];
+    if(!local) return;
+    votarLocalSheets(local.id, USUARIO, local.nome, acao === "sim" ? "interesse" : "nao");
+    posicaoVotacaoRapida++;
+    renderVotacaoRapida();
+  });
+}
+function abrirVotacaoRapida(){
+  if(!USUARIO){ abrirLogin(); return; }
+  setupVotacaoRapida();
+  filaVotacaoRapida = locaisSemMeuVoto(USUARIO);
+  posicaoVotacaoRapida = 0;
+  document.getElementById("vr-modal").style.display = "flex";
+  renderVotacaoRapida();
+}
+function fecharVotacaoRapida(){
+  const m = document.getElementById("vr-modal");
+  if(m) m.style.display = "none";
+  renderVotacao();
+  renderInicio();
+  renderResultados();
+}
+function renderVotacaoRapida(){
+  const card = document.getElementById("vr-card");
+  if(!card) return;
+  const total = filaVotacaoRapida.length;
+  if(posicaoVotacaoRapida >= total){
+    const restam = locaisSemMeuVoto(USUARIO).length;
+    card.innerHTML = `
+      <div class="vr-fim">
+        <div class="vr-fim-emoji">${restam ? "👏" : "🎉"}</div>
+        <h3>${restam ? "Bom trabalho!" : "Você votou em tudo!"}</h3>
+        <p>${restam
+            ? `Ainda ficaram ${restam} pra depois — os que você pulou. É só voltar aqui quando quiser.`
+            : `Não sobrou nenhum lugar sem o seu voto. Agora é esperar a família fechar o consenso.`}</p>
+        <button type="button" class="vr-btn vr-btn-fechar" data-vr="fechar">Voltar pra votação</button>
+      </div>`;
+    return;
+  }
+  const local = filaVotacaoRapida[posicaoVotacaoRapida];
+  const foto = fotoDoLocal(local);
+  const outros = (local.votos || []).length;
+  const contra = (local.naoInteresse || []).length;
+  card.innerHTML = `
+    <div class="vr-topo">
+      <span class="vr-progresso">${posicaoVotacaoRapida + 1} de ${total}</span>
+      <button type="button" class="vr-fechar" data-vr="fechar" aria-label="Fechar">×</button>
+    </div>
+    <div class="vr-barra"><i style="width:${(posicaoVotacaoRapida / total) * 100}%"></i></div>
+    <div class="vr-foto">${foto
+      ? `<img src="${esc(foto)}" alt="${esc(local.nome)}" onerror="this.parentNode.classList.add('vr-sem-foto');this.remove()">`
+      : `<span class="vr-foto-vazia">📷</span>`}</div>
+    <div class="vr-info">
+      <div class="vr-cidade">${esc(local.cidade)}${local.bairro ? " · " + esc(local.bairro) : ""}</div>
+      <h3 class="vr-nome">${esc(local.nome)}</h3>
+      <div class="vr-cat">${esc(local.categoria || "")}</div>
+      ${local.notas ? `<p class="vr-notas">“${esc(local.notas)}”</p>` : ""}
+      ${local.sugeridoPor ? `<p class="vr-sugerido">Sugerido por ${esc(local.sugeridoPor)}</p>` : ""}
+      <p class="vr-placar">${outros ? `${outros} da família já ${outros === 1 ? "quer" : "querem"} ir` : "Ninguém votou ainda"}${contra ? ` · ${contra} sem interesse` : ""}</p>
+    </div>
+    <div class="vr-acoes">
+      <button type="button" class="vr-btn vr-nao" data-vr="nao">✗ Sem interesse</button>
+      <button type="button" class="vr-btn vr-sim" data-vr="sim">✓ Quero ir</button>
+    </div>
+    <button type="button" class="vr-pular" data-vr="pular">decidir depois →</button>
+  `;
+}
+
+/* Faixa no topo da Votação: mostra o que falta de cada um e chama a votação rápida. Antes o app
+   dizia quantos votos um LUGAR tinha, mas nunca quanto faltava de VOCÊ — e é essa a informação
+   que faz alguém agir. */
+function progressoVotacaoHtml(){
+  const locais = carregarLocais();
+  if(!locais.length) return "";
+  const faltamPorPessoa = VIAJANTES.map(v => ({ nome: v, falta: locaisSemMeuVoto(v).length }));
+  const meuFalta = USUARIO ? (faltamPorPessoa.find(p => p.nome === USUARIO) || {}).falta : null;
+  const semNenhumVoto = locais.filter(l => !(l.votos || []).length && !(l.naoInteresse || []).length).length;
+  return `
+    <div class="votprog">
+      <div class="votprog-linha">
+        <div class="votprog-texto">
+          ${USUARIO
+            ? (meuFalta
+                ? `<strong>Faltam ${meuFalta} ${meuFalta === 1 ? "lugar" : "lugares"} pro seu voto.</strong> Dá pra resolver num minuto.`
+                : `<strong>Você votou em todos os ${locais.length} lugares.</strong> 👏`)
+            : `<strong>Entre para votar</strong> — assim seus votos contam no consenso da família.`}
+          ${semNenhumVoto ? `<span class="votprog-alerta">${semNenhumVoto} ${semNenhumVoto === 1 ? "lugar ainda não recebeu" : "lugares ainda não receberam"} nenhum voto.</span>` : ""}
+        </div>
+        ${USUARIO && meuFalta ? `<button type="button" class="votprog-btn" id="btn-votacao-rapida">⚡ Votar rapidinho</button>` : ""}
+      </div>
+      <div class="votprog-pessoas">
+        ${faltamPorPessoa.map(p => `
+          <span class="votprog-pessoa ${p.falta ? "" : "completo"}" title="${esc(p.nome)}: ${p.falta ? p.falta + " a votar" : "votou em tudo"}">
+            ${avatarHtmlDe(p.nome, "votprog-avatar")}
+            <span class="votprog-pessoa-nome">${esc(p.nome)}</span>
+            <span class="votprog-pessoa-falta">${p.falta ? p.falta + " a votar" : "✓ completo"}</span>
+          </span>`).join("")}
+      </div>
+    </div>`;
+}
+document.addEventListener("click", ev => {
+  if(ev.target.closest("#btn-votacao-rapida")) abrirVotacaoRapida();
+});
 
 /* ================= GOOGLE SHEETS INTEGRATION ================= */
 let SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbziouvKIwXk9sS_XX3xQM4oY9i3K9mvyH2OpB1hBBlu9xd91RFnkHoESSm__TsQwexNYQ/exec";
@@ -5095,7 +5679,7 @@ const AJUDA_TEXTOS = {
   },
   votacao: {
     titulo: "Como usar a Votação",
-    texto: "Escolha uma cidade nas abas do topo, depois sugira um lugar preenchendo nome, bairro e categoria. Todo mundo pode marcar \"Tenho interesse\" ou \"Sem interesse\" em cada lugar sugerido — quando todos da família marcam interesse, o lugar ganha um selo de consenso e vira prioridade no roteiro."
+    texto: "Para sugerir um lugar, digite o nome e toque em \"Procurar\": o app acha o lugar no mapa e já preenche bairro e categoria — é isso que faz a foto certa aparecer no card depois. Se não achar, dá pra preencher na mão do mesmo jeito. Para votar, use \"⚡ Votar rapidinho\": ele mostra um lugar por vez, só os que faltam pro SEU voto, com dois botões. A faixa do topo mostra quanto falta de cada um da família. Quando todos marcam interesse no mesmo lugar, ele ganha o selo de consenso e vira prioridade no roteiro."
   },
   roteiro: {
     titulo: "Como usar o Roteiro",
