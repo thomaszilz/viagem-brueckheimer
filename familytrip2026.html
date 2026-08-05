@@ -1963,9 +1963,14 @@ function buscarInfoLocal(local){
     candidatos.sort((a, b) => (b.score || 0) - (a.score || 0));
     let resultado = (candidatos[0] && candidatos[0].score >= 0.6) ? candidatos[0] : null;
 
-    // 2) Se a Wikipédia não achou, ou achou por pouco, consulta a rota autoritativa (OSM→Wikidata).
-    //    Quando ela responde, ganha: é a foto DAQUELE lugar, não de um artigo que só se parece.
-    if(!resultado || resultado.score < 0.95){
+    // 2) Só consulta o OpenStreetMap quando a Wikipédia não achou NADA aceitável.
+    //    Antes esta condição era "achou com nota abaixo de 0,95", o que jogava quase todos os 42
+    //    lugares numa fila de 1 consulta por segundo — o limite do serviço — compartilhada com o
+    //    mapa. Resultado: mais de 40 segundos até as fotos aparecerem, e foi por isso que o app
+    //    ficou lento. A precisão não depende mais disso: quem resolvia os casos errados (o mercado
+    //    que virava bairro) era a correção do cálculo de semelhança, não esta consulta extra.
+    //    O OSM continua valendo pra quem a Wikipédia não cobre — café, restaurante, comércio.
+    if(!resultado){
       const viaOsm = await buscarViaOSM(local.nome, local.cidade);
       if(viaOsm) resultado = viaOsm;
     }
