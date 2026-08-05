@@ -1432,6 +1432,49 @@ function haversineKm(a, b){
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
+/* ---- Coordenada fixada, compartilhada com a família ----
+   Até aqui a coordenada de cada lugar era descoberta e guardada SÓ no aparelho de quem abriu o app.
+   Isso tinha uma consequência ruim e invisível: quando a busca automática errava, não havia como
+   consertar pra todo mundo — nem escolhendo o lugar certo no mapa, porque a correção morria no
+   celular de quem fez. A Laguna del Inca é o caso: existem dois lagos com esse nome e o app pega o
+   mais próximo, a 45 km do certo. Agora a coordenada escolhida vai pra planilha, vale pra família
+   inteira e tem prioridade sobre qualquer busca automática. */
+const STORE_LOCAIS_META = "family_trip_locais_meta";
+function carregarLocaisMeta(){ try { return JSON.parse(localStorage.getItem(STORE_LOCAIS_META) || "{}"); } catch(e){ return {}; } }
+function salvarLocaisMetaLocal(m){ localStorage.setItem(STORE_LOCAIS_META, JSON.stringify(m)); }
+let locaisMetaProtegidoAte = 0;
+function salvarLocaisMeta(m){
+  salvarLocaisMetaLocal(m);
+  locaisMetaProtegidoAte = Date.now() + 8000;
+  if(USE_SHEETS){
+    fetch(SHEETS_API_URL + "?action=setConfig", {
+      method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ locaisMeta: m })
+    }).catch(err => console.log("Coordenadas sync error:", err));
+  }
+}
+function syncLocaisMeta(){
+  if(!USE_SHEETS || !SHEETS_API_URL) return;
+  if(Date.now() < locaisMetaProtegidoAte) return;
+  obterConfigRemota().then(data => {
+    if(data && data.success && data.locaisMeta && typeof data.locaisMeta === "object"){
+      if(JSON.stringify(carregarLocaisMeta()) !== JSON.stringify(data.locaisMeta)){
+        salvarLocaisMetaLocal(data.locaisMeta);
+        if(typeof mapaModo !== "undefined" && mapaModo === "lugares") renderMapaConteudo();
+      }
+    }
+  });
+}
+function coordenadaFixada(localId){
+  const m = carregarLocaisMeta()[String(localId)];
+  return (m && typeof m.lat === "number" && typeof m.lon === "number") ? [m.lat, m.lon] : null;
+}
+function fixarCoordenada(localId, lat, lon, comoAchou){
+  const m = carregarLocaisMeta();
+  m[String(localId)] = { lat: lat, lon: lon, fonte: comoAchou || "escolha manual", por: (typeof USUARIO !== "undefined" ? USUARIO : "") || "", em: Date.now() };
+  salvarLocaisMeta(m);
+}
+
 /* ---- Geocodificação (Nominatim/OpenStreetMap, gratuito, sem chave) ---- */
 // v2: subir a versão joga fora as coordenadas achadas pela busca antiga (só nome + cidade), que
 // colocava lugares de nome ambíguo a quilômetros de distância — o Parque Arauco, que fica a 400 m
@@ -1523,6 +1566,9 @@ function coordenadaPlausivel(coord, cidade, pais){
    vezes já vem com a coordenada exata) e, quando precisa cair no bairro ou na cidade, desloca cada
    um num raiozinho fixo — assim continuam separáveis e cada um é clicável. */
 async function geocodificarLocal(local){
+  // Coordenada fixada pela família manda em tudo — é a correção humana de um erro da busca
+  const fixada = coordenadaFixada(local.id);
+  if(fixada) return fixada;
   const cache = carregarGeocodeCache();
 
   // 1) O lugar em si — é o único jeito de o pino cair na porta certa.
@@ -2301,6 +2347,10 @@ function escolherLugarOSM(indice){
   // Guarda a coordenada exata no cache do mapa: o pin passa a cair no lugar certo em vez do
   // centro do bairro, que é o que o app fazia quando só tinha o nome digitado.
   if(r.lat && r.lon){
+    // Guarda também pro resto da família: escolher o lugar certo no mapa deixa de ser uma correção
+    // que morre no seu celular. Como o local ainda não tem id (é criado ao salvar), fica pendente
+    // e é gravado em adicionarLocalSheets.
+    window.__coordEscolhida = { chave: `${nome}|${cidadeSelecionada}`, lat: parseFloat(r.lat), lon: parseFloat(r.lon) };
     const cache = carregarGeocodeCache();
     // Mesma chave e mesmo formato [lat, lon] que o mapa usa, senão a coordenada exata ficaria
     // guardada num canto que ninguém lê e o pino continuaria caindo no centro do bairro.
@@ -3095,7 +3145,15 @@ async function adicionarLocalSheets(){
     data: new Date().toLocaleDateString("pt-BR"),
     pendente: USE_SHEETS
   });
+  const novoLocal = locais[locais.length - 1];
   salvarLocais(locais);
+
+  // Se o lugar veio da busca no mapa, fixa a coordenada exata pra todo mundo
+  const escolhida = window.__coordEscolhida;
+  if(escolhida && escolhida.chave === `${nome}|${cidadeSelecionada}`){
+    fixarCoordenada(novoLocal.id, escolhida.lat, escolhida.lon, "escolhido no mapa");
+    window.__coordEscolhida = null;
+  }
 
   // Limpa o formulário e mostra o local imediatamente
   document.getElementById("votacao-nome").value = "";
@@ -3133,7 +3191,7 @@ async function adicionarLocalSheets(){
 function sincronizarTudo(){
   if(!USE_SHEETS) return;
   syncFromSheets(); syncViagem(); syncAvatares(); syncAcessos();
-  syncBagagemCompartilhada(); syncPendenciasManuais(); syncRoteiro(); syncDespesas();
+  syncBagagemCompartilhada(); syncPendenciasManuais(); syncRoteiro(); syncDespesas(); syncLocaisMeta();
 }
 setInterval(() => {
   if(document.hidden) return;
@@ -6123,6 +6181,7 @@ syncBagagemCompartilhada();
 syncPendenciasManuais();
 syncRoteiro();
 syncDespesas();
+syncLocaisMeta();
 /* Abre direto na aba pedida pelo endereço (#votacao, #despesas…) — usado pelo lembrete semanal
    e por qualquer link que a família mande no grupo. */
 const PAINEIS_VALIDOS = ["inicio","viagem","votacao","roteiro","despesas","resultados","mapa","bagagem"];
