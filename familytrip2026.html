@@ -2948,7 +2948,10 @@ function obterConfigRemota(){
 /* Aviso de conexão. Sem isso, quando a planilha não respondia — o que vai acontecer bastante no
    exterior — o app simplesmente mostrava os dados antigos calado, e a família não tinha como saber
    se estava vendo o que os outros acabaram de mudar ou uma foto congelada de horas atrás. Um voto
-   dado nesse estado fica no aparelho e sobe sozinho quando a conexão volta. */
+   dado nesse estado NÃO sobe sozinho: o POST falha, o erro é engolido no catch, e o próximo sync
+   bem-sucedido substitui o estado local pelo do servidor — que nunca recebeu a alteração. Ou seja,
+   o voto/despesa feito offline SOME. Enquanto não existir fila de reenvio, o aviso precisa dizer a
+   verdade em vez de prometer o que o código não faz. */
 let estaOnline = true;
 let ultimaSincronia = 0;
 function marcarConexao(ok){
@@ -2969,7 +2972,7 @@ function renderAvisoConexao(){
   const min = ultimaSincronia ? Math.round((Date.now() - ultimaSincronia) / 60000) : null;
   barra.innerHTML = `<span>📴 Sem conexão com a planilha — você está vendo os dados salvos${
     min !== null ? ` de ${min < 1 ? "menos de um minuto" : min === 1 ? "um minuto" : min + " minutos"} atrás` : ""
-  }. O que você marcar agora sobe sozinho quando a internet voltar.</span>`;
+  }. <strong>O que você marcar agora pode se perder</strong> — sem internet o app não consegue guardar no servidor, e ainda não existe fila de reenvio. Confira quando a conexão voltar.</span>`;
   barra.classList.add("visivel");
 }
 
