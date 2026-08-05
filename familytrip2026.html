@@ -1433,7 +1433,11 @@ function haversineKm(a, b){
 }
 
 /* ---- Geocodificação (Nominatim/OpenStreetMap, gratuito, sem chave) ---- */
-const STORE_GEOCODE = "family_trip_geocode_cache";
+// v2: subir a versão joga fora as coordenadas achadas pela busca antiga (só nome + cidade), que
+// colocava lugares de nome ambíguo a quilômetros de distância — o Parque Arauco, que fica a 400 m
+// da hospedagem de Santiago, estava guardado a 11,8 km, no centro. Sem trocar a chave, cada
+// aparelho continuaria com o pino errado no mapa mesmo com a busca corrigida.
+const STORE_GEOCODE = "family_trip_geocode_cache_v2";
 function carregarGeocodeCache(){ try { return JSON.parse(localStorage.getItem(STORE_GEOCODE) || "{}"); } catch(e){ return {}; } }
 function salvarGeocodeCache(c){ localStorage.setItem(STORE_GEOCODE, JSON.stringify(c)); }
 
@@ -1484,16 +1488,26 @@ function coordenadaPlausivel(coord, cidade){
 async function geocodificarLocal(local){
   const cache = carregarGeocodeCache();
 
-  // 1) O lugar em si — é o único jeito de o pino cair na porta certa
+  // 1) O lugar em si — é o único jeito de o pino cair na porta certa.
+  //    Procura COM o bairro antes de procurar só pelo nome: nome de lugar se repete muito dentro
+  //    da mesma cidade, e sem o bairro a busca escolhia o homônimo errado. "Parque Arauco,
+  //    Santiago" caía num ponto do centro a 11,8 km da hospedagem; "Parque Arauco, Las Condes,
+  //    Santiago" acha o shopping de verdade, a 400 m. O erro era invisível: o pino aparecia
+  //    normalmente no mapa, só que no lugar errado.
   const chaveNome = `nome:${local.nome}|${local.cidade}`.toLowerCase();
   if(cache[chaveNome]) return cache[chaveNome];
-  const coordNome = await buscarCoordenada(`${local.nome}, ${local.cidade}`);
-  if(coordNome && coordenadaPlausivel(coordNome, local.cidade)){
-    cache[chaveNome] = coordNome; salvarGeocodeCache(cache); return coordNome;
+  const temBairro = local.bairro && local.bairro !== BAIRRO_A_CONFIRMAR;
+  const consultas = temBairro
+    ? [`${local.nome}, ${local.bairro}, ${local.cidade}`, `${local.nome}, ${local.cidade}`]
+    : [`${local.nome}, ${local.cidade}`];
+  for(const consulta of consultas){
+    const coordNome = await buscarCoordenada(consulta);
+    if(coordNome && coordenadaPlausivel(coordNome, local.cidade)){
+      cache[chaveNome] = coordNome; salvarGeocodeCache(cache); return coordNome;
+    }
   }
 
   // 2) Não achou o lugar: usa o bairro, mas espalhado — senão vira uma pilha só
-  const temBairro = local.bairro && local.bairro !== BAIRRO_A_CONFIRMAR;
   if(temBairro){
     const chaveBairro = `${local.bairro}|${local.cidade}`.toLowerCase();
     let centroBairro = cache[chaveBairro];
