@@ -1350,6 +1350,10 @@ function irParaPainel(nomePainel){
   if(nomePainel === "despesas") renderDespesas();
   if(nomePainel === "resultados") renderResultados();
   if(nomePainel === "bagagem") renderBagagem();
+  // Deixa o endereço acompanhar a aba aberta (sem encher o histórico). É o que faz o lembrete
+  // semanal cair direto na Votação em vez de abrir o app na tela inicial e a pessoa ter que
+  // procurar onde votar — que é exatamente o atrito que o lembrete existe pra remover.
+  try { history.replaceState(null, "", "#" + nomePainel); } catch(e){}
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 document.getElementById("navbar").addEventListener("click", e => {
@@ -6029,6 +6033,16 @@ syncBagagemCompartilhada();
 syncPendenciasManuais();
 syncRoteiro();
 syncDespesas();
+/* Abre direto na aba pedida pelo endereço (#votacao, #despesas…) — usado pelo lembrete semanal
+   e por qualquer link que a família mande no grupo. */
+const PAINEIS_VALIDOS = ["inicio","viagem","votacao","roteiro","despesas","resultados","mapa","bagagem"];
+function irParaPainelDoEndereco(){
+  const alvo = (location.hash || "").replace("#", "");
+  if(PAINEIS_VALIDOS.includes(alvo)) irParaPainel(alvo);
+}
+irParaPainelDoEndereco();
+window.addEventListener("hashchange", irParaPainelDoEndereco);
+
 if(!USUARIO) setTimeout(abrirLogin, 300);
 
 /* PWA: só registra quando hospedado (https ou localhost) — não funciona abrindo o arquivo direto do computador */
