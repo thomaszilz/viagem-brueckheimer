@@ -651,7 +651,7 @@
     .cambio-linha input { width:100%; }
   }
   /* ---- Roteiro dia a dia, com mapa (a partir do roteiro fechado de Buenos Aires) ----
-     A aba antiga mostrava os 14 dias empilhados numa lista só. Com 55 paradas de Buenos Aires
+     A aba antiga mostrava os 14 dias empilhados numa lista só. Com 64 paradas de Buenos Aires
      dentro, isso vira uma parede de texto que ninguém lê no celular. Agora é um dia por vez:
      escolhe o dia em cima, vê o trajeto no mapa e a linha do tempo embaixo. */
   .rot-dias { display:flex; gap:8px; overflow-x:auto; padding:2px 2px 10px; margin-bottom:14px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
@@ -4186,7 +4186,7 @@ function isoDeData(date){
 }
 
 /* ================= ROTEIRO FECHADO DE BUENOS AIRES =================
-   Vem do PDF "Roteiro Buenos Aires · 28/08 a 04/09 de 2026": 8 dias, 55 paradas, com horário,
+   Vem do PDF "Roteiro Buenos Aires · 28/08 a 04/09 de 2026": 8 dias, 64 paradas, com horário,
    como se chega em cada uma, as dicas do dia e a divisão do grupo nos dois dias em que ela existe.
 
    Sobre as COORDENADAS — cada uma foi conferida uma a uma no OpenStreetMap antes de entrar aqui,
@@ -4225,7 +4225,9 @@ const ROTEIRO_BA = [
       { ref:"1.4", hora:"19h35", nome:"Jantar em Puerto Madero", coord:RBA_PUERTO_MADERO, precisao:"aprox", como:"Uber, 20 min",
         nota:"Ponte de la Mujer, as docas iluminadas e jantar nos restaurantes da orla." },
       { ref:"1.5", hora:"21h30", nome:"Lucciano’s · sorvete nas docas", coord:RBA_PUERTO_MADERO, precisao:"aprox", tag:"SOBREMESA", como:"na orla",
-        nota:"A sorveteria dos palitos coloridos, em Puerto Madero. Sorvete e uma volta pelas docas antes de subir." }
+        nota:"A sorveteria dos palitos coloridos, em Puerto Madero. Sorvete e uma volta pelas docas antes de subir." },
+      { ref:"1.6", nome:"Volta para casa", coord:RBA_CASA, precisao:"exata", tag:"VOLTA", como:"Uber",
+        nota:"A dica do dia é explícita: não vale subte à noite com o grupo recém-chegado, cansado e com bagagem de mão. O roteiro não marca hora." }
     ]
   },
   {
@@ -4259,7 +4261,8 @@ const ROTEIRO_BA = [
       { ref:"2.6", hora:"15h45", nome:"Daniel Bakery", coord:[-34.594229,-58.414942], precisao:"aprox", tag:"CAFETERIA", como:"400 m a pé, segundo o roteiro",
         nota:"Confiram o endereço antes de sair andando: o roteiro diz “Palermo Soho, a poucas quadras da Plaza Serrano”, mas o único Daniel Bakery no mapa fica na Av. Honduras 3714 — a cerca de 1,5 km de lá, na direção de casa. O pino está no endereço do mapa." },
       { ref:"2.7", hora:"17h", nome:"Barrio Chino · jantar às 19h", coord:[-34.557233,-58.450364], precisao:"aprox", tag:"PASSEIO", como:"Linha D, 5 estações até Juramento · 200 m a pé",
-        nota:"O arco na esquina de Arribeños com Juramento. Supermercados asiáticos, casas de chá, bubble tea e as lojinhas, com tempo de sobra. Jantar ali mesmo, escolhendo na hora." }
+        nota:"O arco na esquina de Arribeños com Juramento. Supermercados asiáticos, casas de chá, bubble tea e as lojinhas, com tempo de sobra. Jantar ali mesmo, escolhendo na hora." },
+      { ref:"2.8", hora:"20h30", nome:"Volta para casa", coord:RBA_CASA, precisao:"exata", tag:"VOLTA", como:"Subte D, Juramento → Agüero" }
     ]
   },
   {
@@ -4288,10 +4291,14 @@ const ROTEIRO_BA = [
         nota:"Perú 602, em Montserrat. Última parada dos cinco juntos." },
       { ref:"3.7", hora:"19h15", nome:"Independiente", coord:[-34.670223,-58.371038], precisao:"exata", tag:"JOGO", grupo:"Thomas e Mateus", como:"Uber, 25 min direto de San Telmo",
         nota:"Estádio Libertadores de América, em Avellaneda. Saída às 17h; às 17h45 o El Cilindro, estádio do Racing, por fora; entrada no estádio a 300 m dali, às 18h15." },
+      { ref:"3.7b", nome:"Volta para casa", coord:RBA_CASA, precisao:"exata", tag:"VOLTA", grupo:"Thomas e Mateus", como:"Uber, depois do jogo",
+        nota:"Uber na ida e na volta: Avellaneda não é bairro turístico, e a dica do dia pede para não caminhar pelo entorno." },
       { ref:"3.8", hora:"17h30", nome:"Plaza de Mayo", coord:[-34.608445,-58.372179], precisao:"exata", grupo:"Paula, Juliane e Júlia", como:"500 m a pé",
         nota:"E o subte na estação Catedral em seguida." },
       { ref:"3.9", hora:"18h30", nome:"Alto Palermo · Bath & Body Works", coord:[-34.587948,-58.410202], precisao:"exata", tag:"COMPRAS", grupo:"Paula, Juliane e Júlia", como:"Linha D, 8 estações (Catedral → Bulnes)",
-        nota:"Alto Palermo Shopping, Local 3-35/36/37, Av. Santa Fe 3253. Fecha por volta das 21h. Jantar no próprio shopping ou na Av. Santa Fe, voltando os 700 m a pé até casa." }
+        nota:"Alto Palermo Shopping, Local 3-35/36/37, Av. Santa Fe 3253. Fecha por volta das 21h. Jantar no próprio shopping ou na Av. Santa Fe." },
+      { ref:"3.10", hora:"20h", nome:"Volta para casa", coord:RBA_CASA, precisao:"exata", tag:"VOLTA", grupo:"Paula, Juliane e Júlia", como:"700 m a pé",
+        nota:"Do Alto Palermo até em casa a pé, pela Av. Santa Fe — sem Uber nenhum." }
     ]
   },
   {
@@ -4315,8 +4322,15 @@ const ROTEIRO_BA = [
         nota:"Florida 737. A cúpula com os afrescos vale mais que as lojas." },
       { ref:"4.6", hora:"15h45", nome:"El Ateneo Grand Splendid", coord:[-34.595983,-58.394262], precisao:"exata", tag:"CAFETERIA", como:"na rota, 2,2 km pela Florida e a Santa Fe",
         nota:"Santa Fe 1860. Teatro de 1919 virado livraria; o café fica no palco." },
+      // Não é a volta do fim do dia: é uma passada em casa no MEIO do caminho, que o roteiro marca
+      // às 16h30. Estava escondida dentro da nota do Don Julio, então o traçado do dia pulava do
+      // El Ateneo direto pra Palermo — um caminho que ninguém faz.
+      { ref:"4.6b", hora:"16h30", nome:"Passada em casa", coord:RBA_CASA, precisao:"exata", como:"700 m a pé",
+        nota:"Banho e trocar de roupa antes de subir pra Palermo." },
       { ref:"4.7", hora:"17h30", nome:"Don Julio · a fila", coord:[-34.586292,-58.424277], precisao:"exata", tag:"RESERVA ÀS 19h", como:"Uber, 10 min",
-        nota:"Guatemala 4691. Chegar cedo para a calçada: Chandon e empanadas cortesia enquanto se espera. Passando em casa às 16h30 para banho e trocar de roupa." }
+        nota:"Guatemala 4691. Chegar cedo para a calçada: Chandon e empanadas cortesia enquanto se espera." },
+      { ref:"4.8", nome:"Volta para casa", coord:RBA_CASA, precisao:"exata", tag:"VOLTA", como:"Uber, 10 min",
+        nota:"Depois do jantar. A mesa é às 19h e o roteiro não marca hora de voltar." }
     ]
   },
   {
@@ -4338,7 +4352,9 @@ const ROTEIRO_BA = [
       { ref:"5.5", hora:"12h45", nome:"Paseo Victorica · almoço", coord:[-34.412711,-58.586105], precisao:"trecho",
         nota:"A costanera com os clubes de remo antigos." },
       { ref:"5.6", hora:"14h30", nome:"Puerto de Frutos", coord:[-34.418921,-58.572568], precisao:"exata", como:"15 min a pé",
-        nota:"Feira de artesanato, móveis de vime e lembranças. Depois, café à beira do rio às 16h30 e trem de volta às 17h30." }
+        nota:"Feira de artesanato, móveis de vime e lembranças. Depois, café à beira do rio às 16h30." },
+      { ref:"5.7", hora:"19h", nome:"Volta para casa", coord:RBA_CASA, precisao:"exata", tag:"VOLTA", como:"trem de volta, ~1h (saída de Tigre às 17h30)",
+        nota:"Jantar leve no bairro." }
     ]
   },
   {
@@ -4372,7 +4388,9 @@ const ROTEIRO_BA = [
       { ref:"6.7", hora:"16h30", nome:"Rooftop Plaza de Mayo", coord:[-34.608445,-58.372179], precisao:"aprox", tag:"CAFETERIA",
         nota:"A luz do fim de tarde sobre a praça." },
       { ref:"6.8", hora:"18h", nome:"Puerto Madero · pôr do sol", coord:RBA_PUERTO_MADERO, precisao:"aprox", como:"1 km a pé",
-        nota:"1 km reto para o leste. Docas, Ponte de la Mujer, pôr do sol por volta das 18h30. Jantar nas docas." }
+        nota:"1 km reto para o leste. Docas, Ponte de la Mujer, pôr do sol por volta das 18h30. Jantar nas docas, por volta das 20h." },
+      { ref:"6.9", nome:"Volta para casa", coord:RBA_CASA, precisao:"exata", tag:"VOLTA", como:"Uber",
+        nota:"Depois do jantar nas docas. O roteiro não marca hora de voltar." }
     ]
   },
   {
@@ -4399,7 +4417,9 @@ const ROTEIRO_BA = [
       { ref:"7.7", hora:"16h30", nome:"Lab Tostadores · Hollywood", coord:[-34.586024,-58.436859], precisao:"exata", tag:"CAFETERIA", como:"1,5 km",
         nota:"Humboldt 1542, Palermo Hollywood. Torrefação de cafés especiais." },
       { ref:"7.8", hora:"17h15", nome:"All Saints Café", coord:[-34.584027,-58.437982], precisao:"exata", tag:"CAFETERIA", como:"400 m",
-        nota:"Bonpland 1615, a 400 m do anterior: o coffee crawl de verdade. Depois, Subte D de Ministro Carranza até Agüero. Jantar livre — última noite, sem hora marcada." }
+        nota:"Bonpland 1615, a 400 m do anterior: o coffee crawl de verdade." },
+      { ref:"7.9", hora:"18h", nome:"Volta para casa", coord:RBA_CASA, precisao:"exata", tag:"VOLTA", como:"Subte D, Ministro Carranza → Agüero",
+        nota:"Descanso. O jantar da última noite fica livre, por volta das 20h30 e sem hora marcada: Palermo Soho está a dez minutos, ou fiquem pela própria Av. Santa Fe — o voo de sexta sai às 9h25." }
     ]
   },
   {
@@ -4542,7 +4562,7 @@ function renderRoteiro(){
 
 /* Os dias que a aba mostra: os da viagem (que saem das cidades e noites da aba Viagem) mais
    qualquer data do roteiro fechado de Buenos Aires que não esteja entre eles. A segunda parte é
-   uma rede de segurança: se alguém mexer nas noites na aba Viagem, o roteiro de 55 paradas não
+   uma rede de segurança: se alguém mexer nas noites na aba Viagem, o roteiro de 64 paradas não
    pode simplesmente desaparecer do app. */
 function diasDoRoteiro(){
   const lista = diasDaViagem().map(d => ({ iso: isoDeData(d.data), data: d.data, cidade: d.cidade, volta: d.volta }));
