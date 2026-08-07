@@ -4564,7 +4564,19 @@ let roteiroParadaSel = "";
 let mapaRoteiro = null, mapaRoteiroLayer = null, mapaRoteiroEuLayer = null;
 let roteiroMarcadores = {};
 let roteiroGeoToken = 0;
-let roteiroEnquadre = ""; // assinatura do último enquadramento, pra não desfazer o zoom da pessoa
+/* Quando o mapa pode se reenquadrar sozinho.
+   A primeira tentativa foi guardar uma assinatura do que já tinha sido enquadrado e não repetir.
+   Deu errado duas vezes, pelo mesmo motivo de fundo: a assinatura descrevia o CONTEÚDO, mas o
+   enquadramento depende também do TAMANHO do container — e o tamanho muda depois do desenho (a aba
+   abre, o layout assenta, a tela cheia entra). O sintoma foi o primeiro dia da viagem abrindo com o
+   mapa fora de lugar, porque o INIT desenha com a aba escondida, num container de 0x0.
+
+   O critério certo é outro, e é simples: reenquadrar sempre, MENOS quando a pessoa mexeu no mapa.
+   Aí o mapa está sempre certo sozinho, e o único caso em que ele fica quieto é justamente o que
+   importa preservar — alguém arrastou ou deu zoom pra olhar uma esquina. */
+let roteiroMexidoPelaPessoa = false;
+let roteiroEnquadrandoAgora = false;   // distingue o movimento do código do movimento do dedo
+let roteiroConteudoEnquadrado = "";
 
 function renderRoteiroChips(dias){
   const barra = document.getElementById("rot-dias");
@@ -4982,16 +4994,16 @@ function alternarTelaCheiaRoteiro(){
      Até lá o mapa embutido continuava capturando a roda — a pessoa descia a linha do tempo, passava
      o cursor por cima e a página parava de rolar, dando zoom sem querer. */
   if(mapaRoteiro) mapaRoteiro.scrollWheelZoom[roteiroTelaCheia ? "enable" : "disable"]();
+  // A tela é outra, então o enquadramento anterior não vale mais: libera o mapa pra se reenquadrar
+  // sozinho, como se fosse conteúdo novo.
+  roteiroMexidoPelaPessoa = false;
   setTimeout(() => {
     if(!mapaRoteiro) return;
     mapaRoteiro.invalidateSize();
-    if(roteiroPontosDoDia.length > 1){
-      mapaRoteiro.fitBounds(roteiroPontosDoDia.map(p => p.coord), { padding: [50,50] });
-      // Regrava a assinatura do enquadramento, senão o próximo sync acha que o dia mudou e
-      // reenquadra de novo, desfazendo o zoom que a pessoa der logo depois de abrir a tela cheia.
-      roteiroEnquadre = (roteiroDiaSel || "") + "|" + roteiroPontosDoDia.map(p => p.ref).join(",");
-    } else {
-      roteiroEnquadre = "";
+    if(roteiroPontosDoDia.length > 1 && !roteiroMexidoPelaPessoa){
+      roteiroEnquadrandoAgora = true;
+      mapaRoteiro.fitBounds(roteiroPontosDoDia.map(p => p.coord), { padding: [50,50], animate: false });
+      roteiroEnquadrandoAgora = false;
     }
   }, 60);
 }
@@ -5096,6 +5108,13 @@ function desenharMapaRoteiro(corridas, dia){
     }).addTo(mapaRoteiro);
     mapaRoteiroLayer = L.layerGroup().addTo(mapaRoteiro);
     mapaRoteiroEuLayer = L.layerGroup().addTo(mapaRoteiro);
+    /* Arrastar e dar zoom marcam o mapa como "mexido pela pessoa", e a partir daí ele para de se
+       reenquadrar sozinho até trocar o conteúdo. O sinalizador roteiroEnquadrandoAgora existe
+       porque o zoomstart também dispara quando é o CÓDIGO que move o mapa — sem ele, o próprio
+       enquadramento se marcaria como gesto humano e o mapa nunca mais se ajustaria. */
+    const marcarGesto = () => { if(!roteiroEnquadrandoAgora) roteiroMexidoPelaPessoa = true; };
+    mapaRoteiro.on("dragstart", marcarGesto);
+    mapaRoteiro.on("zoomstart", marcarGesto);
     /* Zoom com a roda só junto com Ctrl (ou ⌘), igual ao Google Maps embutido. Deixar a roda
        sozinha dando zoom prende a rolagem da página: quem estivesse descendo a linha do tempo
        passava o cursor sobre o mapa e a página travava, dando zoom sem querer. E deixar a roda
@@ -5168,20 +5187,44 @@ function desenharMapaRoteiro(corridas, dia){
      reenquadrava a cada desenho, e como o sync redesenha de 5 em 5 segundos por causa de qualquer
      edição de qualquer pessoa, o zoom que alguém tinha dado pra ver uma esquina voltava sozinho
      pro dia inteiro, sem nada ter mudado na tela dela. */
-  const assinatura = (dia.iso || "") + "|" + pontos.map(p => p.ref).join(",");
-  const precisaEnquadrar = assinatura !== roteiroEnquadre;
+  const conteudo = (dia.iso || "") + "|" + pontos.map(p => p.ref).join(",");
+  // Conteúdo diferente (outro dia, parada entrando ou saindo) recomeça a conversa: o zoom que a
+  // pessoa deu era para o dia anterior e não faz sentido carregar pro novo.
+  if(conteudo !== roteiroConteudoEnquadrado) roteiroMexidoPelaPessoa = false;
+
   const enquadrar = () => {
     if(meuToken !== roteiroGeoToken || !mapaRoteiro) return;
     mapaRoteiro.invalidateSize();
-    if(!precisaEnquadrar) return;
-    if(pontos.length > 1) mapaRoteiro.fitBounds(pontos.map(p => p.coord), { padding: [42,42] });
-    else if(pontos.length === 1) mapaRoteiro.setView(pontos[0].coord, 16);
-    else mapaRoteiro.setView(CIDADES_COORDS[dia.cidade] || CIDADES_COORDS["Buenos Aires"], 12);
-    roteiroEnquadre = assinatura;
+    const tam = mapaRoteiro.getSize();
+    if(!tam.x || !tam.y){
+      // Sem tamanho (aba ainda escondida) não dá pra enquadrar, mas o Leaflet precisa de um centro
+      // válido: sem nenhum setView, getBounds e qualquer camada nova lançam
+      // "Set map center and zoom first". Não marca como enquadrado — isso é feito quando houver
+      // tamanho de verdade, que é o que conserta o mapa torto da primeira abertura.
+      if(!mapaRoteiro._loaded) mapaRoteiro.setView(CIDADES_COORDS[dia.cidade] || CIDADES_COORDS["Buenos Aires"], 12);
+      return;
+    }
+    if(roteiroMexidoPelaPessoa) return;
+    /* animate:false não é preferência de gosto, é o que faz a detecção de gesto funcionar. Com a
+       animação ligada, o fitBounds só dispara o zoomstart DEPOIS — quando roteiroEnquadrandoAgora
+       já voltou a ser false — e o próprio enquadramento se marcava como se fosse o dedo da pessoa.
+       O efeito era o mapa congelar no primeiro enquadramento: trocar de dia não reenquadrava mais,
+       e o dia de Tigre, a 25 km, ficava inteiro fora da tela. */
+    roteiroEnquadrandoAgora = true;
+    const semAnimacao = { animate: false };
+    if(pontos.length > 1) mapaRoteiro.fitBounds(pontos.map(p => p.coord), { padding: [42,42], animate: false });
+    else if(pontos.length === 1) mapaRoteiro.setView(pontos[0].coord, 16, semAnimacao);
+    else mapaRoteiro.setView(CIDADES_COORDS[dia.cidade] || CIDADES_COORDS["Buenos Aires"], 12, semAnimacao);
+    roteiroEnquadrandoAgora = false;
+    roteiroConteudoEnquadrado = conteudo;
   };
-  // A aba pode estar escondida quando o sync redesenha: um mapa de 0px calcula o zoom errado.
+  /* Três vezes de propósito, e é barato: enquadrar de novo com o mesmo conteúdo dá exatamente o
+     mesmo resultado. O que muda entre elas é o TAMANHO do container — na primeira o mapa pode
+     estar com 0px (aba escondida), na segunda o navegador já aplicou o CSS da aba que abriu, e na
+     terceira as fontes e o teclado do celular já assentaram o layout. */
   enquadrar();
   setTimeout(enquadrar, 60);
+  setTimeout(enquadrar, 350);
 }
 
 function selecionarParadaRoteiro(ref, opcoes){
