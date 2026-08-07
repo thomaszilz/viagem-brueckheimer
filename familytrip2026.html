@@ -442,7 +442,9 @@
   .place-card .int-nao.ativo { background: #b33a3a; color: #fff; border-color: #b33a3a; }
   .place-card .sem-interesse-line { font-size: .75rem; color: #b33a3a; margin: 6px 0 0; opacity: .9; }
   .place-media { margin: 4px 0 12px; min-height: 24px; }
-  .place-media img { width: 100%; max-height: 170px; object-fit: cover; border-radius: 6px; margin-bottom: 8px; display: block; }
+  /* Altura fixa em vez de max-height: com o espaço reservado, a foto que chega depois não empurra
+     o card para baixo — antes a lista inteira pulava conforme cada imagem carregava. */
+  .place-media img { width: 100%; height: 170px; object-fit: cover; border-radius: 6px; margin-bottom: 8px; display: block; background: rgba(var(--hairline),.06); }
   .place-media .media-desc { font-size: .82rem; color: var(--ink-soft); line-height: 1.45; margin: 0 0 8px; }
   .place-media .media-loading { font-size: .78rem; color: var(--ink-soft); font-style: italic; }
   .media-editar-btn {
@@ -2033,7 +2035,7 @@ function mediaHtml(local){
   //    por outra que a família prefira.
   if(fotoManual || local.descricaoManual){
     return `<div class="place-media">
-      ${fotoManual ? `<img src="${esc(fotoManual)}" alt="${esc(local.nome)}" onerror="this.style.display='none'">` : ""}
+      ${fotoManual ? `<img src="${esc(fotoManual)}" alt="${esc(local.nome)}" loading="lazy" decoding="async" width="800" height="450" onerror="this.style.display='none'">` : ""}
       ${local.descricaoManual ? `<p class="media-desc">${esc(local.descricaoManual)}</p>` : ""}
       <button type="button" class="media-editar-btn" onclick="editarMediaManual(${JSON.stringify(local.id)})">✏️ Trocar foto / descrição</button>
       ${linksHtml(local, info)}
@@ -2049,7 +2051,7 @@ function mediaHtml(local){
     const descBruta = info.descricao || "";
     const desc = descBruta.length > 240 ? descBruta.slice(0, 240) + "…" : descBruta;
     return `<div class="place-media">
-      ${info.imagem ? `<img src="${esc(info.imagem)}" alt="${esc(local.nome)}">` : ""}
+      ${info.imagem ? `<img src="${esc(info.imagem)}" alt="${esc(local.nome)}" loading="lazy" decoding="async" width="800" height="450">` : ""}
       ${desc ? `<p class="media-desc">${esc(desc)}</p>` : ""}
       <button type="button" class="media-editar-btn media-editar-discreto" onclick="editarMediaManual(${JSON.stringify(local.id)})">✏️ Trocar foto</button>
       ${linksHtml(local, info)}
@@ -3050,6 +3052,10 @@ function renderAvisoConexao(){
     barra = document.createElement("div");
     barra.id = "aviso-conexao";
     barra.className = "aviso-conexao";
+    // Sem isto, quem usa leitor de tela nunca fica sabendo que perdeu conexão ou que há
+    // alterações pendentes — o aviso aparece na tela e passa em silêncio.
+    barra.setAttribute("role", "status");
+    barra.setAttribute("aria-live", "polite");
     document.body.appendChild(barra);
   }
   const pendentes = pendentesNaFila();
