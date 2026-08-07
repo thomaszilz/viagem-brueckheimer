@@ -756,6 +756,27 @@
   .bagagem-add input { flex:1; padding:7px 10px; border:1px solid rgba(var(--hairline),.18); border-radius:6px; font-size:.82rem; background:transparent; color:var(--ink); font-family:inherit; }
   .bagagem-add button { width:32px; border:none; border-radius:6px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; font-size:1rem; }
 
+  /* ===== TAXA REAL DE CÂMBIO ===== */
+  .taxa-real { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(var(--hairline),.12); }
+  .taxa-real h4 { font-family:'Fraunces',Georgia,serif; color:var(--ink); font-size:1.05rem; margin:0 0 8px; }
+  .taxa-real-aviso { font-size:.83rem; line-height:1.55; color:var(--ink); background:rgba(217,138,61,.1);
+    border-left:3px solid var(--gold); border-radius:0 8px 8px 0; padding:11px 14px; margin:0 0 12px; }
+  .taxa-real-dica { font-size:.8rem; color:var(--ink-soft); margin:0 0 14px; line-height:1.45; }
+  .taxa-real-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+  .taxa-real-item { background:var(--paper-2); border:1px solid rgba(var(--hairline),.12); border-radius:12px; padding:14px 16px; }
+  .taxa-real-topo { margin-bottom:10px; }
+  .taxa-real-topo strong { display:block; font-size:.92rem; color:var(--ink); }
+  .taxa-real-topo span { font-size:.72rem; color:var(--ink-soft); }
+  .taxa-real-linha { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .taxa-real-rot { font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); font-weight:700; }
+  .taxa-real-val { font-variant-numeric:tabular-nums; font-weight:700; color:var(--ink); font-size:.88rem; }
+  .taxa-real-linha input { width:112px; padding:7px 9px; border:1px solid rgba(var(--hairline),.22); border-radius:7px;
+    font-size:.86rem; background:var(--paper); color:var(--ink); font-family:inherit; text-align:right; font-variant-numeric:tabular-nums; }
+  .taxa-real-dif { font-size:.76rem; font-weight:700; margin-bottom:6px; }
+  .taxa-real-dif.melhor { color:var(--teal-deep); }
+  .taxa-real-dif.pior { color:var(--river-red); }
+  .taxa-real-exemplo { font-size:.8rem; color:var(--ink-soft); padding-top:8px; border-top:1px solid rgba(var(--hairline),.08); }
+
   /* ===== AVISO DE CONEXÃO ===== */
   .aviso-conexao {
     position: fixed; left: 12px; right: 12px; z-index: 200;
@@ -3890,6 +3911,38 @@ function wireCambioInputs(rates){
   atualizarResultados();
 }
 
+/* Monta os campos de taxa real das duas moedas, mostrando lado a lado a oficial e a de vocês. */
+function renderTaxaReal(rates){
+  const grid = document.getElementById("taxa-real-grid");
+  if(!grid) return;
+  const taxas = taxasDaFamilia();
+  const MOEDAS_VIAGEM = [
+    { cod: "ARS", nome: "Peso argentino", nota: "mercado paralelo paga mais que a oficial" },
+    { cod: "CLP", nome: "Peso chileno", nota: "sem mercado paralelo — a oficial é a real" }
+  ];
+  grid.innerHTML = MOEDAS_VIAGEM.map(m => {
+    const oficial = (rates && rates[m.cod]) ? (1 / rates[m.cod]) : null;
+    const t = taxas[m.cod];
+    const usada = (t && t.brl > 0) ? t.brl : oficial;
+    const dif = (t && t.brl > 0 && oficial) ? ((t.brl / oficial - 1) * 100) : null;
+    return `
+      <div class="taxa-real-item">
+        <div class="taxa-real-topo"><strong>${esc(m.nome)}</strong><span>${esc(m.nota)}</span></div>
+        <div class="taxa-real-linha">
+          <span class="taxa-real-rot">Oficial</span>
+          <span class="taxa-real-val">${oficial ? "R$ " + oficial.toFixed(4) : "—"}</span>
+        </div>
+        <div class="taxa-real-linha">
+          <label class="taxa-real-rot" for="taxa-${m.cod}">Sua taxa</label>
+          <input id="taxa-${m.cod}" type="text" inputmode="decimal" placeholder="${oficial ? oficial.toFixed(4) : "0,0000"}"
+                 value="${t && t.brl > 0 ? String(t.brl).replace(".", ",") : ""}" data-taxa-moeda="${m.cod}">
+        </div>
+        ${dif !== null ? `<div class="taxa-real-dif ${dif > 0 ? "melhor" : "pior"}">${dif > 0 ? "+" : ""}${dif.toFixed(1)}% em relação à oficial${t.por ? " · anotada por " + esc(t.por) : ""}</div>` : ""}
+        <div class="taxa-real-exemplo">${usada ? `1.000 pesos ≈ <strong>${fmtBRL(1000 * usada)}</strong>` : "informe a taxa para ver o exemplo"}</div>
+      </div>`;
+  }).join("");
+}
+
 async function carregarCambioNaTela(){
   const rates = await obterCambio();
   const atualizadoEl = document.getElementById("cambio-atualizado");
@@ -3903,7 +3956,9 @@ async function carregarCambioNaTela(){
     if(arsUnitEl) arsUnitEl.textContent = `1 ARS ≈ R$ ${(1 / rates.ARS).toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
     if(clpUnitEl) clpUnitEl.textContent = `1 CLP ≈ R$ ${(1 / rates.CLP).toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
     wireCambioInputs(rates);
+    renderTaxaReal(rates);
   } else {
+    renderTaxaReal(null);
     atualizadoEl.textContent = "Não foi possível buscar a cotação agora. Verifique a internet e tente de novo.";
   }
 }
@@ -4134,6 +4189,22 @@ function renderViagem(){
         </div>
       </div>
       <p class="cambio-atualizado" id="cambio-atualizado">Buscando cotação…</p>
+
+      <div class="taxa-real">
+        <h4>💵 A taxa que vocês conseguiram</h4>
+        <p class="taxa-real-aviso">
+          <strong>Na Argentina, a cotação oficial não é a que o turista pega.</strong> Existe o mercado
+          paralelo (“blue”), que paga bem mais — a diferença costuma passar de 15%. Trocar no paralelo
+          é comum e feito em casas de câmbio, hotéis e comércios da Calle Florida; evite quem aborda
+          na rua, conte o dinheiro na hora e confira as notas.
+          <br><br>
+          <strong>No Chile é diferente:</strong> o peso flutua livre e não há mercado paralelo — ali a
+          cotação oficial é a real, tirando o spread da casa de câmbio.
+        </p>
+        <p class="taxa-real-dica">Depois de trocar, anote aqui quantos reais valeu 1 peso. Vale para a
+          família toda e passa a ser a taxa usada para dividir as despesas.</p>
+        <div class="taxa-real-grid" id="taxa-real-grid"></div>
+      </div>
     </div>
   `;
   carregarCambioNaTela();
@@ -4176,6 +4247,15 @@ function renderViagem(){
       renderInicio();
     });
     cont.addEventListener("change", ev => {
+      // Taxa real digitada: grava, sincroniza e redesenha só o bloco de taxas
+      const campoTaxa = ev.target.closest("[data-taxa-moeda]");
+      if(campoTaxa){
+        const moeda = campoTaxa.getAttribute("data-taxa-moeda");
+        const valor = parseNumeroBR(campoTaxa.value);
+        definirTaxaDaFamilia(moeda, isNaN(valor) ? 0 : valor);
+        renderTaxaReal(carregarCambioCache());
+        return;
+      }
       const v2 = carregarViagem();
       if(ev.target.id === "viagem-inicio-input"){ v2.inicio = ev.target.value; }
       else if(ev.target.id === "viagem-hora-input"){ v2.hora = ev.target.value || "08:00"; }
@@ -5383,9 +5463,28 @@ function syncDespesas(){
   });
 }
 
-// Quantos reais vale 1 unidade da moeda, segundo a cotação já buscada pela aba Viagem
+/* ---- Taxa que a família realmente conseguiu ----
+   Guardada dentro da config "viagem" (que já sincroniza), então não precisa mexer no backend.
+   Existe porque a cotação automática é a OFICIAL, e na Argentina ela não é a que o turista pega:
+   o mercado paralelo paga bem mais. Usar a oficial faz o app subestimar o poder de compra de
+   vocês e, pior, converte errado as despesas na hora de dividir a conta. */
+function taxasDaFamilia(){
+  const v = carregarViagem();
+  return (v && v.taxas && typeof v.taxas === "object") ? v.taxas : {};
+}
+function definirTaxaDaFamilia(moeda, brlPorUnidade){
+  const v = carregarViagem();
+  v.taxas = v.taxas || {};
+  if(brlPorUnidade > 0) v.taxas[moeda] = { brl: brlPorUnidade, por: USUARIO || "", em: Date.now() };
+  else delete v.taxas[moeda];
+  salvarViagem(v);
+}
+
+// Quantos reais vale 1 unidade da moeda. A taxa registrada pela família manda sobre a automática.
 function cotacaoSugerida(moeda){
   if(moeda === "BRL") return 1;
+  const t = taxasDaFamilia()[moeda];
+  if(t && t.brl > 0) return t.brl;   // o que vocês pegaram de verdade vem antes da oficial
   const c = carregarCambioCache();
   if(!c || !c[moeda]) return null;
   return 1 / c[moeda];
