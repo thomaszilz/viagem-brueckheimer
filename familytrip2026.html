@@ -102,7 +102,8 @@
     --tape: rgba(240,113,74,.5);
   }
   :root[data-theme="dark"] .navbar { background: rgba(28,23,18,.86); }
-  :root[data-theme="dark"] .mapa-leaflet .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.8); }
+  :root[data-theme="dark"] .mapa-leaflet .leaflet-tile-pane,
+  :root[data-theme="dark"] .rot-mapa .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.8); }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -649,24 +650,167 @@
     .cambio-linha label { width:100%; }
     .cambio-linha input { width:100%; }
   }
-  /* ===== ROTEIRO DIA A DIA ===== */
-  .roteiro-dia { background: var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:16px; padding:20px 22px; margin-bottom:16px; box-shadow:0 12px 26px -16px var(--shadow); }
-  .roteiro-dia-nota { font-size:.8rem; color:var(--ink-soft); margin:0 0 10px; font-style:italic; line-height:1.45; }
-  .roteiro-dia-cabecalho { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(var(--hairline),.12); flex-wrap:wrap; }
-  .roteiro-dia-data { font-family:'Fraunces',Georgia,serif; font-weight:700; color:var(--ink); font-size:1.05rem; text-transform:capitalize; }
-  .roteiro-dia-cidade { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--terracotta-deep); background:rgba(226,100,59,.1); padding:4px 10px; border-radius:999px; }
-  .roteiro-itens { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
-  .roteiro-item { display:flex; align-items:center; gap:8px; background:rgba(var(--hairline),.05); border-radius:8px; padding:9px 12px; font-size:.88rem; color:var(--ink); }
-  .roteiro-item span:first-child { flex:1; }
-  .roteiro-item-autor { font-size:.7rem; color:var(--ink-soft); flex-shrink:0; }
-  .roteiro-item-del { background:transparent; border:none; color:var(--ink-soft); opacity:.5; cursor:pointer; font-size:1.1rem; line-height:1; flex-shrink:0; }
-  .roteiro-item-del:hover { opacity:1; color:#b8362a; }
-  .roteiro-vazio { font-size:.85rem; color:var(--ink-soft); font-style:italic; margin:0; }
-  .roteiro-add { display:flex; flex-direction:column; gap:8px; }
-  .roteiro-add select { padding:9px 10px; border:1px solid rgba(var(--hairline),.2); border-radius:6px; background:var(--paper-2); color:var(--ink); font-family:inherit; font-size:.85rem; }
-  .roteiro-add-livre { display:flex; gap:8px; }
-  .roteiro-add-livre input { flex:1; padding:9px 10px; border:1px solid rgba(var(--hairline),.2); border-radius:6px; background:var(--paper-2); color:var(--ink); font-family:inherit; font-size:.85rem; }
-  .roteiro-add-livre button { width:36px; border:none; border-radius:6px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; font-size:1.1rem; }
+  /* ---- Roteiro dia a dia, com mapa (a partir do roteiro fechado de Buenos Aires) ----
+     A aba antiga mostrava os 14 dias empilhados numa lista só. Com 55 paradas de Buenos Aires
+     dentro, isso vira uma parede de texto que ninguém lê no celular. Agora é um dia por vez:
+     escolhe o dia em cima, vê o trajeto no mapa e a linha do tempo embaixo. */
+  .rot-dias { display:flex; gap:8px; overflow-x:auto; padding:2px 2px 10px; margin-bottom:14px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .rot-dias::-webkit-scrollbar { display:none; }
+  .rot-dia-chip {
+    flex:0 0 auto; border:1px solid rgba(var(--hairline),.16); background:var(--paper); color:var(--ink-soft);
+    border-radius:14px; padding:8px 13px; cursor:pointer; font-family:inherit; text-align:center; line-height:1.25;
+    transition:border-color .15s, transform .15s;
+  }
+  .rot-dia-chip b { display:block; font-size:.9rem; font-weight:800; color:var(--ink); }
+  .rot-dia-chip span { display:block; font-size:.64rem; text-transform:uppercase; letter-spacing:.06em; }
+  .rot-dia-chip:hover { border-color:var(--terracotta); }
+  .rot-dia-chip.ativo { background:linear-gradient(100deg,var(--terracotta),var(--terracotta-deep)); border-color:transparent; box-shadow:0 8px 18px -8px rgba(226,100,59,.5); }
+  .rot-dia-chip.ativo b, .rot-dia-chip.ativo span { color:#fff; }
+  .rot-dia-chip.hoje::after { content:"hoje"; display:block; font-size:.58rem; font-weight:800; color:var(--teal); letter-spacing:.06em; text-transform:uppercase; }
+  .rot-dia-chip.ativo.hoje::after { color:#ffe9c9; }
+
+  .rot-cabecalho { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-radius:16px 16px 0 0; border-bottom:none; padding:18px 22px 14px; }
+  .rot-cab-data { font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); font-weight:700; }
+  .rot-cab-titulo { font-family:'Fraunces',Georgia,serif; font-size:1.32rem; font-weight:700; color:var(--ink); margin:2px 0 6px; line-height:1.2; }
+  .rot-cab-resumo { font-size:.86rem; color:var(--ink-soft); margin:0 0 10px; line-height:1.5; }
+  .rot-cab-meta { display:flex; flex-wrap:wrap; gap:7px; }
+  .rot-cab-meta span { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--teal-deep); background:rgba(60,122,115,.12); padding:4px 10px; border-radius:999px; }
+  .rot-cab-meta span.cidade { color:var(--terracotta-deep); background:rgba(226,100,59,.1); }
+
+  .rot-mapa-wrap { position:relative; }
+  .rot-mapa { height:340px; width:100%; border-left:1px solid rgba(var(--hairline),.08); border-right:1px solid rgba(var(--hairline),.08); background:var(--paper-2); }
+  @media (max-width:620px){ .rot-mapa { height:280px; } }
+
+  /* Botões flutuantes sobre o mapa, no canto — como todo mapa de celular tem */
+  .rot-mapa-acoes { position:absolute; top:10px; right:10px; z-index:500; display:flex; flex-direction:column; gap:6px; }
+  .rot-mapa-acoes button {
+    width:40px; height:40px; border-radius:11px; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+    background:var(--paper); color:var(--ink); border:1px solid rgba(var(--hairline),.14);
+    box-shadow:0 3px 10px rgba(0,0,0,.22); display:flex; align-items:center; justify-content:center;
+  }
+  .rot-mapa-acoes button:hover { border-color:var(--terracotta); }
+  .rot-mapa-acoes button.ativo { background:var(--teal); color:#fff; border-color:transparent; }
+  .rot-mapa-acoes button.carregando { opacity:.6; }
+
+  /* Tela cheia: o mapa de 280px do celular é pequeno pra ler um dia inteiro de paradas */
+  .rot-mapa-wrap.cheia { position:fixed; inset:0; z-index:1500; margin:0; }
+  .rot-mapa-wrap.cheia .rot-mapa { height:100%; border:none; border-radius:0; }
+  body.rot-travado { overflow:hidden; }
+
+  /* Aviso de zoom no desktop: rolar sozinho move a PÁGINA, como no Google Maps embutido */
+  .rot-mapa-dica {
+    position:absolute; inset:0; z-index:450; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.45); color:#fff; font-weight:700; font-size:.95rem; text-align:center; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity .18s;
+  }
+  .rot-mapa-dica.visivel { opacity:1; }
+
+  .rot-mapa-legenda {
+    position:absolute; left:10px; bottom:10px; z-index:500; display:flex; flex-direction:column; gap:4px;
+    background:rgba(var(--paper-rgb,255,255,255),.92); background:var(--paper); padding:7px 10px; border-radius:10px;
+    box-shadow:0 3px 10px rgba(0,0,0,.18); border:1px solid rgba(var(--hairline),.1); max-width:60%;
+  }
+  .rot-mapa-legenda:empty { display:none; }
+  .rot-mapa-legenda span { display:flex; align-items:center; gap:6px; font-size:.66rem; font-weight:700; color:var(--ink); line-height:1.2; }
+  .rot-mapa-legenda i { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+  /* Onde estou */
+  .rot-eu-ponto { width:16px; height:16px; border-radius:50%; background:#1a73e8; border:3px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.2), 0 2px 6px rgba(0,0,0,.35); }
+
+  .rot-ir { text-decoration:none; }
+  .rot-parada-acoes a.rot-ir { display:flex; align-items:center; justify-content:center;
+    width:38px; height:34px; border:1px solid rgba(var(--hairline),.14); border-radius:8px;
+    color:#1a73e8; font-size:.8rem; }
+  .rot-parada-acoes a.rot-ir:hover { border-color:#1a73e8; background:rgba(26,115,232,.08); }
+  :root[data-theme="dark"] .rot-parada-acoes a.rot-ir { color:#8ab4f8; }
+
+  .rot-abrir-maps {
+    display:inline-flex; align-items:center; gap:8px; text-decoration:none; font-family:inherit;
+    font-size:.82rem; font-weight:700; color:#1a73e8; border:1px solid rgba(26,115,232,.35);
+    background:rgba(26,115,232,.06); border-radius:10px; padding:10px 14px; width:100%; justify-content:center;
+  }
+  .rot-abrir-maps:hover { background:rgba(26,115,232,.13); }
+  .rot-maps-links { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+  :root[data-theme="dark"] .rot-abrir-maps { color:#8ab4f8; border-color:rgba(138,180,248,.35); background:rgba(138,180,248,.08); }
+  .rot-mapa-vazio { padding:26px 22px; text-align:center; font-size:.85rem; color:var(--ink-soft); font-style:italic; background:var(--paper-2); border-left:1px solid rgba(var(--hairline),.08); border-right:1px solid rgba(var(--hairline),.08); }
+
+  .rot-corpo { background:var(--paper); border:1px solid rgba(var(--hairline),.08); border-top:none; border-radius:0 0 16px 16px; padding:16px 22px 20px; box-shadow:0 12px 26px -16px var(--shadow); }
+
+  .rot-timeline { display:flex; flex-direction:column; }
+  .rot-parada { display:grid; grid-template-columns:52px 20px 1fr; align-items:start; gap:0; text-align:left; width:100%;
+    background:transparent; border:none; padding:0; font-family:inherit; cursor:pointer; }
+  .rot-parada-hora { font-size:.76rem; font-weight:800; color:var(--ink-soft); padding-top:11px; letter-spacing:.01em; }
+  .rot-parada-trilho { position:relative; align-self:stretch; }
+  .rot-parada-trilho::before { content:""; position:absolute; left:50%; top:0; bottom:0; width:2px; transform:translateX(-50%); background:rgba(var(--hairline),.14); }
+  .rot-parada:first-child .rot-parada-trilho::before { top:14px; }
+  .rot-parada:last-child .rot-parada-trilho::before { bottom:calc(100% - 14px); }
+  .rot-parada-bola { position:absolute; left:50%; top:14px; width:13px; height:13px; margin-left:-6.5px; border-radius:50%;
+    background:var(--paper); border:2.5px solid var(--terracotta); box-shadow:0 0 0 3px var(--paper); z-index:1; }
+  .rot-parada-conteudo { padding:8px 0 8px 12px; border-radius:10px; }
+  .rot-parada-nome { font-size:.9rem; font-weight:700; color:var(--ink); line-height:1.35; }
+  .rot-parada-nota { font-size:.79rem; color:var(--ink-soft); line-height:1.5; margin-top:3px; }
+  .rot-parada-como { font-size:.72rem; color:var(--ink-soft); margin-top:5px; opacity:.85; }
+  .rot-parada.selecionada .rot-parada-conteudo { background:rgba(226,100,59,.08); padding-left:12px; padding-right:12px; margin-right:-4px; }
+  .rot-parada.selecionada .rot-parada-bola { background:var(--terracotta); }
+  .rot-parada.oculta { display:none; }
+  .rot-parada-extra .rot-parada-bola { border-color:var(--teal); border-style:dashed; }
+
+  .rot-selos { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .rot-tag { font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.07em; padding:3px 8px; border-radius:999px;
+    color:var(--gold-deep); background:rgba(217,138,61,.14); }
+  .rot-grupo { font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.07em; padding:3px 8px; border-radius:999px;
+    color:var(--boca-blue); background:rgba(78,110,142,.14); }
+  .rot-aprox { font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:3px 8px; border-radius:999px;
+    color:var(--ink-soft); background:rgba(var(--hairline),.08); }
+  .rot-autor { font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:3px 8px; border-radius:999px;
+    color:var(--teal-deep); background:rgba(60,122,115,.12); }
+
+  .rot-parada-acoes { display:flex; gap:6px; align-items:center; margin-top:8px; }
+  /* Alvo de toque: o app é usado em pé, na rua, com uma mão só. 26x24 exigia mira. */
+  .rot-parada-acoes button { background:transparent; border:1px solid rgba(var(--hairline),.14); color:var(--ink-soft);
+    border-radius:8px; width:38px; height:34px; font-size:.8rem; line-height:1; cursor:pointer; padding:0; }
+  .rot-parada-acoes button:hover:not(:disabled) { border-color:var(--terracotta); color:var(--terracotta); }
+  .rot-parada-acoes button:disabled { opacity:.3; cursor:default; }
+  .rot-parada-acoes button.remover:hover { border-color:#b8362a; color:#b8362a; }
+
+  .rot-pin { display:flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%;
+    color:#fff; font-family:'Work Sans',sans-serif; font-weight:800; font-size:.85rem;
+    border:3px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,.35); background:var(--terracotta); }
+  .rot-pin.aprox { border-style:dashed; }
+  .rot-pin.ativo { transform:scale(1.25); box-shadow:0 6px 16px rgba(0,0,0,.45); z-index:900 !important; }
+  .rot-pin.agora { box-shadow:0 0 0 5px rgba(60,122,115,.35), 0 4px 10px rgba(0,0,0,.35); }
+
+  /* A parada em que o roteiro está agora, no dia que está acontecendo */
+  .rot-agora { display:inline-block; font-size:.58rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em;
+    color:#fff; background:var(--teal); padding:2px 7px; border-radius:999px; margin-right:7px; vertical-align:middle; }
+  .rot-parada.agora .rot-parada-bola { background:var(--teal); border-color:var(--teal); box-shadow:0 0 0 4px rgba(60,122,115,.22); }
+
+  /* Onde o grupo se divide — e onde volta a se juntar */
+  .rot-divisor { display:flex; align-items:center; gap:10px; margin:10px 0 4px; padding-left:2px; }
+  .rot-divisor::after { content:""; flex:1; height:1px; background:rgba(var(--hairline),.14); }
+  .rot-divisor span { font-size:.63rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--boca-blue); background:rgba(78,110,142,.12); padding:4px 10px; border-radius:999px; }
+  .rot-divisor span::before { content:"↱ "; }
+  .rot-divisor.juntos span { color:var(--teal-deep); background:rgba(60,122,115,.12); }
+  .rot-divisor.juntos span::before { content:"↳ "; }
+
+  .rot-dicas { margin-top:16px; border-top:1px solid rgba(var(--hairline),.1); padding-top:12px; }
+  .rot-dicas summary { cursor:pointer; font-size:.8rem; font-weight:800; color:var(--teal-deep); letter-spacing:.02em; list-style:none; }
+  .rot-dicas summary::-webkit-details-marker { display:none; }
+  .rot-dicas summary::before { content:"▸ "; }
+  .rot-dicas[open] summary::before { content:"▾ "; }
+  .rot-dicas ul { margin:10px 0 0; padding-left:18px; display:flex; flex-direction:column; gap:8px; }
+  .rot-dicas li { font-size:.81rem; color:var(--ink-soft); line-height:1.55; }
+
+  .rot-rodape { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:16px; border-top:1px solid rgba(var(--hairline),.1); padding-top:14px; }
+  .rot-add { display:flex; gap:8px; flex:1; min-width:220px; }
+  .rot-add input[type=text] { flex:1; padding:9px 11px; border:1px solid rgba(var(--hairline),.2); border-radius:8px; background:var(--paper-2); color:var(--ink); font-family:inherit; font-size:.85rem; }
+  .rot-add input[type=time] { width:96px; padding:9px 8px; border:1px solid rgba(var(--hairline),.2); border-radius:8px; background:var(--paper-2); color:var(--ink); font-family:inherit; font-size:.85rem; }
+  .rot-add button { border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; cursor:pointer; font-size:.85rem; padding:0 14px; }
+  .rot-add select { flex:1; padding:9px 10px; border:1px solid rgba(var(--hairline),.2); border-radius:8px; background:var(--paper-2); color:var(--ink); font-family:inherit; font-size:.85rem; }
+  .rot-restaurar { background:transparent; border:1px solid rgba(var(--hairline),.16); color:var(--ink-soft); border-radius:8px; padding:8px 12px; font-family:inherit; font-size:.76rem; cursor:pointer; }
+  .rot-restaurar:hover { border-color:var(--terracotta); color:var(--terracotta); }
+  .rot-vazio { font-size:.85rem; color:var(--ink-soft); font-style:italic; margin:6px 0 0; line-height:1.5; }
   /* ===== MAPA (Leaflet real) ===== */
   .mapa-modo-toggle { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
   .mapa-modo-btn {
@@ -1271,7 +1415,7 @@
       <button type="button" class="ajuda-btn" data-ajuda="roteiro" title="Como usar esta aba">?</button>
       <span class="eyebrow">O plano, dia por dia</span>
       <h2>Roteiro da viagem</h2>
-      <p>Monte a agenda de cada dia com os lugares votados (ou qualquer atividade extra). Sincroniza com todo mundo, igual o resto do app.</p>
+      <p>Um dia por vez: escolha a data em cima, veja o trajeto no mapa e a linha do tempo embaixo. Os sete dias de Buenos Aires já vêm montados do roteiro fechado — e qualquer um pode reordenar, tirar ou acrescentar parada. Sincroniza com todo mundo, igual o resto do app.</p>
     </div>
     <div id="roteiro-conteudo"></div>
   </section>
@@ -1358,6 +1502,12 @@ document.getElementById("view-toggle").addEventListener("click", e => {
 
 /* ================= NAV & FILTER WIRING ================= */
 function irParaPainel(nomePainel){
+  // Sair do Roteiro com o mapa em tela cheia deixava o mapa preso por cima do app inteiro (ele
+  // vive no <body> nessa hora, então trocar de aba não o esconde) e a rolagem travada, sem nenhum
+  // botão à vista pra desfazer. Fecha a tela cheia junto com a saída da aba.
+  if(nomePainel !== "roteiro" && typeof roteiroTelaCheia !== "undefined" && roteiroTelaCheia){
+    alternarTelaCheiaRoteiro();
+  }
   document.body.setAttribute("data-painel", nomePainel);
   document.querySelectorAll(".navbtn").forEach(b => b.classList.toggle("active", b.dataset.panel === nomePainel));
   document.querySelectorAll(".drawer-navbtn").forEach(b => b.classList.toggle("active", b.dataset.panel === nomePainel));
@@ -3311,9 +3461,13 @@ async function adicionarLocalSheets(){
    Pausa quando o app está em segundo plano (aba escondida ou celular no bolso): não adianta
    sincronizar uma tela que ninguém está olhando, e isso consumia dados e bateria o dia inteiro.
    Ao voltar pro app, sincroniza na hora em vez de esperar o próximo ciclo. */
-function sincronizarTudo(){
+async function sincronizarTudo(){
   if(!USE_SHEETS) return;
-  enviarOutbox(); // o que ficou pendente sobe antes de reler o servidor
+  // O await aqui não é enfeite: enviarOutbox é assíncrona, e sem ele as leituras abaixo saíam no
+  // MESMO tick do POST que ainda estava subindo. O comentário prometia "sobe antes de reler o
+  // servidor" e o código fazia as duas coisas ao mesmo tempo — a resposta do GET chegava com o
+  // estado anterior à escrita e revertia a tela de quem tinha acabado de mexer.
+  await enviarOutbox(); // o que ficou pendente sobe antes de reler o servidor
   syncFromSheets(); syncViagem(); syncAvatares(); syncAcessos();
   syncBagagemCompartilhada(); syncPendenciasManuais(); syncRoteiro(); syncDespesas(); syncLocaisMeta();
 }
@@ -3977,12 +4131,27 @@ function salvarRoteiro(r){
     salvarConfigRemota("roteiro", r);
   }
 }
+/* Existe alguma alteração do roteiro ainda esperando na fila pra subir? É o mesmo cuidado que
+   votosPendentesPorLocal() já fazia pelos votos, que ao roteiro faltava: sem isto, uma edição
+   feita sem rede era apagada da tela pelo primeiro sync bem-sucedido e, pior, a edição SEGUINTE
+   era montada em cima do estado já mutilado — e como chaveDeColapso() junta os dois setConfig do
+   roteiro num só, o item da fila que ainda guardava a primeira edição era descartado. A escrita
+   sumia sem deixar cópia em lugar nenhum. */
+function roteiroPendenteNaFila(){
+  return carregarOutbox().some(i => i.action === "setConfig" && i.payload && i.payload.roteiro !== undefined);
+}
 function syncRoteiro(){
   if(!USE_SHEETS || !SHEETS_API_URL) return;
   if(Date.now() < roteiroProtegidoAte) return; // deixa o POST recém-enviado chegar antes de reler
+  if(roteiroPendenteNaFila()) return;          // há escrita na fila: o servidor ainda não sabe dela
   obterConfigRemota()
     .then(data => {
       if(data && data.success && data.roteiro){
+        // Reconfere AQUI, e não só lá em cima. A resposta demora de meio a dois segundos, e a
+        // guarda de cima já tinha sido avaliada quando o pedido saiu — quem editasse nesse meio
+        // tempo via a própria alteração ser desfeita por um retrato do servidor que o servidor
+        // tirou antes de ela existir. A leitura só pode valer se nada foi escrito na espera.
+        if(Date.now() < roteiroProtegidoAte || roteiroPendenteNaFila()) return;
         if(JSON.stringify(carregarRoteiro()) !== JSON.stringify(data.roteiro)){
           salvarRoteiroLocal(data.roteiro);
           renderRoteiro();
@@ -4016,95 +4185,1118 @@ function isoDeData(date){
   return `${y}-${m}-${d}`;
 }
 
+/* ================= ROTEIRO FECHADO DE BUENOS AIRES =================
+   Vem do PDF "Roteiro Buenos Aires · 28/08 a 04/09 de 2026": 8 dias, 55 paradas, com horário,
+   como se chega em cada uma, as dicas do dia e a divisão do grupo nos dois dias em que ela existe.
+
+   Sobre as COORDENADAS — cada uma foi conferida uma a uma no OpenStreetMap antes de entrar aqui,
+   não geocodificada na hora pelo nome. O motivo é o mesmo que já derrubou a busca de fotos: nome
+   de lugar erra feio e erra calado. Dois exemplos reais desta checagem: "Av. Santa Fe 2550" devolve
+   PRIMEIRO um endereço homônimo em San Isidro, a 14 km da hospedagem; e "Defensa esquina Av. de
+   Mayo" devolvia um órgão de defesa do consumidor em outro município. Um pino errado no meio da
+   viagem é pior que pino nenhum, então o que não deu para confirmar no ponto exato está marcado
+   como aproximado (`precisao`) e o app diz isso na tela em vez de fingir precisão que não tem.
+
+   `ref` é o identificador estável da parada ("2.4" = dia 2, parada 4). É por ele que as edições da
+   família (ordem, paradas escondidas) são guardadas — assim mexer no texto de uma parada aqui não
+   desfaz o que já foi ajustado no celular de alguém. */
+const RBA_CASA = [-34.594362, -58.403067];        // Av. Santa Fe 2550, Barrio Norte — a hospedagem
+const RBA_AEROPARQUE = [-34.559455, -58.414364];  // Aeroparque Jorge Newbery
+const RBA_PUERTO_MADERO = [-34.608016, -58.365129]; // Puente de la Mujer, na orla das docas
+
+const ROTEIRO_BA = [
+  {
+    data: "2026-08-28", titulo: "Chegada e Puerto Madero", kmAPe: "1,5",
+    resumo: "Pouso às 16h05 no Aeroparque, o aeroporto urbano colado no rio. Dia curto e sem esforço: check-in e jantar à beira d’água.",
+    dicas: [
+      "Comprem o cartão SUBE hoje, em quiosque ou estação. Um cartão serve para os cinco — basta passar cinco vezes na catraca. Vocês vão usar a Linha D quase todo dia da viagem.",
+      "O Aeroparque fica a 20 min de casa, dentro da cidade — nada a ver com Ezeiza. Se o desembarque atrasar, o jantar em Puerto Madero absorve sem problema: não há nada com hora marcada hoje.",
+      "Hoje é o único dia bom para o mercado; nos outros vocês saem cedo e voltam tarde. As redes são Coto, Disco, Carrefour Express e Día. Antes de sair, vejam o que a cozinha do Airbnb tem: se a cafeteira for de cápsula, café moído não serve.",
+      "Volta de Uber. Não vale subte à noite com o grupo recém-chegado, cansado e com bagagem de mão.",
+      "Escurece por volta das 18h30 nesta época — vocês vão pegar Puerto Madero já iluminado, que é como ele fica melhor."
+    ],
+    paradas: [
+      { ref:"1.1", hora:"16h05", nome:"Pouso no Aeroparque", coord:RBA_AEROPARQUE, precisao:"exata", tag:"VOO",
+        nota:"Aeroparque Jorge Newbery. Guardem cerca de 55 min entre o pouso e o táxi, entre imigração e bagagem." },
+      { ref:"1.2", hora:"17h30", nome:"Check-in · Av. Santa Fe 2550", coord:RBA_CASA, precisao:"exata", como:"Uber, 20 min",
+        nota:"Av. Santa Fe 2550, 8º A, em Barrio Norte. Desfazer o essencial das malas." },
+      { ref:"1.3", hora:"18h", nome:"Mercado na Av. Santa Fe", coord:RBA_CASA, precisao:"aprox", tag:"ABASTECER O AIRBNB", como:"a poucas quadras de casa",
+        nota:"Café da manhã para a semana, água, itens de banheiro e vinho. Cerca de 40 min. Coto, Disco, Carrefour Express ou Día — confiram no mapa qual fica mais perto." },
+      { ref:"1.4", hora:"19h35", nome:"Jantar em Puerto Madero", coord:RBA_PUERTO_MADERO, precisao:"aprox", como:"Uber, 20 min",
+        nota:"Ponte de la Mujer, as docas iluminadas e jantar nos restaurantes da orla." },
+      { ref:"1.5", hora:"21h30", nome:"Lucciano’s · sorvete nas docas", coord:RBA_PUERTO_MADERO, precisao:"aprox", tag:"SOBREMESA", como:"na orla",
+        nota:"A sorveteria dos palitos coloridos, em Puerto Madero. Sorvete e uma volta pelas docas antes de subir." }
+    ]
+  },
+  {
+    data: "2026-08-29", titulo: "De Retiro ao Barrio Chino", kmAPe: "4,5",
+    resumo: "Os cinco juntos o dia inteiro, subindo a Linha D de ponta a ponta: palácio, bodegón, Palermo e o bairro chinês de Belgrano.",
+    dicas: [
+      "O dia inteiro sobe pela Linha D, sem um único vaivém. Retiro, Palermo Soho e Belgrano estão em ordem geográfica na mesma linha de subte — por isso o El Preferido virou almoço e o Barrio Chino, jantar.",
+      "Sem a visita guiada, o Palácio Paz vira uma parada de 30 min. Aproveitem a Plaza San Martín em frente, que vale tanto quanto a fachada: gomeros enormes e o monumento a San Martín no alto do barranco.",
+      "Reservem o El Preferido — mesa para cinco pede pelo menos duas semanas. O almoço é a melhor hora ali, e a milanesa é prato de meio-dia.",
+      "Chegar às 17h no Barrio Chino dá os dois momentos do bairro: as lojas ainda de dia, e as lanternas acesas quando escurece, por volta das 18h30.",
+      "Um dia sem nenhuma divisão do grupo — o único da viagem em que os cinco ficam juntos do café da manhã até a hora de dormir."
+    ],
+    paradas: [
+      { ref:"2.1", hora:"9h30", nome:"Saída de casa, a pé pela Santa Fe", coord:RBA_CASA, precisao:"exata", como:"1,8 km a pé",
+        nota:"De casa até Retiro, em linha reta pela avenida." },
+      { ref:"2.2", hora:"10h", nome:"Palácio Paz e Plaza San Martín", coord:[-34.595902,-58.377387], precisao:"exata",
+        nota:"Santa Fe 750. A fachada por fora, a praça arborizada em frente e as fotos. Sem entrar." },
+      { ref:"2.3", hora:"10h30", nome:"Calle del Arroyo", coord:[-34.591501,-58.380042], precisao:"trecho", como:"700 m a pé",
+        nota:"A rua parisiense de Retiro, com as galerias de arte." },
+      { ref:"2.4", hora:"12h", nome:"El Preferido · almoço", coord:[-34.585443,-58.425388], precisao:"exata", tag:"RESERVAR", como:"Linha D até Scalabrini Ortiz · 600 m a pé",
+        nota:"Jorge Luis Borges 2108. A milanesa, no bodegón histórico restaurado." },
+      { ref:"2.5", hora:"13h45", nome:"Palermo Soho · Plaza Serrano", coord:[-34.588755,-58.430167], precisao:"exata", como:"800 m a pé",
+        nota:"Plaza Serrano e as lojas de design das ruas Honduras, El Salvador e Gurruchaga." },
+      /* Único ponto do roteiro em que a fonte e o mapa não fecham, e por isso ele está marcado como
+         aproximado em vez de posto como certeza. O roteiro diz "Palermo Soho, a poucas quadras da
+         Plaza Serrano" e conta 400 m — número que fecha com o resto do dia (1,8+0,7+0,6+0,8+0,4+0,2
+         = os 4,5 km declarados). Só que o único Daniel Bakery que existe no OpenStreetMap fica na
+         Av. Honduras 3714, a 1,5 km dali. Ou é outra unidade, ou a distância do roteiro está
+         errada. O pino vai no endereço que dá pra verificar, e a nota conta o conflito: seguir
+         calado qualquer um dos dois mandaria alguém andar 1,5 km na direção errada. */
+      { ref:"2.6", hora:"15h45", nome:"Daniel Bakery", coord:[-34.594229,-58.414942], precisao:"aprox", tag:"CAFETERIA", como:"400 m a pé, segundo o roteiro",
+        nota:"Confiram o endereço antes de sair andando: o roteiro diz “Palermo Soho, a poucas quadras da Plaza Serrano”, mas o único Daniel Bakery no mapa fica na Av. Honduras 3714 — a cerca de 1,5 km de lá, na direção de casa. O pino está no endereço do mapa." },
+      { ref:"2.7", hora:"17h", nome:"Barrio Chino · jantar às 19h", coord:[-34.557233,-58.450364], precisao:"aprox", tag:"PASSEIO", como:"Linha D, 5 estações até Juramento · 200 m a pé",
+        nota:"O arco na esquina de Arribeños com Juramento. Supermercados asiáticos, casas de chá, bubble tea e as lojinhas, com tempo de sobra. Jantar ali mesmo, escolhendo na hora." }
+    ]
+  },
+  {
+    data: "2026-08-30", titulo: "San Telmo, e à noite o jogo", kmAPe: "3,5",
+    resumo: "Feira de dia com os cinco. Às 17h Thomas e Mateus saem de San Telmo direto para Avellaneda; Paula, Juliane e Júlia seguem para a Plaza de Mayo e o Alto Palermo.",
+    dicas: [
+      "Sair de San Telmo direto para o estádio economiza uma hora — Avellaneda fica ao sul, do mesmo lado da cidade. Levem o passaporte desde a manhã.",
+      "Ingresso resolvido antes de viajar: jogo argentino é majoritariamente para sócio e não se compra na porta. Sem mochila, sem cores do adversário. Avellaneda não é bairro turístico — Uber na ida e na volta.",
+      "Voltar pela Perú em vez da Defensa é de propósito: é a rua vizinha, sem a multidão da feira, e é onde fica o Punto Café. Vocês percorrem San Telmo duas vezes sem repetir calçada.",
+      "Domingo é o único dia da feira, que só desmonta às 17h. Esta data não pode ser trocada por nenhuma outra da semana.",
+      "O Alto Palermo fica na estação Bulnes, na mesma Linha D da Plaza de Mayo, e de lá são 700 m a pé até em casa. Preenche a noite de vocês três enquanto o jogo acontece, sem Uber nenhum."
+    ],
+    paradas: [
+      { ref:"3.1", hora:"10h", nome:"Saída de casa · Subte D", coord:RBA_CASA, precisao:"exata" },
+      { ref:"3.2", hora:"10h30", nome:"Início da feira · Defensa", coord:[-34.6091,-58.3716], precisao:"trecho", como:"Subte D, 7 estações (Agüero → Catedral) · 2 quadras",
+        nota:"A feira começa na Defensa esquina com a Av. de Mayo e desce para o sul, entre antiquários e bancas de artesanato." },
+      { ref:"3.3", hora:"12h30", nome:"Mercado San Telmo", coord:[-34.619049,-58.372512], precisao:"exata", como:"600 m a pé",
+        nota:"Defensa 963. Almoço nas bancas: empanadas, choripán, parrilla." },
+      { ref:"3.4", hora:"14h", nome:"Galería Solar de French", coord:[-34.620292,-58.371319], precisao:"exata", como:"1 quadra",
+        nota:"Defensa 1066. Pátios coloniais azulejados e bancas de artesãos. Coberta, boa no horário de mais sol." },
+      { ref:"3.5", hora:"14h45", nome:"Plaza Dorrego", coord:[-34.620492,-58.371781], precisao:"exata", como:"meia quadra",
+        nota:"O coração da feira, com tango na praça." },
+      { ref:"3.6", hora:"16h30", nome:"Punto Café · Perú 602", coord:[-34.615005,-58.37437], precisao:"exata", tag:"CAFETERIA", como:"550 m a pé, subindo pela Calle Perú",
+        nota:"Perú 602, em Montserrat. Última parada dos cinco juntos." },
+      { ref:"3.7", hora:"19h15", nome:"Independiente", coord:[-34.670223,-58.371038], precisao:"exata", tag:"JOGO", grupo:"Thomas e Mateus", como:"Uber, 25 min direto de San Telmo",
+        nota:"Estádio Libertadores de América, em Avellaneda. Saída às 17h; às 17h45 o El Cilindro, estádio do Racing, por fora; entrada no estádio a 300 m dali, às 18h15." },
+      { ref:"3.8", hora:"17h30", nome:"Plaza de Mayo", coord:[-34.608445,-58.372179], precisao:"exata", grupo:"Paula, Juliane e Júlia", como:"500 m a pé",
+        nota:"E o subte na estação Catedral em seguida." },
+      { ref:"3.9", hora:"18h30", nome:"Alto Palermo · Bath & Body Works", coord:[-34.587948,-58.410202], precisao:"exata", tag:"COMPRAS", grupo:"Paula, Juliane e Júlia", como:"Linha D, 8 estações (Catedral → Bulnes)",
+        nota:"Alto Palermo Shopping, Local 3-35/36/37, Av. Santa Fe 3253. Fecha por volta das 21h. Jantar no próprio shopping ou na Av. Santa Fe, voltando os 700 m a pé até casa." }
+    ]
+  },
+  {
+    data: "2026-08-31", titulo: "Centro, Recoleta e Don Julio", kmAPe: "6,5",
+    resumo: "Começa num teatro de ópera e termina na calçada mais concorrida de Palermo. O dia inteiro foi puxado 45 min para trás por causa da fila.",
+    dicas: [
+      "Chegar às 17h30 é o ponto do dia. O Don Julio serve espumante e empanadas de graça a quem espera na calçada, e essa hora e meia é parte da experiência. A reserva das 19h garante a mesa de qualquer jeito.",
+      "Por isso o El Ateneo foi para 15h45, mais cedo que a maioria das cafeterias da semana: foi para caber a passada em casa antes de Palermo.",
+      "Segunda é o dia em que Palermo fecha — Eco Parque, Jardim Botânico e a maioria dos museus. Tudo deste roteiro abre normalmente, por isso ele caiu aqui.",
+      "Reservem o Teatro Colón online. Os horários enchem e há tour em português. Segunda costuma ser bom dia: sem função à noite, a sala fica livre para visita."
+    ],
+    paradas: [
+      { ref:"4.1", hora:"9h15", nome:"Saída de casa, a pé", coord:RBA_CASA, precisao:"exata", como:"1,4 km a pé" },
+      { ref:"4.2", hora:"9h15", nome:"Floralis Genérica", coord:[-34.581689,-58.394002], precisao:"exata",
+        nota:"A flor gigante de metal em frente à Faculdade de Direito. 15 min, foto." },
+      { ref:"4.3", hora:"10h30", nome:"Teatro Colón", coord:[-34.601086,-58.383187], precisao:"exata", tag:"VISITA GUIADA · RESERVAR", como:"1,4 km de volta · Subte D, 5 estações",
+        nota:"Cerrito 628. Cerca de 50 min. A cúpula pintada e os camarotes em ferradura." },
+      { ref:"4.4", hora:"11h45", nome:"Obelisco", coord:[-34.603709,-58.38163], precisao:"exata", como:"300 m a pé",
+        nota:"Foto, 10 min. Fica a duas quadras do Colón. Almoço em seguida na Av. Corrientes." },
+      { ref:"4.5", hora:"13h45", nome:"Galerías Pacífico · Florida", coord:[-34.599244,-58.374763], precisao:"exata", tag:"COMPRAS", como:"600 m a pé",
+        nota:"Florida 737. A cúpula com os afrescos vale mais que as lojas." },
+      { ref:"4.6", hora:"15h45", nome:"El Ateneo Grand Splendid", coord:[-34.595983,-58.394262], precisao:"exata", tag:"CAFETERIA", como:"na rota, 2,2 km pela Florida e a Santa Fe",
+        nota:"Santa Fe 1860. Teatro de 1919 virado livraria; o café fica no palco." },
+      { ref:"4.7", hora:"17h30", nome:"Don Julio · a fila", coord:[-34.586292,-58.424277], precisao:"exata", tag:"RESERVA ÀS 19h", como:"Uber, 10 min",
+        nota:"Guatemala 4691. Chegar cedo para a calçada: Chandon e empanadas cortesia enquanto se espera. Passando em casa às 16h30 para banho e trocar de roupa." }
+    ]
+  },
+  {
+    data: "2026-09-01", titulo: "Tigre e o Delta", kmAPe: "2",
+    resumo: "Dia inteiro fora da cidade. O mais descansado da semana em caminhada, apesar de ser o mais longo em horas.",
+    dicas: [
+      "Cheguem à Estación Fluvial antes das 11h. Os passeios saem em horário fixo, e perder um custa de 45 min a 1h de espera.",
+      "Dois trens possíveis: o Mitre direto é rápido e barato, 1h. O Tren de la Costa é mais lento, mas vai margeando o rio com estações antigas restauradas — para esse, peguem o Mitre até Maipú e façam a baldeação.",
+      "Há passeios de 1h, 1h30 e 2h, comprados na hora, sem reserva. Existe também a lancha colectiva, o barco de linha de quem mora nas ilhas: mais lento e sem narração, mas é a experiência real do Delta.",
+      "Orçamento: o trem é irrisório com o SUBE; o barco fica na faixa de US$ 15 a 25 por pessoa."
+    ],
+    paradas: [
+      { ref:"5.1", hora:"8h30", nome:"Saída de casa", coord:RBA_CASA, precisao:"exata", como:"Subte D → Catedral + Linha C, ou Uber 15 min" },
+      { ref:"5.2", hora:"9h15", nome:"Retiro · trem Mitre", coord:[-34.59115,-58.37468], precisao:"exata",
+        nota:"Trem Mitre, ramal Tigre — passa com o mesmo cartão SUBE. Cerca de 1h de viagem." },
+      { ref:"5.3", hora:"10h20", nome:"Estação de Tigre", coord:[-34.423534,-58.581763], precisao:"exata", como:"trem Mitre, ~1h" },
+      { ref:"5.4", hora:"11h", nome:"Estación Fluvial · barco pelo Delta", coord:[-34.421308,-58.579694], precisao:"exata", tag:"PASSEIO DE BARCO", como:"5 min a pé",
+        nota:"Comprar o passeio no balcão. 1h30 entre as ilhas, as casas sobre palafitas e os canais." },
+      { ref:"5.5", hora:"12h45", nome:"Paseo Victorica · almoço", coord:[-34.412711,-58.586105], precisao:"trecho",
+        nota:"A costanera com os clubes de remo antigos." },
+      { ref:"5.6", hora:"14h30", nome:"Puerto de Frutos", coord:[-34.418921,-58.572568], precisao:"exata", como:"15 min a pé",
+        nota:"Feira de artesanato, móveis de vime e lembranças. Depois, café à beira do rio às 16h30 e trem de volta às 17h30." }
+    ]
+  },
+  {
+    data: "2026-09-02", titulo: "Da La Boca ao Puerto Madero", kmAPe: "5",
+    resumo: "Uma linha contínua de oeste a leste. O grupo se divide só durante o tour do estádio e se reencontra ao meio-dia.",
+    dicas: [
+      "Às 9h o Caminito é de vocês. Os ônibus de turismo chegam por volta das 10h30, e a luz da manhã bate de frente nas casas coloridas — a fachada leste é a mais fotografada e só fica boa cedo. Para isso funcionar, o Uber tem que sair de casa às 8h30.",
+      "Confirmem o horário da primeira visita da Bombonera. O dia está calibrado para 10h; se a primeira sessão for às 11h, tudo empurra uma hora e a tarde absorve sem quebrar nada.",
+      "A Fundación Proa fica a 300 m e tem a única vista boa do bairro, mas começando tão cedo a janela cai antes de o museu abrir. Se confirmarem que abre às 10h, ela cabe.",
+      "Confiram a agenda do Boca antes — em dia de jogo o tour não roda, e meio de semana costuma ter Libertadores. Plano B: trocar quarta por quinta.",
+      "Fiquem no circuito Caminito, Av. Pedro de Mendoza e Bombonera. Tudo do dia está dentro dele — sem caminhar para fora da área."
+    ],
+    paradas: [
+      { ref:"6.1", hora:"8h30", nome:"Saída de casa · Uber", coord:RBA_CASA, precisao:"exata", como:"Uber, 25 min" },
+      { ref:"6.2", hora:"9h", nome:"Caminito · as casas vazias", coord:[-34.639359,-58.362569], precisao:"exata", tag:"OS CINCO JUNTOS",
+        nota:"As casas coloridas ainda vazias, na primeira luz — a melhor hora do dia para fotografar." },
+      { ref:"6.3", hora:"10h", nome:"La Bombonera", coord:[-34.635517,-58.364916], precisao:"exata", tag:"VISITA GUIADA", grupo:"Thomas e Mateus", como:"400 m a pé",
+        nota:"Tour do estádio e Museu da Paixão Boquense, cerca de 1h15." },
+      /* O roteiro divide a manhã de 02/09 em dois blocos com horário próprio, do mesmo jeito que
+         divide a noite de 30/08. Esta parada faltava: o programa das três estava escondido dentro
+         da nota da Bombonera, então esconder a Bombonera (o que a dica do dia manda considerar, se
+         houver jogo do Boca) apagava junto a única menção ao que elas fariam nessas duas horas. */
+      { ref:"6.3b", hora:"9h45", nome:"Caminito com calma e a Av. Pedro de Mendoza", coord:[-34.639359,-58.362569], precisao:"aprox", grupo:"Paula, Juliane e Júlia",
+        nota:"As vielas sem gente, os ateliês e a beira do Riachuelo, olhando para o velho Puente Transbordador. Até o Uber das 11h20, quando os cinco se reencontram." },
+      { ref:"6.4", hora:"11h50", nome:"Congreso de la Nación", coord:[-34.609824,-58.392732], precisao:"exata", como:"Uber, 20 min",
+        nota:"Fachada e Plaza del Congreso, 20 min. Os cinco de novo juntos. Almoço em seguida na Av. de Mayo, sem pressa." },
+      { ref:"6.5", hora:"14h30", nome:"Catedral Metropolitana", coord:[-34.607474,-58.373277], precisao:"exata", como:"1,5 km a pé pela Av. de Mayo",
+        nota:"Entrar. Túmulo de San Martín com guarda de honra." },
+      { ref:"6.6", hora:"15h10", nome:"Casa Rosada e Plaza de Mayo", coord:[-34.608069,-58.370276], precisao:"exata", como:"na praça",
+        nota:"A fachada, o Cabildo e a Pirâmide de Mayo, tudo na mesma praça. Sem tour e sem pressa." },
+      { ref:"6.7", hora:"16h30", nome:"Rooftop Plaza de Mayo", coord:[-34.608445,-58.372179], precisao:"aprox", tag:"CAFETERIA",
+        nota:"A luz do fim de tarde sobre a praça." },
+      { ref:"6.8", hora:"18h", nome:"Puerto Madero · pôr do sol", coord:RBA_PUERTO_MADERO, precisao:"aprox", como:"1 km a pé",
+        nota:"1 km reto para o leste. Docas, Ponte de la Mujer, pôr do sol por volta das 18h30. Jantar nas docas." }
+    ]
+  },
+  {
+    data: "2026-09-03", titulo: "Palermo, dos parques ao Soho", kmAPe: "7,5",
+    resumo: "Café da manhã no Cuervo, os parques no meio do dia e as duas torrefações de Hollywood no fim da tarde.",
+    dicas: [
+      "Com o Cuervo virando café da manhã, as duas torrefações de Hollywood ficaram juntas no fim da tarde. Elas estão a 400 m uma da outra, então são uma parada só, e vocês já voltam para casa pela estação Ministro Carranza.",
+      "O almoço nos Arcos del Rosedal é o ponto do dia. É o único polo gastronômico dentro do próprio parque — por isso o El Preferido foi para o sábado, para não competir com ele.",
+      "O Café Cuervo fica a 900 m de casa, a pé. A Arenales é a rua paralela à Santa Fe, uma quadra a oeste — 12 minutos de caminhada, sem subte.",
+      "Eco Parque e Jardim Botânico fecham às segundas — por isso este dia não pode ser antecipado."
+    ],
+    paradas: [
+      { ref:"7.1", hora:"9h", nome:"Saída de casa, a pé", coord:RBA_CASA, precisao:"exata", como:"900 m a pé" },
+      { ref:"7.2", hora:"9h", nome:"Café Cuervo · Arenales 3339", coord:[-34.587752,-58.410057], precisao:"exata", tag:"CAFÉ DA MANHÃ",
+        nota:"Arenales 3339, em Palermo. A Arenales é a paralela da Santa Fe, uma quadra a oeste." },
+      { ref:"7.3", hora:"10h30", nome:"El Rosedal", coord:[-34.570952,-58.417238], precisao:"exata", como:"2,2 km",
+        nota:"O roseiral, a ponte branca e o lago." },
+      { ref:"7.4", hora:"12h", nome:"Arcos del Rosedal · almoço", coord:[-34.570484,-58.421074], precisao:"aprox", como:"ao lado",
+        nota:"Almoço no polo gastronômico, dentro do próprio parque, na Av. Infanta Isabel." },
+      { ref:"7.5", hora:"13h30", nome:"Eco Parque Palermo", coord:[-34.577508,-58.415736], precisao:"exata", como:"1,2 km",
+        nota:"Entrada gratuita de terça a domingo." },
+      { ref:"7.6", hora:"15h15", nome:"Jardim Botânico", coord:[-34.582593,-58.417256], precisao:"exata", como:"800 m",
+        nota:"Jardim Botânico Carlos Thays, Santa Fe 3951. Fecha às 18h45." },
+      { ref:"7.7", hora:"16h30", nome:"Lab Tostadores · Hollywood", coord:[-34.586024,-58.436859], precisao:"exata", tag:"CAFETERIA", como:"1,5 km",
+        nota:"Humboldt 1542, Palermo Hollywood. Torrefação de cafés especiais." },
+      { ref:"7.8", hora:"17h15", nome:"All Saints Café", coord:[-34.584027,-58.437982], precisao:"exata", tag:"CAFETERIA", como:"400 m",
+        nota:"Bonpland 1615, a 400 m do anterior: o coffee crawl de verdade. Depois, Subte D de Ministro Carranza até Agüero. Jantar livre — última noite, sem hora marcada." }
+    ]
+  },
+  {
+    data: "2026-09-04", titulo: "Partida para o Chile", kmAPe: null,
+    resumo: "Voo às 9h25 do Aeroparque, a 20 min de casa. Saída cedo — nada abre na Santa Fe a essa hora, o café da manhã fica para o saguão.",
+    dicas: [
+      "Reservem o traslado na véspera. Cinco pessoas com mala despachada não cabem num carro só — serão dois veículos ou uma van.",
+      "O Aeroparque joga a favor: 20 min de casa e pequeno, bem diferente de Ezeiza. Se alguém atrasar dez minutos, o voo não está em risco."
+    ],
+    paradas: [
+      { ref:"8.1", hora:"6h", nome:"Acordar e fechar as malas", coord:RBA_CASA, precisao:"exata" },
+      { ref:"8.2", hora:"6h45", nome:"Sair de casa", coord:RBA_CASA, precisao:"exata", como:"traslado reservado na véspera" },
+      { ref:"8.3", hora:"7h25", nome:"Check-in no Aeroparque", coord:RBA_AEROPARQUE, precisao:"exata", como:"20 min de carro",
+        nota:"2h antes do voo internacional. Café da manhã no saguão." },
+      { ref:"8.4", hora:"9h25", nome:"Voo para o Chile", coord:RBA_AEROPARQUE, precisao:"exata", tag:"VOO" }
+    ]
+  }
+];
+const ROTEIRO_BA_POR_DATA = Object.fromEntries(ROTEIRO_BA.map(d => [d.data, d]));
+
+/* ---- As edições da família sobre o roteiro do PDF ----
+   Moram DENTRO da configuração "roteiro", que já é sincronizada, numa chave que não é data
+   ("__ba"). Isso foi de propósito: a planilha só aceita uma lista fixa de chaves de configuração,
+   então guardar aqui evita ter que mexer no Apps Script e republicar o backend só por causa disso.
+   Como todo o resto do app lê o roteiro por data (roteiro["2026-08-29"]), a chave "__ba" passa
+   despercebida por quem não a conhece.
+
+   Guarda só o DIFF — que ordem ficou e o que foi escondido —, nunca o roteiro inteiro. Assim uma
+   correção de texto aqui no código chega em todo mundo sem apagar o que a família já ajustou, e o
+   que sobe pra planilha a cada mudança são algumas centenas de bytes em vez de 20 KB. */
+function overlayBA(){ const r = carregarRoteiro(); return (r && r.__ba) || {}; }
+function salvarOverlayBA(iso, mudanca){
+  const r = carregarRoteiro();
+  if(!r.__ba) r.__ba = {};
+  const atual = r.__ba[iso] || {};
+  const novo = Object.assign({}, atual, mudanca);
+  // Não guarda diff vazio: dia sem alteração nenhuma some do overlay em vez de virar lixo eterno
+  if((!novo.ordem || !novo.ordem.length) && (!novo.ocultos || !novo.ocultos.length)) delete r.__ba[iso];
+  else r.__ba[iso] = novo;
+  if(!Object.keys(r.__ba).length) delete r.__ba;
+  salvarRoteiro(r);
+}
+/* As paradas do PDF de um dia, já com a ordem e as remoções da família aplicadas. */
+function paradasBADoDia(iso){
+  const dia = ROTEIRO_BA_POR_DATA[iso];
+  if(!dia) return [];
+  const ov = overlayBA()[iso] || {};
+  const ocultos = new Set(ov.ocultos || []);
+  const porRef = Object.fromEntries(dia.paradas.map(p => [p.ref, p]));
+  // A ordem guardada pode estar velha em relação ao código (parada nova aqui, parada que saiu
+  // dali): quem está na ordem e ainda existe vem primeiro, e o que o código tem de novo entra
+  // depois, na posição original. Sem isso, acrescentar uma parada ao PDF a faria sumir da tela
+  // de quem já tinha reordenado o dia.
+  const ordenadas = (ov.ordem || []).map(ref => porRef[ref]).filter(Boolean);
+  const jaListadas = new Set(ordenadas.map(p => p.ref));
+  // Entra na posição que ela ocupa no código — logo depois da parada que vem antes dela aqui —,
+  // e não no fim da lista. Jogar no fim fazia uma parada nova das 10h45 aparecer embaixo do jantar
+  // das 22h, e só para quem já tivesse mexido nas setas naquele dia: como o overlay é
+  // compartilhado, bastava UMA pessoa ter reordenado para o dia ficar torto para a família toda,
+  // com o traçado do mapa voltando ao ponto de partida.
+  dia.paradas.forEach((p, i) => {
+    if(jaListadas.has(p.ref)) return;
+    let depoisDe = -1;
+    for(let k = i - 1; k >= 0; k--){
+      const pos = ordenadas.findIndex(o => o.ref === dia.paradas[k].ref);
+      if(pos !== -1){ depoisDe = pos; break; }
+    }
+    ordenadas.splice(depoisDe + 1, 0, p);
+    jaListadas.add(p.ref);
+  });
+  return ordenadas.filter(p => !ocultos.has(p.ref));
+}
+function temParadaOcultaBA(iso){ return !!((overlayBA()[iso] || {}).ocultos || []).length; }
+function diaFoiEditadoBA(iso){
+  const ov = overlayBA()[iso] || {};
+  return !!((ov.ocultos && ov.ocultos.length) || (ov.ordem && ov.ordem.length));
+}
+
+/* Converte "16h05" / "9h" / "17:30" num número comparável, pra intercalar as paradas do PDF com o
+   que a família acrescentar. Quem não tem hora vai pro fim, na ordem em que foi adicionado. */
+function minutosDaHora(txt){
+  const m = String(txt || "").match(/^(\d{1,2})\s*[h:]\s*(\d{2})?/);
+  if(!m) return null;
+  return (+m[1]) * 60 + (+(m[2] || 0));
+}
+function fmtHoraCurta(txt){
+  const min = minutosDaHora(txt);
+  if(min === null) return txt || "";
+  const h = Math.floor(min/60), mm = min % 60;
+  return mm ? `${h}h${String(mm).padStart(2,"0")}` : `${h}h`;
+}
+
 function renderRoteiro(){
   const cont = document.getElementById("roteiro-conteudo");
   if(!cont) return;
-  const dias = diasDaViagem();
-  const roteiro = carregarRoteiro();
-  const locais = carregarLocais();
+  const dias = diasDoRoteiro();
 
   if(!dias.length){
     cont.innerHTML = `<p class="home-vazio">Defina as datas e noites de cada cidade na aba <strong>Viagem</strong> pra começar a montar o roteiro.</p>`;
     return;
   }
 
-  cont.innerHTML = dias.map(d => {
-    const iso = isoDeData(d.data);
-    const itens = roteiro[iso] || [];
-    const locaisCidade = locais.filter(l => l.cidade === d.cidade).slice().sort((a,b) => (b.votos||[]).length - (a.votos||[]).length);
-    return `
-      <div class="roteiro-dia">
-        <div class="roteiro-dia-cabecalho">
-          <div class="roteiro-dia-data">${fmtData(d.data)}</div>
-          <div class="roteiro-dia-cidade">${d.volta ? `✈️ Volta · ${esc(d.cidade)}` : esc(d.cidade)}</div>
+  // O dia escolhido sobrevive entre um render e outro (o sync redesenha a aba a cada 5s; sem isso
+  // a tela pulava de volta pro primeiro dia sozinha enquanto a pessoa lia o dia do jogo).
+  if(!roteiroDiaSel || !dias.some(d => d.iso === roteiroDiaSel)) roteiroDiaSel = diaPadraoDoRoteiro(dias);
+
+  // A casca é montada uma vez só. O mapa em especial NÃO pode ser recriado a cada troca de dia:
+  // um L.map novo por dia deixa o anterior vivo escutando eventos, e depois de umas dez trocas o
+  // celular fica lento sem motivo aparente.
+  if(!document.getElementById("rot-mapa")){
+    cont.innerHTML = `
+      <div class="rot-dias" id="rot-dias"></div>
+      <div class="rot-cabecalho" id="rot-cabecalho"></div>
+      <div class="rot-mapa-wrap" id="rot-mapa-wrap">
+        <div class="rot-mapa" id="rot-mapa"></div>
+        <div class="rot-mapa-acoes">
+          <!-- aria-label explícito: pelo algoritmo de nome acessível o conteúdo do botão vence o
+               title, então um leitor de tela anunciaria só "emoji de alfinete". O aria-pressed diz
+               se a localização está ligada, que a cor sozinha não informa. -->
+          <button type="button" data-rot-onde aria-label="Mostrar onde eu estou" aria-pressed="false"
+                  title="Mostrar onde eu estou"><span aria-hidden="true">📍</span></button>
+          <button type="button" data-rot-tela aria-label="Abrir o mapa em tela cheia"
+                  title="Tela cheia"><span aria-hidden="true">⛶</span></button>
         </div>
-        ${d.volta ? `<p class="roteiro-dia-nota">Último dia: check-out e viagem de volta. Vale combinar aqui o horário de sair e o que ainda dá tempo de fazer.</p>` : ""}
-        <div class="roteiro-itens">
-          ${itens.length ? itens.map((it,i) => `
-            <div class="roteiro-item">
-              <span>${esc(it.texto)}</span>
-              ${it.autor ? `<span class="roteiro-item-autor">${esc(it.autor)}</span>` : ""}
-              <button type="button" class="roteiro-item-del" data-roteiro-del="${iso}|${i}" title="Remover">×</button>
-            </div>
-          `).join("") : `<p class="roteiro-vazio">Nada planejado ainda pra esse dia.</p>`}
-        </div>
-        <div class="roteiro-add">
-          ${locaisCidade.length ? `
-            <select data-roteiro-select="${iso}">
-              <option value="">+ Adicionar lugar votado…</option>
-              ${locaisCidade.map(l => `<option value="${esc(l.nome)}">${esc(l.nome)} (${(l.votos||[]).length} interesse${(l.votos||[]).length===1?"":"s"})</option>`).join("")}
-            </select>
-          ` : ""}
-          <div class="roteiro-add-livre">
-            <input type="text" placeholder="ou escreva uma atividade…" data-roteiro-input="${iso}">
-            <button type="button" data-roteiro-add="${iso}">+</button>
-          </div>
+        <div class="rot-mapa-dica" id="rot-mapa-dica"></div>
+        <div class="rot-mapa-legenda" id="rot-mapa-legenda"></div>
+      </div>
+      <div class="rot-corpo" id="rot-corpo"></div>`;
+    ligarEventosRoteiro(cont);
+    // Estes dois vão direto no botão, e não pela delegação: em tela cheia o mapa é movido pro
+    // <body>, sai de dentro de #roteiro-conteudo e o clique deixaria de chegar lá — ou seja, o
+    // botão de SAIR da tela cheia pararia de funcionar justamente quando é o único visível.
+    cont.querySelector("[data-rot-onde]").addEventListener("click", mostrarOndeEstou);
+    cont.querySelector("[data-rot-tela]").addEventListener("click", alternarTelaCheiaRoteiro);
+  }
+
+  renderRoteiroChips(dias);
+  renderRoteiroDia();
+}
+
+/* Os dias que a aba mostra: os da viagem (que saem das cidades e noites da aba Viagem) mais
+   qualquer data do roteiro fechado de Buenos Aires que não esteja entre eles. A segunda parte é
+   uma rede de segurança: se alguém mexer nas noites na aba Viagem, o roteiro de 55 paradas não
+   pode simplesmente desaparecer do app. */
+function diasDoRoteiro(){
+  const lista = diasDaViagem().map(d => ({ iso: isoDeData(d.data), data: d.data, cidade: d.cidade, volta: d.volta }));
+  const vistos = new Set(lista.map(d => d.iso));
+  ROTEIRO_BA.forEach(d => {
+    if(vistos.has(d.data)) return;
+    const [a,m,di] = d.data.split("-").map(Number);
+    lista.push({ iso: d.data, data: new Date(a, m-1, di), cidade: "Buenos Aires", foraDaViagem: true });
+  });
+  return lista.sort((a,b) => a.iso < b.iso ? -1 : a.iso > b.iso ? 1 : 0);
+}
+/* Abre no dia de hoje se a viagem estiver acontecendo; senão, no primeiro dia. */
+function diaPadraoDoRoteiro(dias){
+  const hoje = isoDeData(new Date());
+  const doDia = dias.find(d => d.iso === hoje);
+  return doDia ? doDia.iso : dias[0].iso;
+}
+
+let roteiroDiaSel = "";
+let roteiroParadaSel = "";
+let mapaRoteiro = null, mapaRoteiroLayer = null, mapaRoteiroEuLayer = null;
+let roteiroMarcadores = {};
+let roteiroGeoToken = 0;
+let roteiroEnquadre = ""; // assinatura do último enquadramento, pra não desfazer o zoom da pessoa
+
+function renderRoteiroChips(dias){
+  const barra = document.getElementById("rot-dias");
+  if(!barra) return;
+  const hoje = isoDeData(new Date());
+  const DIA_SEMANA = ["dom","seg","ter","qua","qui","sex","sáb"];
+  barra.innerHTML = dias.map(d => {
+    const dia = String(d.data.getDate()).padStart(2,"0");
+    const mes = String(d.data.getMonth()+1).padStart(2,"0");
+    return `<button type="button" class="rot-dia-chip ${d.iso === roteiroDiaSel ? "ativo" : ""} ${d.iso === hoje ? "hoje" : ""}" data-rot-dia="${d.iso}">
+      <b>${dia}/${mes}</b><span>${DIA_SEMANA[d.data.getDay()]}</span>
+    </button>`;
+  }).join("");
+  const ativo = barra.querySelector(".ativo");
+  if(ativo) ativo.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+}
+
+/* Junta, num dia só, as paradas do roteiro fechado com o que a família acrescentou.
+   As paradas do PDF respeitam a ordem que a família deixou; as adicionadas se encaixam pelo
+   horário, e as sem horário vão pro fim. */
+/* Coordenada dos lugares que a família traz pro dia (o "+ trazer um lugar votado"), achada uma vez
+   e guardada só na memória desta sessão. Não vai pra planilha de propósito: já existe um cache de
+   geocodificação compartilhado, e gravar de novo aqui faria cada abertura da aba disparar uma
+   escrita no backend sem nada ter mudado. */
+const roteiroCoordLivre = {};
+function itensDoDiaRoteiro(iso){
+  const doPdf = paradasBADoDia(iso).map(p => Object.assign({}, p, { tipo: "pdf" }));
+  const livres = (carregarRoteiro()[iso] || []).map((it, i) => {
+    const coord = it.coord || roteiroCoordLivre[iso + "|" + it.texto] || null;
+    return {
+      tipo: "livre", idx: i, ref: "livre:" + i,
+      nome: it.texto, hora: it.hora || "", autor: it.autor || "",
+      coord, precisao: coord ? "aprox" : ""
+    };
+  });
+  const lista = doPdf.slice();
+  livres.forEach(item => {
+    const min = minutosDaHora(item.hora);
+    if(min === null){ lista.push(item); return; }
+    const posicao = lista.findIndex(p => {
+      const m = minutosDaHora(p.hora);
+      return m !== null && m > min;
+    });
+    if(posicao === -1) lista.push(item); else lista.splice(posicao, 0, item);
+  });
+  return lista;
+}
+
+function renderRoteiroDia(){
+  const iso = roteiroDiaSel;
+  const dias = diasDoRoteiro();
+  const dia = dias.find(d => d.iso === iso);
+  if(!dia) return;
+  const fechado = ROTEIRO_BA_POR_DATA[iso];
+  const itens = itensDoDiaRoteiro(iso);
+
+  // Numera aqui, uma vez só: o número da linha do tempo TEM que ser o mesmo do pino. Se cada um
+  // contasse por conta própria, bastava uma parada sem coordenada pra tudo desalinhar depois dela.
+  let contador = 0;
+  itens.forEach(it => { if(it.coord) it.numeroNoMapa = ++contador; });
+  const corridas = corridasDoDia(itens);
+
+  /* "Agora": no dia que está acontecendo, marca em que parada o roteiro está neste momento.
+     Durante a viagem é a primeira coisa que se quer saber ao abrir o app, e sem isso a pessoa tem
+     que procurar o horário na lista e comparar com o relógio. Recalcula sozinho, porque o sync
+     redesenha esta aba a cada 5 segundos.
+
+     Nos dias de grupo dividido a conta não pode ser "a última parada que já passou na lista": a
+     lista não está em ordem de relógio ali (o jogo das 19h15 aparece antes da Plaza de Mayo das
+     17h30, porque são pessoas diferentes). Pegar a última da lista apontaria o Alto Palermo às
+     19h30, quando o Thomas e o Mateus estão no estádio. Então: se algum ramo já começou, marca a
+     parada atual DE CADA RAMO — os dois grupos estão em lugares diferentes ao mesmo tempo, e as
+     duas respostas são verdadeiras. Só enquanto ninguém se separou é que o tronco recebe a marca. */
+  if(iso === isoDeData(new Date())){
+    const agora = new Date();
+    const agoraMin = agora.getHours() * 60 + agora.getMinutes();
+    const ultimaJaPassada = lista => {
+      let alvo = null, melhor = -1;
+      lista.forEach(it => {
+        const m = minutosDaHora(it.hora);
+        if(m !== null && m <= agoraMin && m >= melhor){ melhor = m; alvo = it; }
+      });
+      return alvo;
+    };
+    const ramos = corridas.filter(c => c.grupo);
+    const ramosAtivos = ramos.map(c => ultimaJaPassada(c.itens)).filter(Boolean);
+    if(ramosAtivos.length) ramosAtivos.forEach(it => { it.agora = true; });
+    else {
+      const noTronco = ultimaJaPassada(corridas.filter(c => !c.grupo).flatMap(c => c.itens));
+      if(noTronco) noTronco.agora = true;
+    }
+  }
+
+  const cab = document.getElementById("rot-cabecalho");
+  cab.innerHTML = `
+    <div class="rot-cab-data">${esc(fmtData(dia.data))}</div>
+    <div class="rot-cab-titulo">${esc(fechado ? fechado.titulo : (dia.volta ? "Último dia · check-out e volta" : "A combinar"))}</div>
+    ${fechado ? `<p class="rot-cab-resumo">${esc(fechado.resumo)}</p>`
+      : dia.volta ? `<p class="rot-cab-resumo">Check-out e viagem de volta. Vale combinar aqui o horário de sair e o que ainda dá tempo de fazer.</p>` : ""}
+    <div class="rot-cab-meta">
+      <span class="cidade">${esc(dia.cidade)}</span>
+      <span>${itens.length} ${itens.length === 1 ? "parada" : "paradas"}</span>
+      ${fechado && fechado.kmAPe ? `<span>${esc(fechado.kmAPe)} km a pé</span>` : ""}
+      ${diaFoiEditadoBA(iso) ? `<span>editado pela família</span>` : ""}
+    </div>`;
+
+  /* O sync roda a cada 5 segundos e chama renderRoteiro em TODOS os aparelhos sempre que qualquer
+     pessoa mexe em qualquer dia. Como este corpo é refeito por innerHTML, alguém digitando "jantar
+     no Don Julio, reserva 20h30" via o texto sumir no meio da frase por causa de uma edição que
+     outra pessoa fez num dia que nem está na tela. Guardo o que está digitado e o foco, e devolvo
+     depois de redesenhar. */
+  const corpo = document.getElementById("rot-corpo");
+  const eraFoco = corpo.contains(document.activeElement) ? document.activeElement : null;
+  const rascunho = {
+    texto: (corpo.querySelector("[data-rot-texto]") || {}).value || "",
+    hora: (corpo.querySelector("[data-rot-hora]") || {}).value || "",
+    focoEm: eraFoco && eraFoco.hasAttribute("data-rot-texto") ? "texto"
+          : eraFoco && eraFoco.hasAttribute("data-rot-hora") ? "hora" : "",
+    selInicio: eraFoco && eraFoco.selectionStart, selFim: eraFoco && eraFoco.selectionEnd
+  };
+  const locais = carregarLocais().filter(l => l.cidade === dia.cidade)
+    .slice().sort((a,b) => (b.votos||[]).length - (a.votos||[]).length);
+  const paradasPdf = itens.filter(i => i.tipo === "pdf");
+
+  corpo.innerHTML = `
+    ${itens.length ? `<div class="rot-timeline">${corridas.map(c => `
+        ${c.grupo ? `<div class="rot-divisor"><span>${esc(c.grupo)}</span></div>` : (c.reencontro ? `<div class="rot-divisor juntos"><span>os cinco de novo juntos</span></div>` : "")}
+        ${c.itens.map(it => linhaDoTempoHtml(it, paradasPdf)).join("")}`).join("")}</div>`
+      : `<p class="rot-vazio">Nada planejado ainda pra esse dia. Use o campo abaixo pra combinar alguma coisa — todo mundo vê na hora.</p>`}
+    ${fechado && fechado.dicas && fechado.dicas.length ? `
+      <details class="rot-dicas">
+        <summary>Dicas do dia (${fechado.dicas.length})</summary>
+        <ul>${fechado.dicas.map(d => `<li>${esc(d)}</li>`).join("")}</ul>
+      </details>` : ""}
+    <div class="rot-rodape">
+      <div class="rot-add">
+        <input type="time" data-rot-hora title="Horário (opcional)">
+        <input type="text" data-rot-texto placeholder="acrescentar uma parada…">
+        <button type="button" data-rot-add>Adicionar</button>
+      </div>
+      ${diaFoiEditadoBA(iso) ? `<button type="button" class="rot-restaurar" data-rot-restaurar>↺ Voltar ao roteiro do PDF</button>` : ""}
+    </div>
+    ${(() => {
+      const caminhos = caminhosDoDia(corridas).filter(c => c.itens.length > 1);
+      if(!caminhos.length) return "";
+      const varios = caminhos.length > 1;
+      return `<div class="rot-maps-links">${caminhos.map(c => `
+        <a class="rot-abrir-maps" href="${linkTrechoNoMaps(c.itens)}" target="_blank" rel="noopener">
+          ➤ ${varios ? (c.grupo ? `Trajeto de ${esc(c.grupo)}` : "Trajeto dos cinco juntos") : "Abrir o trajeto do dia no Google Maps"}
+        </a>`).join("")}</div>`;
+    })()}
+    ${locais.length ? `<div class="rot-add" style="margin-top:8px">
+      <select data-rot-select>
+        <option value="">+ Trazer um lugar votado de ${esc(dia.cidade)}…</option>
+        ${locais.map(l => `<option value="${esc(l.nome)}">${esc(l.nome)} (${(l.votos||[]).length} interesse${(l.votos||[]).length===1?"":"s"})</option>`).join("")}
+      </select>
+    </div>` : ""}`;
+
+  // Devolve o que estava digitado e onde o cursor estava
+  const campoTexto = corpo.querySelector("[data-rot-texto]"), campoHora = corpo.querySelector("[data-rot-hora]");
+  if(campoTexto && rascunho.texto) campoTexto.value = rascunho.texto;
+  if(campoHora && rascunho.hora) campoHora.value = rascunho.hora;
+  if(rascunho.focoEm === "texto" && campoTexto){
+    campoTexto.focus();
+    try { campoTexto.setSelectionRange(rascunho.selInicio, rascunho.selFim); } catch(e){}
+  } else if(rascunho.focoEm === "hora" && campoHora){ campoHora.focus(); }
+
+  desenharMapaRoteiro(corridas, dia);
+  completarCoordenadasLivres(iso, itens, dia);
+}
+
+/* O lugar votado que alguém traz pro dia entra como texto e, sem isto, ficava só na lista: aparecia
+   na linha do tempo e não no mapa, bem no caso em que o mapa é mais útil ("onde isso fica em
+   relação ao resto do dia?"). Aqui ele é casado com o lugar cadastrado na Votação e reaproveita a
+   geocodificação que o app já tem — inclusive a coordenada que alguém corrigiu na mão.
+   Redesenha uma vez só, no fim, e o token garante que uma troca de dia no meio do caminho aborta:
+   sem isso, escolher outro dia enquanto isto roda desenhava os pinos do dia anterior por cima. */
+async function completarCoordenadasLivres(iso, itens, dia){
+  const pendentes = itens.filter(it => it.tipo === "livre" && !it.coord);
+  if(!pendentes.length) return;
+  const meuToken = roteiroGeoToken;
+  const locais = carregarLocais().filter(l => l.cidade === dia.cidade);
+  let achouAlguma = false;
+  for(const it of pendentes){
+    const local = locais.find(l => normalizarTexto(l.nome) === normalizarTexto(it.nome));
+    if(!local) continue;
+    const coord = await geocodificarLocal(local);
+    if(meuToken !== roteiroGeoToken) return; // trocou de dia no meio — esta chamada não vale mais
+    if(coord){ roteiroCoordLivre[iso + "|" + it.nome] = coord; achouAlguma = true; }
+  }
+  // A gravação no cache acima é o que impede o laço infinito: no render seguinte a parada já tem
+  // coordenada, não entra mais em "pendentes" e nada é redesenhado de novo.
+  if(achouAlguma && meuToken === roteiroGeoToken && roteiroDiaSel === iso) renderRoteiroDia();
+}
+
+/* ---- Quando o grupo se divide ----
+   Dois dias da viagem têm o grupo separado, e tratar isso como um trajeto só produzia duas
+   mentiras ao mesmo tempo: a linha do tempo mostrava 19h15 (o jogo) antes de 17h30 (a Plaza de
+   Mayo), e o mapa ligava Avellaneda à Plaza de Mayo com um traço, como se alguém tivesse feito
+   aquele caminho. Ninguém fez — são pessoas diferentes, ao mesmo tempo, em lugares diferentes.
+
+   A solução é ler o dia como corridas consecutivas de mesmo grupo. No dia 30/08 dá
+   [os cinco 1-6] → [Thomas e Mateus] + [Paula, Juliane e Júlia], dois ramos que não se
+   reencontram. No dia 02/09 dá [os cinco] → [Thomas e Mateus na Bombonera] → [os cinco de novo],
+   um ramo que sai e volta — e aí a linha principal segue reto, que é o que as três realmente
+   fizeram enquanto os dois estavam no tour. */
+function corridasDoDia(itens){
+  const corridas = [];
+  itens.forEach(it => {
+    const g = it.grupo || "";
+    const ultima = corridas[corridas.length - 1];
+    if(ultima && ultima.grupo === g) ultima.itens.push(it);
+    else corridas.push({ grupo: g, itens: [it] });
+  });
+  // "os cinco de novo juntos" só faz sentido num trecho compartilhado que vem depois de uma divisão
+  corridas.forEach((c, i) => { c.reencontro = !c.grupo && i > 0 && corridas.slice(0, i).some(a => a.grupo); });
+  return corridas;
+}
+
+function linhaDoTempoHtml(it, paradasPdf){
+  const numeroNoMapa = it.numeroNoMapa || null;
+  const ehPdf = it.tipo === "pdf";
+  const posPdf = ehPdf ? paradasPdf.findIndex(p => p.ref === it.ref) : -1;
+  const selos = [
+    it.tag ? `<span class="rot-tag">${esc(it.tag)}</span>` : "",
+    it.grupo ? `<span class="rot-grupo">${esc(it.grupo)}</span>` : "",
+    // Honestidade sobre o pino: quando a coordenada é da rua ou do bairro, e não da porta, a tela
+    // diz isso. É o mesmo princípio da busca de fotos — melhor admitir do que fingir precisão.
+    it.precisao === "aprox" ? `<span class="rot-aprox">ponto aproximado</span>` : "",
+    it.precisao === "trecho" ? `<span class="rot-aprox">trecho de rua</span>` : "",
+    it.autor ? `<span class="rot-autor">${esc(it.autor)}</span>` : ""
+  ].filter(Boolean).join("");
+
+  return `
+    <div class="rot-parada ${it.ref === roteiroParadaSel ? "selecionada" : ""} ${ehPdf ? "" : "rot-parada-extra"} ${it.agora ? "agora" : ""}"
+         data-rot-ref="${esc(it.ref)}" role="button" tabindex="0">
+      <div class="rot-parada-hora">${esc(fmtHoraCurta(it.hora))}</div>
+      <div class="rot-parada-trilho"><span class="rot-parada-bola"></span></div>
+      <div class="rot-parada-conteudo">
+        <div class="rot-parada-nome">${it.agora ? `<span class="rot-agora">agora</span>` : ""}${numeroNoMapa ? `${numeroNoMapa}. ` : ""}${esc(it.nome)}</div>
+        ${selos ? `<div class="rot-selos">${selos}</div>` : ""}
+        ${it.nota ? `<div class="rot-parada-nota">${esc(it.nota)}</div>` : ""}
+        ${it.como ? `<div class="rot-parada-como">↳ ${esc(it.como)}</div>` : ""}
+        <div class="rot-parada-acoes">
+          ${it.coord ? `<a class="rot-ir" href="${linkComoChegar(it.coord, it.como)}" target="_blank" rel="noopener"
+             title="Como chegar (abre no Google Maps)" data-rot-nao-seleciona>➤</a>` : ""}
+          ${ehPdf ? `
+            <button type="button" data-rot-subir="${esc(it.ref)}" title="Subir" ${posPdf <= 0 ? "disabled" : ""}>▲</button>
+            <button type="button" data-rot-descer="${esc(it.ref)}" title="Descer" ${posPdf === paradasPdf.length - 1 ? "disabled" : ""}>▼</button>` : ""}
+          <button type="button" class="remover" data-rot-remover="${esc(it.ref)}" title="Tirar do dia">×</button>
         </div>
       </div>
-    `;
-  }).join("");
+    </div>`;
+}
 
-  if(!cont._delegado){
-    cont._delegado = true;
-    cont.addEventListener("click", ev => {
-      const del = ev.target.closest("[data-roteiro-del]");
-      if(del){
-        const [iso, idx] = del.getAttribute("data-roteiro-del").split("|");
-        const r = carregarRoteiro();
-        if(r[iso]){ r[iso].splice(+idx, 1); if(!r[iso].length) delete r[iso]; salvarRoteiro(r); renderRoteiro(); }
-        return;
-      }
-      const addBtn = ev.target.closest("[data-roteiro-add]");
-      if(addBtn){
-        const iso = addBtn.getAttribute("data-roteiro-add");
-        const input = cont.querySelector(`[data-roteiro-input="${iso}"]`);
-        const texto = (input.value || "").trim();
-        if(!texto) return;
-        const r = carregarRoteiro();
-        if(!r[iso]) r[iso] = [];
-        r[iso].push({ texto, autor: USUARIO || "" });
-        salvarRoteiro(r);
-        renderRoteiro();
-      }
-    });
-    cont.addEventListener("change", ev => {
-      const select = ev.target.closest("[data-roteiro-select]");
-      if(!select || !select.value) return;
-      const iso = select.getAttribute("data-roteiro-select");
-      const texto = select.value;
-      const r = carregarRoteiro();
-      if(!r[iso]) r[iso] = [];
-      r[iso].push({ texto, autor: USUARIO || "" });
-      salvarRoteiro(r);
-      renderRoteiro();
-    });
-    cont.addEventListener("keydown", ev => {
-      if(ev.key === "Enter" && ev.target.matches("[data-roteiro-input]")){
-        const iso = ev.target.getAttribute("data-roteiro-input");
-        cont.querySelector(`[data-roteiro-add="${iso}"]`).click();
-      }
-    });
+/* Duas paradas podem legitimamente cair no mesmo ponto — o jantar e o sorvete em Puerto Madero são
+   a mesma âncora das docas. Empilhadas no mesmo pixel, só a de cima é clicável e o mapa mente
+   dizendo que tem uma parada a menos. Este desvio de ~40 m é sempre o mesmo para a mesma posição,
+   então os pinos não dançam entre um render e outro. */
+function separarPinosEmpilhados(pontos){
+  const usados = new Map();
+  return pontos.map(p => {
+    const chave = p.coord[0].toFixed(4) + "," + p.coord[1].toFixed(4);
+    const quantos = usados.get(chave) || 0;
+    usados.set(chave, quantos + 1);
+    if(!quantos) return p;
+    // Guarda a coordenada REAL junto. O desvio é só para o pino não sumir embaixo do outro; quem
+    // for navegar até lá tem que receber o endereço de verdade — o "como chegar" do popup estava
+    // mandando a pessoa para um ponto ~40 m ao lado, diferente do que o mesmo lugar dava na lista.
+    const angulo = (quantos * 137.5) * Math.PI / 180;
+    return Object.assign({}, p, { coordReal: p.coord,
+                                  coord: [p.coord[0] + Math.cos(angulo) * 0.00035,
+                                          p.coord[1] + Math.sin(angulo) * 0.00042] });
+  });
+}
+
+/* ---- Navegação de verdade: o app mostra o plano, o Google Maps leva até lá ----
+   Desenhar rota de rua dentro do app exigiria serviço com chave e ficaria pior que o aplicativo que
+   todo mundo já tem no bolso, com trânsito e transporte público de Buenos Aires. Então o mapa daqui
+   responde "onde isso fica no meu dia" e entrega a navegação passo a passo pro Google Maps. */
+/* O meio de transporte sai do próprio roteiro. Mandar tudo como "a pé" era um erro visível: o
+   trajeto até o estádio do Independiente, que o roteiro faz de Uber, abria no Google como uma
+   caminhada de 9 km e quase duas horas por Avellaneda — e o dia do Tigre virava uma caminhada de
+   25 km. O texto do campo "como" já diz se é Uber, subte ou a pé; é só ler. */
+function modoDeTransporte(como){
+  const t = normalizarTexto(como || "");
+  if(/\buber\b|\btaxi\b|carro|traslado|\bvan\b/.test(t)) return "driving";
+  if(/subte|linha [a-e]\b|\btrem\b|estaco|metro|onibus/.test(t)) return "transit";
+  return "walking";
+}
+function linkComoChegar(coord, como){
+  // Sem `origin`: o Google usa a localização atual de quem abriu, que é o que se quer na rua.
+  return "https://www.google.com/maps/dir/?api=1&travelmode=" + modoDeTransporte(como) +
+         "&destination=" + coord[0] + "," + coord[1];
+}
+/* Um trecho do dia como rota do Google. A URL aceita no máximo 9 pontos intermediários; passando
+   disso, pega pontos espaçados por igual em vez de cortar o fim — cortar faria o link parar no meio
+   da tarde sem avisar ninguém. */
+function linkTrechoNoMaps(todosOsPontos){
+  /* Colapsa paradas seguidas no mesmo lugar. Vários dias têm duas atividades no mesmo ponto — o
+     check-in e o mercado saem os dois de casa, o jantar e o sorvete são os dois nas docas de Puerto
+     Madero. Mandadas como pontos distintos, a rota do Google ganhava um trecho de zero metro no
+     meio e gastava um dos poucos waypoints disponíveis à toa. */
+  const pontos = todosOsPontos.filter((p, i) => {
+    if(i === 0) return true;
+    const ant = todosOsPontos[i - 1].coord;
+    return !(Math.abs(ant[0] - p.coord[0]) < 1e-6 && Math.abs(ant[1] - p.coord[1]) < 1e-6);
+  });
+  if(!pontos.length) return "";
+  if(pontos.length === 1) return linkComoChegar(pontos[0].coord, pontos[0].como);
+  const origem = pontos[0], destino = pontos[pontos.length - 1];
+  /* Quantas paradas intermediárias cabem na URL. A documentação do Google é explícita: até 3 em
+     navegador de celular, até 9 no resto. Mandar 9 pro celular — que é onde a família vai usar —
+     é apostar num comportamento não documentado. Quando não cabem todas, pega pontos espaçados por
+     igual em vez de cortar o fim: cortar faria a rota parar no meio da tarde sem avisar ninguém. */
+  const teto = matchMedia("(pointer: coarse)").matches ? 3 : 9;
+  let meio = pontos.slice(1, -1);
+  if(meio.length > teto){
+    const passo = meio.length / teto;
+    meio = Array.from({ length: teto }, (_, i) => meio[Math.floor(i * passo)]);
   }
+  // Modo do trecho: o que mais aparece entre as chegadas — um dia a pé com um Uber no meio
+  // continua sendo um dia a pé.
+  const contagem = {}, distancia = {};
+  pontos.slice(1).forEach((p, i) => {
+    const m = modoDeTransporte(p.como);
+    contagem[m] = (contagem[m] || 0) + 1;
+    distancia[m] = (distancia[m] || 0) + haversineKm(pontos[i].coord, p.coord);
+  });
+  /* Empate acontece direto nos trechos de 2 ou 3 pontos, que é justamente o caso dos ramos de
+     grupo. Sem critério, `Object.keys` devolvia a ordem de inserção e o modo saía sendo o da
+     primeira parada da lista — resultado que muda por acidente se alguém reordenar o dia. Desempata
+     por distância percorrida em cada modo e, se ainda empatar, por uma ordem fixa. */
+  const prioridade = { walking: 0, transit: 1, driving: 2 };
+  let modo = Object.keys(contagem).sort((a, b) =>
+    (contagem[b] - contagem[a]) || (distancia[b] - distancia[a]) || (prioridade[a] - prioridade[b])
+  )[0] || "walking";
+  // Só que a maioria sozinha errava feio no dia do Tigre: cinco pernas curtas a pé e UMA de trem de
+  // 25 km davam "a pé" na votação, e o Google abria uma caminhada de seis horas até o Delta. Perna
+  // longa demais para andar manda no trecho inteiro, por mais curtas que sejam as outras.
+  let maiorPerna = 0;
+  pontos.slice(1).forEach((p, i) => { maiorPerna = Math.max(maiorPerna, haversineKm(pontos[i].coord, p.coord)); });
+  if(modo === "walking" && maiorPerna > 8) modo = contagem.driving ? "driving" : (contagem.transit ? "transit" : "walking");
+  return "https://www.google.com/maps/dir/?api=1&travelmode=" + modo +
+    "&origin=" + origem.coord[0] + "," + origem.coord[1] +
+    "&destination=" + destino.coord[0] + "," + destino.coord[1] +
+    // O separador vai como %7C, e não como "|" cru: a documentação do Maps URLs API exige isso.
+    (meio.length ? "&waypoints=" + meio.map(p => p.coord[0] + "," + p.coord[1]).join("%7C") : "");
+}
+
+/* Os caminhos percorridos no dia — um por grupo quando o grupo se divide, senão um só.
+   É a MESMA conta que desenha as linhas no mapa e que monta os links do Google Maps, de propósito:
+   quando eram duas contas separadas, o mapa mostrava dois ramos e o link do dia mandava uma rota
+   só passando por Avellaneda e pela Plaza de Mayo em sequência — um caminho que ninguém faz. */
+function caminhosDoDia(corridas){
+  const comCoord = itens => itens.filter(i => i.coord);
+  const caminhos = [];
+  const principal = comCoord(corridas.filter(c => !c.grupo).flatMap(c => c.itens));
+  if(principal.length) caminhos.push({ grupo: "", itens: principal });
+  corridas.forEach((c, i) => {
+    if(!c.grupo) return;
+    const antes = corridas.slice(0, i).filter(x => !x.grupo).pop();
+    const depois = corridas.slice(i + 1).find(x => !x.grupo);
+    const anteriores = antes ? comCoord(antes.itens) : [];
+    const seguintes = depois ? comCoord(depois.itens) : [];
+    const itens = [
+      anteriores.length ? anteriores[anteriores.length - 1] : null,
+      ...comCoord(c.itens),
+      seguintes.length ? seguintes[0] : null
+    ].filter(Boolean);
+    if(itens.length) caminhos.push({ grupo: c.grupo, itens });
+  });
+  return caminhos;
+}
+
+/* ---- Tela cheia ----
+   O mapa é MOVIDO pro <body> em vez de só receber position:fixed. Motivo: a aba ativa tem
+   `transform: translateY(8px)` (a animaçãozinha de entrada do painel), e um ancestral com
+   transform vira o bloco de contenção de tudo que é `fixed` dentro dele — o "inset:0" passava a
+   valer a caixa do painel, não a tela. Na prática o mapa abria com 1140x1933 em vez do tamanho da
+   janela: largura errada e quase três telas de altura. Movendo pro body, o fixed volta a se medir
+   pela janela, e não importa que estilo o painel ganhe no futuro. */
+let roteiroTelaCheia = false;
+let roteiroAncoraMapa = null;
+function alternarTelaCheiaRoteiro(){
+  const wrap = document.getElementById("rot-mapa-wrap");
+  if(!wrap) return;
+  roteiroTelaCheia = !roteiroTelaCheia;
+  if(roteiroTelaCheia){
+    roteiroAncoraMapa = document.createElement("div"); // marca o lugar de onde ele saiu
+    wrap.parentNode.insertBefore(roteiroAncoraMapa, wrap);
+    document.body.appendChild(wrap);
+  } else if(roteiroAncoraMapa && roteiroAncoraMapa.parentNode){
+    roteiroAncoraMapa.parentNode.insertBefore(wrap, roteiroAncoraMapa);
+    roteiroAncoraMapa.remove();
+    roteiroAncoraMapa = null;
+  } else {
+    // A âncora sumiu (a casca da aba foi reconstruída enquanto o mapa estava fora). Recoloca no
+    // lugar certo pelo vizinho, em vez de deixar o mapa órfão preso no body pra sempre.
+    const corpo = document.getElementById("rot-corpo");
+    if(corpo && corpo.parentNode) corpo.parentNode.insertBefore(wrap, corpo);
+    roteiroAncoraMapa = null;
+  }
+  wrap.classList.toggle("cheia", roteiroTelaCheia);
+  document.body.classList.toggle("rot-travado", roteiroTelaCheia);
+  const btn = wrap.querySelector("[data-rot-tela]");
+  if(btn){
+    btn.innerHTML = `<span aria-hidden="true">${roteiroTelaCheia ? "✕" : "⛶"}</span>`;
+    btn.title = roteiroTelaCheia ? "Sair da tela cheia" : "Tela cheia";
+    btn.setAttribute("aria-label", roteiroTelaCheia ? "Sair da tela cheia" : "Abrir o mapa em tela cheia");
+  }
+  // O mapa precisa recalcular o tamanho DEPOIS de o CSS aplicar, senão desenha com a altura antiga
+  /* A roda do mouse só dá zoom em tela cheia. Ao SAIR, isso tinha que ser desligado aqui: quem
+     desligava não era esta função e sim o próximo desenho do mapa, que só acontece na troca de dia.
+     Até lá o mapa embutido continuava capturando a roda — a pessoa descia a linha do tempo, passava
+     o cursor por cima e a página parava de rolar, dando zoom sem querer. */
+  if(mapaRoteiro) mapaRoteiro.scrollWheelZoom[roteiroTelaCheia ? "enable" : "disable"]();
+  setTimeout(() => {
+    if(!mapaRoteiro) return;
+    mapaRoteiro.invalidateSize();
+    if(roteiroPontosDoDia.length > 1){
+      mapaRoteiro.fitBounds(roteiroPontosDoDia.map(p => p.coord), { padding: [50,50] });
+      // Regrava a assinatura do enquadramento, senão o próximo sync acha que o dia mudou e
+      // reenquadra de novo, desfazendo o zoom que a pessoa der logo depois de abrir a tela cheia.
+      roteiroEnquadre = (roteiroDiaSel || "") + "|" + roteiroPontosDoDia.map(p => p.ref).join(",");
+    } else {
+      roteiroEnquadre = "";
+    }
+  }, 60);
+}
+document.addEventListener("keydown", ev => {
+  if(ev.key === "Escape" && roteiroTelaCheia) alternarTelaCheiaRoteiro();
+});
+
+/* ---- Onde estou ----
+   Durante a viagem a pergunta deixa de ser "qual é o plano" e passa a ser "onde eu estou dentro
+   dele". O ponto azul e a distância até a parada mais próxima respondem isso sem serviço nenhum. */
+let roteiroMarcadorEu = null;
+let roteiroWatchEu = null;
+function desligarOndeEstou(){
+  if(roteiroWatchEu !== null){ navigator.geolocation.clearWatch(roteiroWatchEu); roteiroWatchEu = null; }
+  if(mapaRoteiroEuLayer) mapaRoteiroEuLayer.clearLayers();
+  roteiroMarcadorEu = null;
+  const btn = document.querySelector("[data-rot-onde]");
+  if(btn){ btn.classList.remove("ativo", "carregando"); btn.setAttribute("aria-pressed", "false"); }
+}
+function mostrarOndeEstou(){
+  const btn = document.querySelector("[data-rot-onde]");
+  // O botão é montado por renderRoteiro, que não depende do Leaflet — então ele existe e é
+  // clicável mesmo quando o mapa não carregou (celular sem rede, que é cenário previsto no app).
+  // Sem esta guarda, o toque estourava um TypeError dentro do callback do GPS e não acontecia
+  // absolutamente nada na tela: nem ponto, nem erro, nem explicação.
+  if(!mapaRoteiro || !mapaRoteiroEuLayer || typeof L === "undefined"){
+    avisarNoMapa("O mapa ainda não carregou. Tente de novo com internet.", 3000);
+    return;
+  }
+  if(roteiroMarcadorEu || roteiroWatchEu !== null){ desligarOndeEstou(); return; }
+  if(!navigator.geolocation){ avisarNoMapa("Este aparelho não informa a localização."); return; }
+  if(btn){ btn.classList.add("carregando"); }
+
+  /* watchPosition, e não uma leitura só. Com getCurrentPosition o ponto azul congelava onde a
+     pessoa estava quando apertou o botão: às 10h no hotel em Recoleta, às 13h em San Telmo, o
+     ponto continuava desenhado no hotel e o botão continuava aceso dizendo que mostrava onde ela
+     estava. Numa viagem a pé o dia inteiro, isso é pior que não ter o botão. */
+  let primeira = true;
+  roteiroWatchEu = navigator.geolocation.watchPosition(pos => {
+    if(btn){ btn.classList.remove("carregando"); btn.classList.add("ativo"); btn.setAttribute("aria-pressed", "true"); }
+    const eu = [pos.coords.latitude, pos.coords.longitude];
+    const raio = pos.coords.accuracy || 0;
+    if(roteiroMarcadorEu){
+      // Reposiciona em vez de recriar: recriar faz o ponto piscar a cada leitura do GPS
+      roteiroMarcadorEu.marcador.setLatLng(eu);
+      if(roteiroMarcadorEu.circulo) roteiroMarcadorEu.circulo.setLatLng(eu).setRadius(raio);
+      roteiroMarcadorEu.coord = eu;
+    } else {
+      // Camada separada de propósito: a das paradas é limpa a cada redesenho (e o sync redesenha
+      // a cada 5 s), o que apagaria o ponto azul sozinho enquanto a pessoa anda pela cidade.
+      mapaRoteiroEuLayer.clearLayers();
+      const marcador = L.marker(eu, { icon: L.divIcon({ className: "rot-icone", html: `<div class="rot-eu-ponto"></div>`, iconSize: [16,16], iconAnchor: [8,8] }) })
+        .addTo(mapaRoteiroEuLayer).bindTooltip("Você está aqui", { direction: "top", offset: [0,-10] });
+      const circulo = raio ? L.circle(eu, { radius: raio, color: "#1a73e8",
+        fillColor: "#1a73e8", fillOpacity: .1, weight: 1 }).addTo(mapaRoteiroEuLayer) : null;
+      roteiroMarcadorEu = { marcador, circulo, coord: eu };
+    }
+
+    // Qual parada do dia está mais perto de mim agora
+    let maisPerto = null;
+    roteiroPontosDoDia.forEach(p => {
+      const km = haversineKm(eu, p.coord);
+      if(!maisPerto || km < maisPerto.km) maisPerto = { p, km };
+    });
+    // Só enquadra e avisa na PRIMEIRA leitura: reenquadrar a cada atualização do GPS ficaria
+    // puxando o mapa da mão de quem está tentando arrastá-lo.
+    if(primeira){
+      primeira = false;
+      if(maisPerto){
+        const d = maisPerto.km < 1 ? Math.round(maisPerto.km * 1000) + " m" : maisPerto.km.toFixed(1) + " km";
+        avisarNoMapa(`Você está a ${d} de “${maisPerto.p.nome}”`, 3200);
+        mapaRoteiro.fitBounds([eu, maisPerto.p.coord], { padding: [60,60], maxZoom: 16 });
+      } else {
+        mapaRoteiro.setView(eu, 15);
+      }
+    }
+  }, () => {
+    desligarOndeEstou();
+    avisarNoMapa("Não consegui pegar sua localização. Autorize o acesso e tente de novo.", 3600);
+  }, { timeout: 12000, maximumAge: 30000, enableHighAccuracy: true });
+}
+
+let avisoMapaTimer = null;
+function avisarNoMapa(texto, ms){
+  const dica = document.getElementById("rot-mapa-dica");
+  if(!dica) return;
+  dica.textContent = texto;
+  dica.classList.add("visivel");
+  clearTimeout(avisoMapaTimer);
+  avisoMapaTimer = setTimeout(() => dica.classList.remove("visivel"), ms || 1800);
+}
+
+const ROT_COR_GRUPO = ["#4e6e8e", "#8e5ba6", "#2e7d32"]; // cores dos ramos, quando o grupo se divide
+let roteiroPontosDoDia = []; // paradas com coordenada do dia aberto, na ordem — usada por vários controles
+function desenharMapaRoteiro(corridas, dia){
+  const el = document.getElementById("rot-mapa");
+  if(!el || typeof L === "undefined") return;
+  if(!mapaRoteiro){
+    mapaRoteiro = L.map(el, { scrollWheelZoom: false, zoomControl: true });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(mapaRoteiro);
+    mapaRoteiroLayer = L.layerGroup().addTo(mapaRoteiro);
+    mapaRoteiroEuLayer = L.layerGroup().addTo(mapaRoteiro);
+    /* Zoom com a roda só junto com Ctrl (ou ⌘), igual ao Google Maps embutido. Deixar a roda
+       sozinha dando zoom prende a rolagem da página: quem estivesse descendo a linha do tempo
+       passava o cursor sobre o mapa e a página travava, dando zoom sem querer. E deixar a roda
+       sem nenhuma reação parecia mapa quebrado — daí o aviso escrito. */
+    el.addEventListener("wheel", ev => {
+      if(ev.ctrlKey || ev.metaKey){
+        ev.preventDefault();
+        mapaRoteiro.setZoom(mapaRoteiro.getZoom() + (ev.deltaY < 0 ? 1 : -1));
+      } else if(!roteiroTelaCheia && !matchMedia("(pointer: coarse)").matches){
+        avisarNoMapa("Use Ctrl + rolagem para dar zoom, ou toque em ⛶ para abrir em tela cheia");
+      }
+    }, { passive: false });
+  }
+  mapaRoteiro.scrollWheelZoom[roteiroTelaCheia ? "enable" : "disable"]();
+  mapaRoteiroLayer.clearLayers();
+  roteiroMarcadores = {};
+
+  const todos = separarPinosEmpilhados(corridas.flatMap(c => c.itens).filter(i => i.coord));
+  const porRef = Object.fromEntries(todos.map(p => [p.ref, p]));
+  const coordDe = it => (porRef[it.ref] || {}).coord;
+  const grupos = [...new Set(corridas.map(c => c.grupo).filter(Boolean))];
+  const meuToken = ++roteiroGeoToken;
+
+  /* O traçado é a ordem do dia, não a rota de rua: linha reta pontilhada é honesta (ninguém
+     confunde com navegação) e não depende de serviço de rotas com chave. Quem quiser a rota de
+     verdade toca no "como chegar" e vai pro Google Maps.
+     A linha PRINCIPAL pula os trechos de grupo — no dia da Bombonera ela vai do Caminito direto
+     ao Congresso, que é exatamente o caminho de quem não entrou no tour. */
+  caminhosDoDia(corridas).forEach(c => {
+    const linha = c.itens.map(coordDe).filter(Boolean);
+    if(linha.length < 2) return;
+    const cor = c.grupo ? ROT_COR_GRUPO[grupos.indexOf(c.grupo) % ROT_COR_GRUPO.length] : "#e2643b";
+    L.polyline(linha, { color: cor, weight: c.grupo ? 2.5 : 3, dashArray: c.grupo ? "5 7" : "1 8",
+      lineCap: "round", opacity: c.grupo ? .75 : .8 }).addTo(mapaRoteiroLayer);
+  });
+
+  todos.forEach(p => {
+    const iGrupo = p.grupo ? grupos.indexOf(p.grupo) : -1;
+    const classe = "rot-pin" + (p.precisao === "aprox" || p.precisao === "trecho" ? " aprox" : "") + (p.agora ? " agora" : "");
+    const estilo = iGrupo >= 0 ? ` style="background:${ROT_COR_GRUPO[iGrupo % ROT_COR_GRUPO.length]}"` : "";
+    const marcador = L.marker(p.coord, {
+      icon: L.divIcon({ className: "rot-icone", html: `<div class="${classe}"${estilo}>${p.numeroNoMapa}</div>`, iconSize: [30,30], iconAnchor: [15,15] })
+    }).addTo(mapaRoteiroLayer);
+    marcador.bindTooltip(`${p.numeroNoMapa}. ${esc(p.nome)}`, { direction: "top", offset: [0,-16] });
+    marcador.bindPopup(
+      `<strong>${esc(fmtHoraCurta(p.hora))} · ${esc(p.nome)}</strong>` +
+      (p.grupo ? `<br><span style="font-size:.9em">só ${esc(p.grupo)}</span>` : "") +
+      (p.como ? `<br><span style="font-size:.9em">${esc(p.como)}</span>` : "") +
+      (p.precisao === "aprox" || p.precisao === "trecho" ? `<br><span style="font-size:.85em;opacity:.75">local aproximado</span>` : "") +
+      `<br><a href="${linkComoChegar(p.coordReal || p.coord, p.como)}" target="_blank" rel="noopener"
+          style="display:inline-block;margin-top:7px;font-weight:700;color:#1a73e8;text-decoration:none">➤ Como chegar</a>`,
+      { closeButton: true, maxWidth: 240 });
+    marcador.on("click", () => selecionarParadaRoteiro(p.ref, { doMapa: true }));
+    roteiroMarcadores[p.ref] = marcador;
+  });
+  const pontos = todos;
+  roteiroPontosDoDia = todos;
+
+  /* Legenda das cores. Sem ela o mapa mostrava três traços de cores diferentes sem dizer o que
+     cada um é — a informação mais importante do dia (quem vai pra onde) ficava só na lista. */
+  const legenda = document.getElementById("rot-mapa-legenda");
+  if(legenda){
+    legenda.innerHTML = grupos.length
+      ? `<span><i style="background:#e2643b"></i>os cinco juntos</span>` +
+        grupos.map((g, i) => `<span><i style="background:${ROT_COR_GRUPO[i % ROT_COR_GRUPO.length]}"></i>${esc(g)}</span>`).join("")
+      : "";
+  }
+
+  /* Só reenquadra quando o CONTEÚDO do mapa muda (outro dia, parada entrando ou saindo). Antes
+     reenquadrava a cada desenho, e como o sync redesenha de 5 em 5 segundos por causa de qualquer
+     edição de qualquer pessoa, o zoom que alguém tinha dado pra ver uma esquina voltava sozinho
+     pro dia inteiro, sem nada ter mudado na tela dela. */
+  const assinatura = (dia.iso || "") + "|" + pontos.map(p => p.ref).join(",");
+  const precisaEnquadrar = assinatura !== roteiroEnquadre;
+  const enquadrar = () => {
+    if(meuToken !== roteiroGeoToken || !mapaRoteiro) return;
+    mapaRoteiro.invalidateSize();
+    if(!precisaEnquadrar) return;
+    if(pontos.length > 1) mapaRoteiro.fitBounds(pontos.map(p => p.coord), { padding: [42,42] });
+    else if(pontos.length === 1) mapaRoteiro.setView(pontos[0].coord, 16);
+    else mapaRoteiro.setView(CIDADES_COORDS[dia.cidade] || CIDADES_COORDS["Buenos Aires"], 12);
+    roteiroEnquadre = assinatura;
+  };
+  // A aba pode estar escondida quando o sync redesenha: um mapa de 0px calcula o zoom errado.
+  enquadrar();
+  setTimeout(enquadrar, 60);
+}
+
+function selecionarParadaRoteiro(ref, opcoes){
+  opcoes = opcoes || {};
+  roteiroParadaSel = (roteiroParadaSel === ref && !opcoes.doMapa) ? "" : ref;
+  document.querySelectorAll("#rot-corpo .rot-parada").forEach(el => {
+    el.classList.toggle("selecionada", el.getAttribute("data-rot-ref") === roteiroParadaSel);
+  });
+  const linha = document.querySelector(`#rot-corpo .rot-parada[data-rot-ref="${CSS.escape(ref)}"]`);
+  const marcador = roteiroMarcadores[ref];
+  if(opcoes.doMapa){
+    if(linha) linha.scrollIntoView({ behavior: "smooth", block: "center" });
+  } else if(marcador && mapaRoteiro && roteiroParadaSel){
+    mapaRoteiro.setView(marcador.getLatLng(), Math.max(mapaRoteiro.getZoom(), 16), { animate: true });
+    marcador.openPopup();
+  }
+}
+
+/* Tirar do dia. Parada do PDF não é apagada de verdade — entra na lista de escondidas, e o botão
+   "voltar ao roteiro do PDF" traz tudo de volta. O que a família acrescentou, esse sim sai. */
+function removerParadaRoteiro(iso, ref){
+  if(ref.startsWith("livre:")){
+    const idx = +ref.split(":")[1];
+    const r = carregarRoteiro();
+    if(r[iso]){ r[iso].splice(idx, 1); if(!r[iso].length) delete r[iso]; salvarRoteiro(r); }
+  } else {
+    const ov = overlayBA()[iso] || {};
+    const ocultos = (ov.ocultos || []).slice();
+    if(!ocultos.includes(ref)) ocultos.push(ref);
+    salvarOverlayBA(iso, { ocultos });
+  }
+  if(roteiroParadaSel === ref) roteiroParadaSel = "";
+  renderRoteiroDia();
+}
+
+function moverParadaRoteiro(iso, ref, direcao){
+  const atual = paradasBADoDia(iso).map(p => p.ref);
+  const i = atual.indexOf(ref);
+  const j = i + direcao;
+  if(i < 0 || j < 0 || j >= atual.length) return;
+  [atual[i], atual[j]] = [atual[j], atual[i]];
+  // Guarda a ordem COMPLETA do dia (inclusive as escondidas, que ficam no fim), pra que
+  // restaurar uma parada escondida não a jogue pra uma posição aleatória.
+  const escondidas = ((overlayBA()[iso] || {}).ocultos || []);
+  salvarOverlayBA(iso, { ordem: atual.concat(escondidas.filter(r => !atual.includes(r))) });
+  renderRoteiroDia();
+}
+
+function restaurarDiaRoteiro(iso){
+  const r = carregarRoteiro();
+  if(r.__ba && r.__ba[iso]){
+    delete r.__ba[iso];
+    if(!Object.keys(r.__ba).length) delete r.__ba;
+    salvarRoteiro(r);
+  }
+  renderRoteiroDia();
+}
+
+function adicionarParadaRoteiro(iso, texto, hora){
+  texto = (texto || "").trim();
+  if(!texto) return;
+  const r = carregarRoteiro();
+  if(!r[iso]) r[iso] = [];
+  r[iso].push({ texto, autor: USUARIO || "", hora: hora || "" });
+  salvarRoteiro(r);
+  renderRoteiroDia();
+}
+
+function ligarEventosRoteiro(cont){
+  cont.addEventListener("click", ev => {
+    const chip = ev.target.closest("[data-rot-dia]");
+    if(chip){
+      roteiroDiaSel = chip.getAttribute("data-rot-dia");
+      roteiroParadaSel = "";
+      // Apaga o "onde estou" junto: a posição continuava desenhada e o botão aceso, mas o mapa
+      // pulava pro dia novo e o ponto azul ficava fora da área visível — o botão afirmava mostrar
+      // onde a pessoa está enquanto não havia nada na tela, e a distância anunciada era do dia
+      // anterior. Quem quiser ver de novo toca no 📍, que refaz a leitura do GPS.
+      if(roteiroMarcadorEu || roteiroWatchEu !== null) desligarOndeEstou();
+      renderRoteiroChips(diasDoRoteiro());
+      renderRoteiroDia();
+      return;
+    }
+    // Os botões do mapa têm listener próprio (ver renderRoteiro) — não entram aqui.
+    // O "como chegar" é um link: deixa o navegador abri-lo sem a linha também reagir ao toque
+    if(ev.target.closest("[data-rot-nao-seleciona]")) return;
+    // Os botões da parada vêm ANTES da seleção da linha: os dois estão no mesmo elemento, e sem
+    // isso subir uma parada também centralizava o mapa nela, dando um solavanco a cada toque.
+    const subir = ev.target.closest("[data-rot-subir]");
+    if(subir){ moverParadaRoteiro(roteiroDiaSel, subir.getAttribute("data-rot-subir"), -1); return; }
+    const descer = ev.target.closest("[data-rot-descer]");
+    if(descer){ moverParadaRoteiro(roteiroDiaSel, descer.getAttribute("data-rot-descer"), 1); return; }
+    const remover = ev.target.closest("[data-rot-remover]");
+    if(remover){ removerParadaRoteiro(roteiroDiaSel, remover.getAttribute("data-rot-remover")); return; }
+    if(ev.target.closest("[data-rot-restaurar]")){ restaurarDiaRoteiro(roteiroDiaSel); return; }
+    if(ev.target.closest("[data-rot-add]")){
+      const texto = cont.querySelector("[data-rot-texto]");
+      const hora = cont.querySelector("[data-rot-hora]");
+      adicionarParadaRoteiro(roteiroDiaSel, texto.value, hora.value);
+      return;
+    }
+    const linha = ev.target.closest("[data-rot-ref]");
+    if(linha){ selecionarParadaRoteiro(linha.getAttribute("data-rot-ref")); return; }
+  });
+  cont.addEventListener("change", ev => {
+    const select = ev.target.closest("[data-rot-select]");
+    if(!select || !select.value) return;
+    adicionarParadaRoteiro(roteiroDiaSel, select.value, "");
+  });
+  cont.addEventListener("keydown", ev => {
+    if(ev.key === "Enter" && ev.target.matches("[data-rot-texto]")){
+      ev.preventDefault();
+      cont.querySelector("[data-rot-add]").click();
+    }
+  });
 }
 
 function renderViagem(){
@@ -4557,7 +5749,11 @@ function renderMapaRota(){
   }
 
   const el = document.getElementById("mapa-leaflet");
-  if(el && !mapaLeaflet){
+  // typeof L: sem rede o unpkg não carrega, e `L.map` aqui lançava ReferenceError. Como esta
+  // função roda no INIT, o erro abortava tudo que vem depois dela — roteiro, despesas, tela de
+  // login e o registro do service worker. Ou seja, uma falha de CDN derrubava o app inteiro em vez
+  // de apenas deixar o mapa sem carregar.
+  if(el && !mapaLeaflet && typeof L !== "undefined"){
     mapaLeaflet = L.map(el, { scrollWheelZoom: false });
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 18,
